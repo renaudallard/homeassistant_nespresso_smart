@@ -29,6 +29,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -39,9 +40,19 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MACHINE_FAMILY_NAMES, MachineFamily
+from .const import (
+    BARISTA_STATE_NAMES,
+    DOMAIN,
+    MACHINE_FAMILY_NAMES,
+    VERTUO_STATE_NAMES,
+    MachineFamily,
+)
 from .coordinator import NespressoCoordinator
 from .models import NespressoMachineData
+
+ALL_STATE_OPTIONS: list[str] = sorted(
+    set(BARISTA_STATE_NAMES.values()) | set(VERTUO_STATE_NAMES.values()) | {"unknown"}
+)
 
 
 @dataclass(frozen=True)
@@ -58,6 +69,8 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         translation_key="machine_state",
         name="State",
         icon="mdi:coffee-maker",
+        device_class=SensorDeviceClass.ENUM,
+        options=ALL_STATE_OPTIONS,
         families=frozenset({MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.machine_state,
     ),
