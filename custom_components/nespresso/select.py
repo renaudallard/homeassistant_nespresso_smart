@@ -38,6 +38,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    BARISTA_CHAR_LANGUAGE,
     BARISTA_CHAR_RECIPE_SELECTION,
     DOMAIN,
     MACHINE_FAMILY_NAMES,
@@ -46,6 +47,20 @@ from .const import (
 from .coordinator import NespressoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+BARISTA_LANGUAGES = [
+    "en",
+    "fr",
+    "de",
+    "it",
+    "es",
+    "pt",
+    "nl",
+    "ja",
+    "ko",
+    "zh",
+    "ru",
+]
 
 BARISTA_RECIPES = [
     "espresso",
@@ -69,9 +84,8 @@ async def async_setup_entry(
 
     entities: list[SelectEntity] = []
     if family == MachineFamily.BARISTA:
-        entities.append(
-            NespressoRecipeSelect(coordinator, entry),
-        )
+        entities.append(NespressoRecipeSelect(coordinator, entry))
+        entities.append(NespressoLanguageSelect(coordinator, entry))
     async_add_entities(entities)
 
 
@@ -133,3 +147,61 @@ class NespressoRecipeSelect(CoordinatorEntity[NespressoCoordinator], SelectEntit
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set recipe: %s", err)
+
+
+class NespressoLanguageSelect(CoordinatorEntity[NespressoCoordinator], SelectEntity):
+    """Select entity for Barista language setting."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Language"
+    _attr_icon = "mdi:translate"
+    _attr_options = BARISTA_LANGUAGES
+    _attr_current_option: str | None = None
+
+    def __init__(
+        self,
+        coordinator: NespressoCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        super().__init__(coordinator)
+        self._address = entry.data["address"]
+        self._attr_unique_id = f"{self._address}_language_select"
+        family = MachineFamily(entry.data["family"])
+        data = coordinator.data
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._address)},
+            name=entry.data.get("name", "Nespresso"),
+            manufacturer="Nespresso",
+            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
+            serial_number=data.serial_number if data else None,
+            sw_version=data.firmware_version if data else None,
+            hw_version=data.hardware_version if data else None,
+        )
+
+    async def async_select_option(self, option: str) -> None:
+        """Write language code to machine via BLE."""
+        if option not in BARISTA_LANGUAGES:
+            return
+
+        device = bluetooth.async_ble_device_from_address(
+            self.hass, self._address, connectable=True
+        )
+        if device is None:
+            _LOGGER.error("Machine not found for language setting")
+            return
+
+        try:
+            client = await establish_connection(
+                BleakClient, device, self._address, max_attempts=2
+            )
+            try:
+                # Language is written as 2-byte UTF-8 string
+                lang_bytes = option.encode("utf-8")[:2].ljust(2, b"\x00")
+                await client.write_gatt_char(BARISTA_CHAR_LANGUAGE, lang_bytes)
+                self._attr_current_option = option
+                self.async_write_ha_state()
+                _LOGGER.info("Language set to %s", option)
+            finally:
+                await client.disconnect()
+        except (BleakError, TimeoutError) as err:
+            _LOGGER.error("Failed to set language: %s", err)
