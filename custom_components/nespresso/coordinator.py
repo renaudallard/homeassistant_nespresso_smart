@@ -46,6 +46,7 @@ from .ble.parsing import (
     parse_serial_number,
     parse_vertuonext_machine_info,
     parse_vertuonext_status,
+    parse_vmini_fota_status,
 )
 from .ble.protocol import get_protocol
 from .const import (
@@ -262,6 +263,13 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     def _parse_vmini(self, raw: RawMachineData) -> NespressoMachineData:
         serial = parse_serial_number(raw.serial_bytes) if raw.serial_bytes else None
 
+        fota_status = None
+        fota_progress = None
+        if raw.fota_status_bytes:
+            fota = parse_vmini_fota_status(raw.fota_status_bytes)
+            fota_status = str(fota.get("fota_status", "unknown"))
+            fota_progress = int(fota.get("fota_progress", 0))
+
         return NespressoMachineData(
             machine_state="unknown",
             error_present=False,
@@ -269,4 +277,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             hardware_version=raw.software_version,
             serial_number=serial,
             shadow_data=raw.shadow_header,
+            fota_status=fota_status,
+            fota_progress=fota_progress,
         )

@@ -62,6 +62,8 @@ class NespressoMachineData:
 
     # VMini specific
     shadow_data: str | None = None
+    fota_status: str | None = None
+    fota_progress: int | None = None
 
 
 @dataclass(slots=True)
@@ -81,3 +83,4 @@ class RawMachineData:
     pairing_byte: int | None = None
     wifi_mac: str | None = None
     shadow_header: str | None = None
+    fota_status_bytes: bytes | None = None

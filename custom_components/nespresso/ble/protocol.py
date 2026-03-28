@@ -38,6 +38,7 @@ from ..const import (
     BARISTA_CHAR_INFO,
     BARISTA_CHAR_SERIAL,
     BARISTA_CHAR_STATUS,
+    VMINI_CHAR_FOTA_STATUS,
     VMINI_CHAR_FW_REV,
     VMINI_CHAR_MANUFACTURER,
     VMINI_CHAR_MODEL,
@@ -130,6 +131,11 @@ class VMiniProtocol(AbstractNespressoProtocol):
         # Optional chars that may not be available before WiFi setup
         wifi_mac = None
         shadow = None
+        fota_status = None
+        try:
+            fota_status = await client.read_gatt_char(VMINI_CHAR_FOTA_STATUS)
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("VMini FOTA status not available")
         try:
             wifi_mac = await client.read_gatt_char(VMINI_CHAR_WIFI_MAC)
         except Exception:  # noqa: BLE001
@@ -155,6 +161,7 @@ class VMiniProtocol(AbstractNespressoProtocol):
             manufacturer=_decode_ble_string(bytes(manufacturer)),
             wifi_mac=_decode_ble_string(bytes(wifi_mac)) if wifi_mac else None,
             shadow_header=_decode_ble_string(bytes(shadow)) if shadow else None,
+            fota_status_bytes=bytes(fota_status) if fota_status else None,
         )
 
 

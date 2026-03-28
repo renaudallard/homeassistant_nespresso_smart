@@ -75,6 +75,7 @@ VMINI_CHAR_FW_REV: Final = "00002a26-0000-1000-8000-00805f9b34fb"
 VMINI_CHAR_SW_REV: Final = "00002a28-0000-1000-8000-00805f9b34fb"
 VMINI_CHAR_MANUFACTURER: Final = "00002a29-0000-1000-8000-00805f9b34fb"
 VMINI_CHAR_WIFI_MAC: Final = "e0f00205-5c88-455f-98ba-cfe7db1a7d1d"
+VMINI_CHAR_FOTA_STATUS: Final = "e0f00302-5c88-455f-98ba-cfe7db1a7d1d"
 VMINI_CHAR_SHADOW_HEADER: Final = "e0f00501-5c88-455f-98ba-cfe7db1a7d1d"
 
 # ---------------------------------------------------------------------------

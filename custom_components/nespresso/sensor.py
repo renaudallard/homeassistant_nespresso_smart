@@ -136,6 +136,24 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         families=frozenset({MachineFamily.VMINI}),
         value_fn=lambda d: d.shadow_data,
     ),
+    NespressoSensorDescription(
+        key="fota_status",
+        translation_key="fota_status",
+        name="Firmware update status",
+        icon="mdi:cellphone-arrow-down",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.VMINI}),
+        value_fn=lambda d: d.fota_status,
+    ),
+    NespressoSensorDescription(
+        key="fota_progress",
+        translation_key="fota_progress",
+        name="Firmware update progress",
+        icon="mdi:progress-download",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.VMINI}),
+        value_fn=lambda d: d.fota_progress,
+    ),
 )
 
 
