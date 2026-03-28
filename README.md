@@ -85,9 +85,25 @@ Machine family is detected automatically from the advertised BLE service UUID du
 
 Detailed protocol documentation from the APK decompilation is available under [docs/](docs/).
 
+## Configuration
+
+After adding the machine, go to **Settings > Devices & Services > Nespresso > Configure** to set:
+
+- **Poll interval** (10-600 seconds, default 60): how often to read machine status
+- **Persistent connection** (off by default): keeps the BLE connection open for real-time GATT notifications. Gives instant status updates but blocks the Nespresso mobile app.
+
 ## Limitations
 
-- **No brewing commands**: v1 is read-only. Sending commands to the machine requires real hardware testing for safety.
-- **VMini limited**: Only device info is available. The VMini uses a separate JSON-based protocol for operational data.
+- **Vertuo brewing**: Vertuo machines use a complex command protocol for brewing. Recipe selection is only available for Barista machines.
+- **VMini**: Only device info and shadow data. The VMini uses a JSON-based protocol that needs further reverse engineering.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
 - **Single client**: Only one BLE client can connect at a time. If the Nespresso app is connected, HA will retry on the next poll.
+
+## Contributing
+
+To submit this integration to the HACS default repository:
+
+1. Ensure it meets the [HACS requirements](https://hacs.xyz/docs/publish/integration)
+2. Fork [hacs/default](https://github.com/hacs/default)
+3. Add the repository URL to the `integration` file
+4. Submit a pull request
