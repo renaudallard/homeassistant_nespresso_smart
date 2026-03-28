@@ -60,6 +60,9 @@ After installation, the integration will auto-discover Nespresso machines via Bl
 | Firmware version | Yes | Yes | Yes | Current firmware version (diagnostic) |
 | Hardware version | Yes | Yes | No | Hardware revision (diagnostic) |
 | Water hardness | No | Yes | No | Configured water hardness level |
+| Auto power off | No | Yes | No | Auto power off time in minutes (diagnostic) |
+| Error code | No | Yes | No | Current error code (diagnostic) |
+| Device shadow | No | No | Yes | Device shadow JSON data (diagnostic) |
 
 ### Binary Sensors
 
@@ -70,6 +73,14 @@ After installation, the integration will auto-discover Nespresso machines via Bl
 | Descaling needed | No | Yes | No | Machine needs descaling |
 | Cleaning needed | No | Yes | No | Machine needs cleaning |
 | Capsule container full | No | Yes | No | Used capsule container is full |
+| Milk frother | No | Yes | No | Milk frother is running |
+
+### Controls
+
+| Entity | Barista | Vertuo Next | VMini | Description |
+|--------|---------|-------------|-------|-------------|
+| Recipe | Yes | No | No | Select recipe (espresso, lungo, etc.) |
+| Water hardness | No | Yes | No | Set water hardness level (0-6 slider) |
 
 ### Device Info
 
@@ -77,9 +88,9 @@ Each machine is registered as a device with manufacturer, model, serial number, 
 
 ## How It Works
 
-The integration connects to the machine via BLE every 60 seconds, reads the status characteristics, and disconnects. This avoids blocking the Nespresso mobile app from connecting.
+The integration connects to the machine via BLE at a configurable interval (default 60 seconds), reads the status characteristics, and disconnects. This avoids blocking the Nespresso mobile app from connecting.
 
-Machine family is detected automatically from the advertised BLE service UUID during discovery.
+Machine family is detected automatically from the advertised BLE service UUID during discovery. When the machine becomes available after being off or out of range, a BLE advertisement callback triggers an immediate refresh.
 
 ## Reverse Engineering Documentation
 
