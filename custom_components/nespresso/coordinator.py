@@ -60,12 +60,13 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         hass: HomeAssistant,
         address: str,
         family: MachineFamily,
+        scan_interval: int = DEFAULT_SCAN_INTERVAL,
     ) -> None:
         super().__init__(
             hass,
             _LOGGER,
             name=f"Nespresso {address}",
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(seconds=scan_interval),
         )
         self.address = address
         self.family = family

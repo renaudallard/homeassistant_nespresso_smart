@@ -31,7 +31,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, MachineFamily
+from .config_flow import CONF_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MachineFamily
 from .coordinator import NespressoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nespresso from a config entry."""
     address: str = entry.data["address"]
     family = MachineFamily(entry.data["family"])
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
-    coordinator = NespressoCoordinator(hass, address, family)
+    coordinator = NespressoCoordinator(hass, address, family, scan_interval)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
@@ -52,8 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "coordinator": coordinator,
     }
 
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload integration when options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -15,5 +15,15 @@
       "already_configured": "Machine is already configured.",
       "bluetooth_only": "This integration discovers machines via Bluetooth automatically. Ensure Bluetooth is enabled and the machine is powered on."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nespresso Options",
+        "data": {
+          "scan_interval": "Poll interval (seconds)"
+        }
+      }
+    }
   }
 }
