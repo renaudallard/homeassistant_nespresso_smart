@@ -40,7 +40,7 @@ Copy `custom_components/nespresso/` into your Home Assistant `config/custom_comp
 
 ### Setup
 
-After installation, the integration will auto-discover Nespresso machines via Bluetooth. You can also go to **Settings > Devices & Services > Add Integration** and search for "Nespresso Smart".
+After installation, the integration will auto-discover Nespresso machines via Bluetooth. Ensure your machine is powered on and within BLE range. No manual configuration is needed.
 
 ### Requirements
 
@@ -71,7 +71,7 @@ After installation, the integration will auto-discover Nespresso machines via Bl
 
 ### Device Info
 
-Each machine is registered as a device with manufacturer, model, serial number, and firmware version.
+Each machine is registered as a device with manufacturer, model, serial number, firmware version, and hardware version.
 
 ## How It Works
 
