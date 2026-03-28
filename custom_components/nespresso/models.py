@@ -45,7 +45,10 @@ class NespressoMachineData:
     cleaning_needed: bool | None = None
     capsule_container_full: bool | None = None
     brewing_unit_closed: bool | None = None
+    milk_frother_running: bool | None = None
     water_hardness: int | None = None
+    auto_power_off: int | None = None
+    error_code: int | None = None
 
     # Barista specific
     motor_running: bool | None = None
@@ -59,6 +62,7 @@ class RawMachineData:
     info_bytes: bytes | None = None
     serial_bytes: bytes | None = None
     user_settings_bytes: bytes | None = None
+    error_info_bytes: bytes | None = None
     # VMini uses decoded strings from standard BLE Device Info
     firmware_version: str | None = None
     model_number: str | None = None

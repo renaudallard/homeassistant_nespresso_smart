@@ -57,6 +57,7 @@ VERTUO_BASIC_SERVICE: Final = "06aa1910-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_STATUS: Final = "06aa3a12-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_INFO: Final = "06aa3a21-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_SERIAL: Final = "06aa3a31-f22a-11e3-9daa-0002a5d5c51b"
+VERTUO_CHAR_ERROR_INFO: Final = "06aa3a23-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_USER_SETTINGS: Final = "06aa3a44-f22a-11e3-9daa-0002a5d5c51b"
 
 # ---------------------------------------------------------------------------

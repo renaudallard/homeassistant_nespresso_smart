@@ -53,6 +53,7 @@ sys.modules.setdefault("bleak_retry_connector", MagicMock())
 from custom_components.nespresso.ble.parsing import (  # noqa: E402
     parse_barista_machine_info,
     parse_barista_status,
+    parse_error_information,
     parse_general_user_settings,
     parse_serial_number,
     parse_version_v2,
@@ -244,6 +245,12 @@ class TestVertuoNextStatus:
         assert result["brewing_unit_closed"] is True
         assert result["machine_state"] == "ready"
 
+    def test_milk_frother_running(self) -> None:
+        # byte1 bit4 -> 0x12 (bit4 set + low nibble 2 for READY)
+        result = parse_vertuonext_status(b"\x00\x12\x00")
+        assert result["milk_frother_running"] is True
+        assert result["machine_state"] == "ready"
+
     def test_brewing_state(self) -> None:
         # state BREWING=4: (byte1 & 0x0F)=4, (byte2 & 0xF0)=0
         result = parse_vertuonext_status(b"\x00\x04\x00")
@@ -382,3 +389,29 @@ class TestGeneralUserSettings:
     def test_too_short_raises(self) -> None:
         with pytest.raises(ValueError, match="4 bytes"):
             parse_general_user_settings(b"\x00\x00")
+
+
+# ---------------------------------------------------------------------------
+# Error information parsing
+# Verified against: CharacErrorInformation
+#   byte 0: errorSelectionIndex
+#   bytes 1-2: errorCode (2-byte unsigned LSB)
+# ---------------------------------------------------------------------------
+
+
+class TestErrorInformation:
+    def test_no_error(self) -> None:
+        # errorSelectionIndex=0, errorCode=0x0000
+        data = b"\x00\x00\x00"
+        result = parse_error_information(data)
+        assert result["error_code"] == 0
+
+    def test_error_code_lsb(self) -> None:
+        # errorSelectionIndex=0, errorCode: low=0x15, high=0x05 -> 0x0515 = 1301
+        data = b"\x00\x15\x05"
+        result = parse_error_information(data)
+        assert result["error_code"] == 1301
+
+    def test_too_short_raises(self) -> None:
+        with pytest.raises(ValueError, match="3 bytes"):
+            parse_error_information(b"\x00\x00")

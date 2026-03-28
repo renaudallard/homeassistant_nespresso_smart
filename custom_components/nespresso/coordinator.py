@@ -40,6 +40,7 @@ from homeassistant.helpers.update_coordinator import (
 from .ble.parsing import (
     parse_barista_machine_info,
     parse_barista_status,
+    parse_error_information,
     parse_general_user_settings,
     parse_serial_number,
     parse_vertuonext_machine_info,
@@ -138,9 +139,16 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         serial = parse_serial_number(raw.serial_bytes) if raw.serial_bytes else None
 
         water_hardness = None
+        auto_power_off = None
         if raw.user_settings_bytes:
             settings = parse_general_user_settings(raw.user_settings_bytes)
             water_hardness = settings.get("water_hardness")
+            auto_power_off = settings.get("auto_power_off")
+
+        error_code = None
+        if raw.error_info_bytes and len(raw.error_info_bytes) >= 3:
+            err = parse_error_information(raw.error_info_bytes)
+            error_code = err.get("error_code")
 
         return NespressoMachineData(
             machine_state=str(status["machine_state"]),
@@ -153,7 +161,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             cleaning_needed=bool(status.get("cleaning_needed", False)),
             capsule_container_full=bool(status.get("capsule_container_full", False)),
             brewing_unit_closed=bool(status.get("brewing_unit_closed", False)),
+            milk_frother_running=bool(status.get("milk_frother_running", False)),
             water_hardness=water_hardness,
+            auto_power_off=auto_power_off,
+            error_code=error_code,
         )
 
     def _parse_vmini(self, raw: RawMachineData) -> NespressoMachineData:

@@ -43,6 +43,7 @@ from ..const import (
     VMINI_CHAR_MODEL,
     VMINI_CHAR_PAIRING,
     VMINI_CHAR_SERIAL,
+    VERTUO_CHAR_ERROR_INFO,
     VERTUO_CHAR_INFO,
     VERTUO_CHAR_SERIAL,
     VERTUO_CHAR_STATUS,
@@ -95,18 +96,21 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         info = await client.read_gatt_char(VERTUO_CHAR_INFO)
         serial = await client.read_gatt_char(VERTUO_CHAR_SERIAL)
         settings = await client.read_gatt_char(VERTUO_CHAR_USER_SETTINGS)
+        error_info = await client.read_gatt_char(VERTUO_CHAR_ERROR_INFO)
         _LOGGER.debug(
-            "VertuoNext raw: status=%s info=%s serial=%s settings=%s",
+            "VertuoNext raw: status=%s info=%s serial=%s settings=%s error=%s",
             status.hex(),
             info.hex(),
             serial.hex(),
             settings.hex(),
+            error_info.hex(),
         )
         return RawMachineData(
             status_bytes=bytes(status),
             info_bytes=bytes(info),
             serial_bytes=bytes(serial),
             user_settings_bytes=bytes(settings),
+            error_info_bytes=bytes(error_info),
         )
 
 

@@ -115,6 +115,7 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
         "cleaning_needed": _get_bit(b0, 1),
         "descaling_needed": _get_bit(b0, 2),
         "error_present": _get_bit(b0, 4),
+        "milk_frother_running": _get_bit(b1, 4),
         "capsule_container_full": _get_bit(b1, 6),
         "brewing_unit_closed": _get_bit(b1, 7),
     }
@@ -164,6 +165,24 @@ def parse_vertuonext_machine_info(data: bytes) -> dict[str, str | None]:
     return {
         "hardware_version": hw,
         "firmware_version": fw,
+    }
+
+
+def parse_error_information(data: bytes) -> dict[str, int]:
+    """Parse Vertuo Next error information bytes.
+
+    Source: com.sdataway.vertuonext.sdk.characteristics.CharacErrorInformation
+      byte 0: errorSelectionIndex (unsigned)
+      bytes 1-2: errorCode (2-byte unsigned LSB)
+      category = (errorCode & 0xF0) >> 4
+    """
+    if len(data) < 3:
+        raise ValueError(f"Error information requires >= 3 bytes, got {len(data)}")
+
+    error_code = _get_2bytes_unsigned_lsb(data, 1)
+
+    return {
+        "error_code": error_code,
     }
 
 

@@ -86,6 +86,24 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         families=frozenset({MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.water_hardness,
     ),
+    NespressoSensorDescription(
+        key="auto_power_off",
+        translation_key="auto_power_off",
+        name="Auto power off",
+        icon="mdi:timer-off-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda d: d.auto_power_off,
+    ),
+    NespressoSensorDescription(
+        key="error_code",
+        translation_key="error_code",
+        name="Error code",
+        icon="mdi:alert-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda d: d.error_code,
+    ),
 )
 
 
