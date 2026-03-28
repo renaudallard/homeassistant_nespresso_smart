@@ -29,6 +29,7 @@ machine family. All I/O happens here; parsing is delegated to parsing.py.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 
@@ -67,21 +68,63 @@ def _decode_ble_string(data: bytes) -> str:
 
 
 async def _try_pair(client: BleakClient) -> bool:
-    """Attempt BLE pairing. Returns True if pairing succeeded."""
+    """Attempt BLE pairing via bleak, then bluetoothctl fallback."""
+    address = client.address
+
+    # Try bleak pairing first
     try:
         result = await client.pair()
-        _LOGGER.debug("BLE pairing result: %s", result)
-        return bool(result)
+        _LOGGER.debug("bleak pair() returned: %s", result)
+        if result is True:
+            return True
     except Exception as err:  # noqa: BLE001
-        _LOGGER.warning(
-            "BLE pairing failed for %s: %s. "
-            "Try pairing on the host OS: "
-            "sudo bluetoothctl pair %s",
-            client.address,
-            err,
-            client.address,
+        _LOGGER.debug("bleak pair() raised: %s", err)
+
+    # Fallback: use bluetoothctl directly (works in Docker as root)
+    _LOGGER.info("Trying bluetoothctl pairing for %s", address)
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "bluetoothctl",
+            "pair",
+            address,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
-        return False
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+        _LOGGER.debug(
+            "bluetoothctl pair: rc=%s stdout=%r stderr=%r",
+            proc.returncode,
+            stdout.decode(errors="replace").strip(),
+            stderr.decode(errors="replace").strip(),
+        )
+
+        # Also trust the device so it reconnects automatically
+        proc2 = await asyncio.create_subprocess_exec(
+            "bluetoothctl",
+            "trust",
+            address,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        await asyncio.wait_for(proc2.communicate(), timeout=10)
+
+        if proc.returncode == 0:
+            _LOGGER.info("bluetoothctl pairing succeeded for %s", address)
+            return True
+
+        _LOGGER.warning(
+            "bluetoothctl pairing failed (rc=%s) for %s",
+            proc.returncode,
+            address,
+        )
+    except FileNotFoundError:
+        _LOGGER.debug("bluetoothctl not found")
+    except TimeoutError:
+        _LOGGER.warning("bluetoothctl pairing timed out for %s", address)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("bluetoothctl pairing error: %s", err)
+
+    return False
 
 
 async def _dump_all_characteristics(client: BleakClient) -> dict[str, str]:
