@@ -53,6 +53,9 @@ class NespressoMachineData:
     # Barista specific
     motor_running: bool | None = None
 
+    # VMini specific
+    shadow_data: str | None = None
+
 
 @dataclass(slots=True)
 class RawMachineData:
@@ -65,6 +68,9 @@ class RawMachineData:
     error_info_bytes: bytes | None = None
     # VMini uses decoded strings from standard BLE Device Info
     firmware_version: str | None = None
+    software_version: str | None = None
     model_number: str | None = None
     manufacturer: str | None = None
     pairing_byte: int | None = None
+    wifi_mac: str | None = None
+    shadow_header: str | None = None

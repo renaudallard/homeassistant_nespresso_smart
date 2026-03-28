@@ -43,6 +43,9 @@ from ..const import (
     VMINI_CHAR_MODEL,
     VMINI_CHAR_PAIRING,
     VMINI_CHAR_SERIAL,
+    VMINI_CHAR_SHADOW_HEADER,
+    VMINI_CHAR_SW_REV,
+    VMINI_CHAR_WIFI_MAC,
     VERTUO_CHAR_ERROR_INFO,
     VERTUO_CHAR_INFO,
     VERTUO_CHAR_SERIAL,
@@ -121,21 +124,37 @@ class VMiniProtocol(AbstractNespressoProtocol):
         serial = await client.read_gatt_char(VMINI_CHAR_SERIAL)
         pairing = await client.read_gatt_char(VMINI_CHAR_PAIRING)
         fw = await client.read_gatt_char(VMINI_CHAR_FW_REV)
+        sw = await client.read_gatt_char(VMINI_CHAR_SW_REV)
         model = await client.read_gatt_char(VMINI_CHAR_MODEL)
         manufacturer = await client.read_gatt_char(VMINI_CHAR_MANUFACTURER)
+        # Optional chars that may not be available before WiFi setup
+        wifi_mac = None
+        shadow = None
+        try:
+            wifi_mac = await client.read_gatt_char(VMINI_CHAR_WIFI_MAC)
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("VMini WiFi MAC not available")
+        try:
+            shadow = await client.read_gatt_char(VMINI_CHAR_SHADOW_HEADER)
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("VMini shadow header not available")
         _LOGGER.debug(
-            "VMini raw: serial=%s pairing=%s fw=%s model=%s",
+            "VMini raw: serial=%s pairing=%s fw=%s model=%s shadow=%s",
             serial.hex(),
             pairing.hex(),
             fw.hex(),
             model.hex(),
+            shadow.hex() if shadow else "N/A",
         )
         return RawMachineData(
             serial_bytes=bytes(serial),
             pairing_byte=pairing[0] if pairing else None,
             firmware_version=_decode_ble_string(bytes(fw)),
+            software_version=_decode_ble_string(bytes(sw)),
             model_number=_decode_ble_string(bytes(model)),
             manufacturer=_decode_ble_string(bytes(manufacturer)),
+            wifi_mac=_decode_ble_string(bytes(wifi_mac)) if wifi_mac else None,
+            shadow_header=_decode_ble_string(bytes(shadow)) if shadow else None,
         )
 
 

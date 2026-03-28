@@ -104,6 +104,15 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         families=frozenset({MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.error_code,
     ),
+    NespressoSensorDescription(
+        key="shadow_data",
+        translation_key="shadow_data",
+        name="Device shadow",
+        icon="mdi:cloud-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.VMINI}),
+        value_fn=lambda d: d.shadow_data,
+    ),
 )
 
 

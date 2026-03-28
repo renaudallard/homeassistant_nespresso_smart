@@ -174,6 +174,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             machine_state="unknown",
             error_present=False,
             firmware_version=raw.firmware_version,
-            hardware_version=None,
+            hardware_version=raw.software_version,
             serial_number=serial,
+            shadow_data=raw.shadow_header,
         )
