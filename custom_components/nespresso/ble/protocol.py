@@ -72,13 +72,30 @@ async def _ensure_paired(client: BleakClient) -> None:
     Nespresso machines require BLE bonding before GATT characteristics
     can be read. Without pairing, reads fail with
     org.bluez.Error.NotPermitted.
+
+    In Docker environments, pairing must be done on the host OS first
+    using: bluetoothctl pair <MAC_ADDRESS>
     """
     try:
         is_paired = await client.pair()
-        _LOGGER.debug("BLE pairing result: %s", is_paired)
+        if is_paired:
+            _LOGGER.debug("BLE pairing successful")
+        else:
+            _LOGGER.warning(
+                "BLE pairing returned %s for %s. If reads fail with "
+                "NotPermitted, pair the device on the host OS: "
+                "bluetoothctl pair %s",
+                is_paired,
+                client.address,
+                client.address,
+            )
     except Exception as err:  # noqa: BLE001
-        # Pairing may not be supported or already done at OS level
-        _LOGGER.debug("BLE pairing attempt: %s", err)
+        _LOGGER.debug(
+            "BLE pairing not available (%s). If reads fail, pair on "
+            "the host OS: bluetoothctl pair %s",
+            err,
+            client.address,
+        )
 
 
 async def _dump_all_characteristics(client: BleakClient) -> dict[str, str]:
@@ -120,6 +137,24 @@ async def _dump_all_characteristics(client: BleakClient) -> dict[str, str]:
     return dump
 
 
+async def _read_char(client: BleakClient, uuid: str, name: str) -> bytearray:
+    """Read a GATT characteristic with detailed error logging."""
+    try:
+        value = await client.read_gatt_char(uuid)
+        _LOGGER.debug("Read %s [%s]: %s", name, uuid, value.hex())
+        return value
+    except Exception as err:
+        _LOGGER.error(
+            "Failed to read %s [%s]: %s. "
+            "If NotPermitted, pair on host: bluetoothctl pair %s",
+            name,
+            uuid,
+            err,
+            client.address,
+        )
+        raise
+
+
 class AbstractNespressoProtocol(ABC):
     """Base class for BLE protocol implementations."""
 
@@ -134,15 +169,9 @@ class BaristaProtocol(AbstractNespressoProtocol):
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
         await _ensure_paired(client)
 
-        status = await client.read_gatt_char(BARISTA_CHAR_STATUS)
-        info = await client.read_gatt_char(BARISTA_CHAR_INFO)
-        serial = await client.read_gatt_char(BARISTA_CHAR_SERIAL)
-        _LOGGER.debug(
-            "Barista raw: status=%s info=%s serial=%s",
-            status.hex(),
-            info.hex(),
-            serial.hex(),
-        )
+        status = await _read_char(client, BARISTA_CHAR_STATUS, "status")
+        info = await _read_char(client, BARISTA_CHAR_INFO, "machine_info")
+        serial = await _read_char(client, BARISTA_CHAR_SERIAL, "serial")
         # GATT dump only when debug logging is active
         gatt_dump = None
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -162,28 +191,18 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
         await _ensure_paired(client)
 
-        status = await client.read_gatt_char(VERTUO_CHAR_STATUS)
-        info = await client.read_gatt_char(VERTUO_CHAR_INFO)
-        serial = await client.read_gatt_char(VERTUO_CHAR_SERIAL)
-        settings = await client.read_gatt_char(VERTUO_CHAR_USER_SETTINGS)
-        error_info = await client.read_gatt_char(VERTUO_CHAR_ERROR_INFO)
+        status = await _read_char(client, VERTUO_CHAR_STATUS, "status")
+        info = await _read_char(client, VERTUO_CHAR_INFO, "machine_info")
+        serial = await _read_char(client, VERTUO_CHAR_SERIAL, "serial")
+        settings = await _read_char(client, VERTUO_CHAR_USER_SETTINGS, "user_settings")
+        error_info = await _read_char(client, VERTUO_CHAR_ERROR_INFO, "error_info")
 
         # Read command response for any unsolicited data (debugging)
-        cmd_rsp = None
         try:
             cmd_rsp = await client.read_gatt_char(VERTUO_CHAR_COMMAND_RSP)
             _LOGGER.debug("VertuoNext command response: %s", cmd_rsp.hex())
         except Exception:  # noqa: BLE001
             _LOGGER.debug("VertuoNext command response not readable")
-
-        _LOGGER.debug(
-            "VertuoNext raw: status=%s info=%s serial=%s settings=%s error=%s",
-            status.hex(),
-            info.hex(),
-            serial.hex(),
-            settings.hex(),
-            error_info.hex(),
-        )
         # GATT dump only when debug logging is active
         gatt_dump = None
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -205,12 +224,12 @@ class VMiniProtocol(AbstractNespressoProtocol):
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
         await _ensure_paired(client)
 
-        serial = await client.read_gatt_char(VMINI_CHAR_SERIAL)
-        pairing = await client.read_gatt_char(VMINI_CHAR_PAIRING)
-        fw = await client.read_gatt_char(VMINI_CHAR_FW_REV)
-        sw = await client.read_gatt_char(VMINI_CHAR_SW_REV)
-        model = await client.read_gatt_char(VMINI_CHAR_MODEL)
-        manufacturer = await client.read_gatt_char(VMINI_CHAR_MANUFACTURER)
+        serial = await _read_char(client, VMINI_CHAR_SERIAL, "serial")
+        pairing = await _read_char(client, VMINI_CHAR_PAIRING, "pairing")
+        fw = await _read_char(client, VMINI_CHAR_FW_REV, "firmware_rev")
+        sw = await _read_char(client, VMINI_CHAR_SW_REV, "software_rev")
+        model = await _read_char(client, VMINI_CHAR_MODEL, "model")
+        manufacturer = await _read_char(client, VMINI_CHAR_MANUFACTURER, "manufacturer")
         # Optional chars that may not be available before WiFi setup
         wifi_mac = None
         wifi_current = None
