@@ -115,6 +115,14 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
         families=frozenset({MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.milk_frother_running,
     ),
+    NespressoBinarySensorDescription(
+        key="led_signaling",
+        translation_key="led_signaling",
+        name="LED signaling",
+        icon="mdi:led-on",
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda d: d.led_signaling,
+    ),
 )
 
 

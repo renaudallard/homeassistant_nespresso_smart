@@ -117,8 +117,10 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
         "water_tank_empty": _get_bit(b0, 0),
         "cleaning_needed": _get_bit(b0, 1),
         "descaling_needed": _get_bit(b0, 2),
+        "led_signaling": _get_bit(b0, 3),
         "error_present": _get_bit(b0, 4),
         "milk_frother_running": _get_bit(b1, 4),
+        "cup_length_prog": _get_bit(b1, 5),
         "capsule_container_full": _get_bit(b1, 6),
         "brewing_unit_closed": _get_bit(b1, 7),
     }

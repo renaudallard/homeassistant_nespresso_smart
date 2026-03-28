@@ -46,6 +46,8 @@ class NespressoMachineData:
     capsule_container_full: bool | None = None
     brewing_unit_closed: bool | None = None
     milk_frother_running: bool | None = None
+    led_signaling: bool | None = None
+    cup_length_prog: bool | None = None
     water_hardness: int | None = None
     auto_power_off: int | None = None
     error_code: int | None = None

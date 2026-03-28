@@ -133,9 +133,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     "water_tank_empty",
                     "cleaning_needed",
                     "descaling_needed",
+                    "led_signaling",
                     "capsule_container_full",
                     "brewing_unit_closed",
                     "milk_frother_running",
+                    "cup_length_prog",
                 ):
                     current[key] = bool(status.get(key, False))
 
@@ -247,6 +249,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             capsule_container_full=bool(status.get("capsule_container_full", False)),
             brewing_unit_closed=bool(status.get("brewing_unit_closed", False)),
             milk_frother_running=bool(status.get("milk_frother_running", False)),
+            led_signaling=bool(status.get("led_signaling", False)),
+            cup_length_prog=bool(status.get("cup_length_prog", False)),
             water_hardness=water_hardness,
             auto_power_off=auto_power_off,
             error_code=error_code,
