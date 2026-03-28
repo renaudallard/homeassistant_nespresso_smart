@@ -27,9 +27,11 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .config_flow import CONF_SCAN_INTERVAL
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MachineFamily
@@ -53,6 +55,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
     }
+
+    # Trigger immediate refresh when machine becomes available via BLE
+    @callback
+    def _async_on_ble_event(
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: BluetoothChange,
+    ) -> None:
+        if not coordinator.last_update_success:
+            _LOGGER.debug("Machine %s detected, triggering refresh", address)
+            hass.async_create_task(coordinator.async_request_refresh())
+
+    entry.async_on_unload(
+        bluetooth.async_register_callback(
+            hass,
+            _async_on_ble_event,
+            bluetooth.BluetoothCallbackMatcher(address=address, connectable=True),
+            bluetooth.BluetoothScanningMode.ACTIVE,
+        )
+    )
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
