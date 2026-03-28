@@ -113,11 +113,15 @@ class NespressoBinarySensor(
         self.entity_description = description
         self._attr_unique_id = f"{entry.data['address']}_{description.key}"
         family = MachineFamily(entry.data["family"])
+        data = coordinator.data
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.data["address"])},
             name=entry.data.get("name", "Nespresso"),
             manufacturer="Nespresso",
             model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
+            serial_number=data.serial_number if data else None,
+            sw_version=data.firmware_version if data else None,
+            hw_version=data.hardware_version if data else None,
         )
 
     @property

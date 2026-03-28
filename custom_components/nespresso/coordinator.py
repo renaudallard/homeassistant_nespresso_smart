@@ -70,6 +70,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             raw = await protocol.async_read_all(client)
         except (BleakError, TimeoutError) as err:
             raise UpdateFailed(f"BLE read failed: {err}") from err
+        except Exception as err:
+            raise UpdateFailed(f"Unexpected BLE error: {err}") from err
         finally:
             await client.disconnect()
 
