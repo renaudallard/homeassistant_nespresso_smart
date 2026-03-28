@@ -66,6 +66,21 @@ def _decode_ble_string(data: bytes) -> str:
     return data.split(b"\x00", 1)[0].decode("utf-8", errors="replace")
 
 
+async def _ensure_paired(client: BleakClient) -> None:
+    """Ensure the BLE device is paired/bonded for encrypted reads.
+
+    Nespresso machines require BLE bonding before GATT characteristics
+    can be read. Without pairing, reads fail with
+    org.bluez.Error.NotPermitted.
+    """
+    try:
+        is_paired = await client.pair()
+        _LOGGER.debug("BLE pairing result: %s", is_paired)
+    except Exception as err:  # noqa: BLE001
+        # Pairing may not be supported or already done at OS level
+        _LOGGER.debug("BLE pairing attempt: %s", err)
+
+
 async def _dump_all_characteristics(client: BleakClient) -> dict[str, str]:
     """Read and log every readable characteristic on the device.
 
@@ -117,8 +132,7 @@ class BaristaProtocol(AbstractNespressoProtocol):
     """BLE protocol for Barista (Original Line) machines."""
 
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
-        # Dump all characteristics for debugging unknown commands
-        gatt_dump = await _dump_all_characteristics(client)
+        await _ensure_paired(client)
 
         status = await client.read_gatt_char(BARISTA_CHAR_STATUS)
         info = await client.read_gatt_char(BARISTA_CHAR_INFO)
@@ -129,6 +143,11 @@ class BaristaProtocol(AbstractNespressoProtocol):
             info.hex(),
             serial.hex(),
         )
+        # GATT dump only when debug logging is active
+        gatt_dump = None
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            gatt_dump = await _dump_all_characteristics(client)
+
         return RawMachineData(
             status_bytes=bytes(status),
             info_bytes=bytes(info),
@@ -141,8 +160,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
     """BLE protocol for Vertuo Next (Venus Line) machines."""
 
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
-        # Dump all characteristics for debugging unknown commands
-        gatt_dump = await _dump_all_characteristics(client)
+        await _ensure_paired(client)
 
         status = await client.read_gatt_char(VERTUO_CHAR_STATUS)
         info = await client.read_gatt_char(VERTUO_CHAR_INFO)
@@ -166,6 +184,11 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
             settings.hex(),
             error_info.hex(),
         )
+        # GATT dump only when debug logging is active
+        gatt_dump = None
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            gatt_dump = await _dump_all_characteristics(client)
+
         return RawMachineData(
             status_bytes=bytes(status),
             info_bytes=bytes(info),
@@ -180,8 +203,7 @@ class VMiniProtocol(AbstractNespressoProtocol):
     """BLE protocol for VMini (Vertuo Mini) machines."""
 
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
-        # Dump all characteristics for debugging unknown WiFi byte format
-        gatt_dump = await _dump_all_characteristics(client)
+        await _ensure_paired(client)
 
         serial = await client.read_gatt_char(VMINI_CHAR_SERIAL)
         pairing = await client.read_gatt_char(VMINI_CHAR_PAIRING)
@@ -224,6 +246,11 @@ class VMiniProtocol(AbstractNespressoProtocol):
             model.hex(),
             shadow.hex() if shadow else "N/A",
         )
+        # GATT dump only when debug logging is active
+        gatt_dump_result = None
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            gatt_dump_result = await _dump_all_characteristics(client)
+
         return RawMachineData(
             serial_bytes=bytes(serial),
             pairing_byte=pairing[0] if pairing else None,
@@ -235,7 +262,7 @@ class VMiniProtocol(AbstractNespressoProtocol):
             shadow_header=_decode_ble_string(bytes(shadow)) if shadow else None,
             fota_status_bytes=bytes(fota_status) if fota_status else None,
             wifi_current_bytes=bytes(wifi_current) if wifi_current else None,
-            gatt_dump=gatt_dump,
+            gatt_dump=gatt_dump_result,
         )
 
 
