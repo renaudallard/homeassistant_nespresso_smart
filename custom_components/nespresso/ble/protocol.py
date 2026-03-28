@@ -66,36 +66,22 @@ def _decode_ble_string(data: bytes) -> str:
     return data.split(b"\x00", 1)[0].decode("utf-8", errors="replace")
 
 
-async def _ensure_paired(client: BleakClient) -> None:
-    """Ensure the BLE device is paired/bonded for encrypted reads.
-
-    Nespresso machines require BLE bonding before GATT characteristics
-    can be read. Without pairing, reads fail with
-    org.bluez.Error.NotPermitted.
-
-    In Docker environments, pairing must be done on the host OS first
-    using: bluetoothctl pair <MAC_ADDRESS>
-    """
+async def _try_pair(client: BleakClient) -> bool:
+    """Attempt BLE pairing. Returns True if pairing succeeded."""
     try:
-        is_paired = await client.pair()
-        if is_paired:
-            _LOGGER.debug("BLE pairing successful")
-        else:
-            _LOGGER.warning(
-                "BLE pairing returned %s for %s. If reads fail with "
-                "NotPermitted, pair the device on the host OS: "
-                "bluetoothctl pair %s",
-                is_paired,
-                client.address,
-                client.address,
-            )
+        result = await client.pair()
+        _LOGGER.debug("BLE pairing result: %s", result)
+        return bool(result)
     except Exception as err:  # noqa: BLE001
-        _LOGGER.debug(
-            "BLE pairing not available (%s). If reads fail, pair on "
-            "the host OS: bluetoothctl pair %s",
+        _LOGGER.warning(
+            "BLE pairing failed for %s: %s. "
+            "Try pairing on the host OS: "
+            "sudo bluetoothctl pair %s",
+            client.address,
             err,
             client.address,
         )
+        return False
 
 
 async def _dump_all_characteristics(client: BleakClient) -> dict[str, str]:
@@ -138,21 +124,51 @@ async def _dump_all_characteristics(client: BleakClient) -> dict[str, str]:
 
 
 async def _read_char(client: BleakClient, uuid: str, name: str) -> bytearray:
-    """Read a GATT characteristic with detailed error logging."""
+    """Read a GATT characteristic, auto-pairing on NotPermitted."""
     try:
         value = await client.read_gatt_char(uuid)
         _LOGGER.debug("Read %s [%s]: %s", name, uuid, value.hex())
         return value
     except Exception as err:
-        _LOGGER.error(
-            "Failed to read %s [%s]: %s. "
-            "If NotPermitted, pair on host: bluetoothctl pair %s",
+        err_str = str(err).lower()
+        if "notpermitted" not in err_str and "not permitted" not in err_str:
+            _LOGGER.error("Failed to read %s [%s]: %s", name, uuid, err)
+            raise
+
+        # Read denied - try pairing and retry
+        _LOGGER.info(
+            "Read %s denied (NotPermitted), attempting BLE pairing for %s",
             name,
-            uuid,
-            err,
             client.address,
         )
-        raise
+        paired = await _try_pair(client)
+        if not paired:
+            _LOGGER.error(
+                "Auto-pairing failed for %s. Pair manually: "
+                "sudo bluetoothctl pair %s && "
+                "sudo bluetoothctl trust %s",
+                client.address,
+                client.address,
+                client.address,
+            )
+            raise
+
+        # Retry after pairing
+        try:
+            value = await client.read_gatt_char(uuid)
+            _LOGGER.info("Read %s succeeded after pairing", name)
+            return value
+        except Exception as retry_err:
+            _LOGGER.error(
+                "Read %s still failed after pairing: %s. "
+                "Pair manually: sudo bluetoothctl pair %s && "
+                "sudo bluetoothctl trust %s",
+                name,
+                retry_err,
+                client.address,
+                client.address,
+            )
+            raise retry_err from err
 
 
 class AbstractNespressoProtocol(ABC):
@@ -167,8 +183,6 @@ class BaristaProtocol(AbstractNespressoProtocol):
     """BLE protocol for Barista (Original Line) machines."""
 
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
-        await _ensure_paired(client)
-
         status = await _read_char(client, BARISTA_CHAR_STATUS, "status")
         info = await _read_char(client, BARISTA_CHAR_INFO, "machine_info")
         serial = await _read_char(client, BARISTA_CHAR_SERIAL, "serial")
@@ -189,8 +203,6 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
     """BLE protocol for Vertuo Next (Venus Line) machines."""
 
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
-        await _ensure_paired(client)
-
         status = await _read_char(client, VERTUO_CHAR_STATUS, "status")
         info = await _read_char(client, VERTUO_CHAR_INFO, "machine_info")
         serial = await _read_char(client, VERTUO_CHAR_SERIAL, "serial")
@@ -222,8 +234,6 @@ class VMiniProtocol(AbstractNespressoProtocol):
     """BLE protocol for VMini (Vertuo Mini) machines."""
 
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
-        await _ensure_paired(client)
-
         serial = await _read_char(client, VMINI_CHAR_SERIAL, "serial")
         pairing = await _read_char(client, VMINI_CHAR_PAIRING, "pairing")
         fw = await _read_char(client, VMINI_CHAR_FW_REV, "firmware_rev")
