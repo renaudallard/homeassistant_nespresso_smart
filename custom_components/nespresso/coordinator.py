@@ -26,6 +26,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import asdict
 from datetime import timedelta
 
 from bleak import BleakClient, BleakError
@@ -47,7 +48,12 @@ from .ble.parsing import (
     parse_vertuonext_status,
 )
 from .ble.protocol import get_protocol
-from .const import DEFAULT_SCAN_INTERVAL, MachineFamily
+from .const import (
+    BARISTA_CHAR_STATUS,
+    DEFAULT_SCAN_INTERVAL,
+    VERTUO_CHAR_STATUS,
+    MachineFamily,
+)
 from .models import NespressoMachineData, RawMachineData
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,8 +84,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     def _get_status_uuid(self) -> str | None:
         """Return the status characteristic UUID for GATT notifications."""
-        from .const import BARISTA_CHAR_STATUS, VERTUO_CHAR_STATUS
-
         if self.family == MachineFamily.BARISTA:
             return BARISTA_CHAR_STATUS
         if self.family == MachineFamily.VERTUO_NEXT:
@@ -101,43 +105,39 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             self._client = None
 
     def _on_status_notification(self, _sender: object, data: bytearray) -> None:
-        """Handle BLE GATT notification for status changes."""
+        """Handle BLE GATT notification for status changes.
+
+        This callback runs on the BLE thread, so schedule the update
+        on the HA event loop.
+        """
+        self.hass.loop.call_soon_threadsafe(self._handle_status_update, bytes(data))
+
+    def _handle_status_update(self, data: bytes) -> None:
+        """Process status notification data on the event loop."""
         if self.data is None:
             return
         try:
             if self.family == MachineFamily.BARISTA:
-                status = parse_barista_status(bytes(data))
+                status = parse_barista_status(data)
             elif self.family == MachineFamily.VERTUO_NEXT:
-                status = parse_vertuonext_status(bytes(data))
+                status = parse_vertuonext_status(data)
             else:
                 return
 
-            from dataclasses import asdict
-
             current = asdict(self.data)
-            current.update(
-                {
-                    "machine_state": str(status["machine_state"]),
-                    "error_present": bool(status["error_present"]),
-                }
-            )
+            current["machine_state"] = str(status["machine_state"])
+            current["error_present"] = bool(status["error_present"])
+
             if self.family == MachineFamily.VERTUO_NEXT:
-                current["water_tank_empty"] = bool(
-                    status.get("water_tank_empty", False)
-                )
-                current["descaling_needed"] = bool(
-                    status.get("descaling_needed", False)
-                )
-                current["cleaning_needed"] = bool(status.get("cleaning_needed", False))
-                current["capsule_container_full"] = bool(
-                    status.get("capsule_container_full", False)
-                )
-                current["brewing_unit_closed"] = bool(
-                    status.get("brewing_unit_closed", False)
-                )
-                current["milk_frother_running"] = bool(
-                    status.get("milk_frother_running", False)
-                )
+                for key in (
+                    "water_tank_empty",
+                    "cleaning_needed",
+                    "descaling_needed",
+                    "capsule_container_full",
+                    "brewing_unit_closed",
+                    "milk_frother_running",
+                ):
+                    current[key] = bool(status.get(key, False))
 
             self.async_set_updated_data(NespressoMachineData(**current))
         except (ValueError, IndexError) as err:
@@ -145,11 +145,13 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     async def _async_update_data(self) -> NespressoMachineData:
         """Connect, read all characteristics, parse, disconnect."""
+        # Disconnect any stale persistent client before reconnecting
+        await self._disconnect()
+
         device = bluetooth.async_ble_device_from_address(
             self.hass, self.address, connectable=True
         )
         if device is None:
-            await self._disconnect()
             raise UpdateFailed("Machine not found; it may be off or out of range")
 
         try:

@@ -132,7 +132,6 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
                     _LOGGER.info("Water hardness set to %d", int(value))
             finally:
                 await client.disconnect()
+            await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set water hardness: %s", err)
-
-        await self.coordinator.async_request_refresh()

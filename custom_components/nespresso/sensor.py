@@ -92,14 +92,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         value_fn=lambda d: d.hardware_version,
     ),
     NespressoSensorDescription(
-        key="water_hardness",
-        translation_key="water_hardness",
-        name="Water hardness",
-        icon="mdi:water",
-        families=frozenset({MachineFamily.VERTUO_NEXT}),
-        value_fn=lambda d: d.water_hardness,
-    ),
-    NespressoSensorDescription(
         key="auto_power_off",
         translation_key="auto_power_off",
         name="Auto power off",

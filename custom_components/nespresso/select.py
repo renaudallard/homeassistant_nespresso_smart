@@ -130,5 +130,6 @@ class NespressoRecipeSelect(CoordinatorEntity[NespressoCoordinator], SelectEntit
                 _LOGGER.info("Recipe set to %s (index %d)", option, index)
             finally:
                 await client.disconnect()
+            await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set recipe: %s", err)

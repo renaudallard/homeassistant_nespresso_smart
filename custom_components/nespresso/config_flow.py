@@ -30,6 +30,7 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import (
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -88,10 +89,10 @@ class NespressoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: object,
+        config_entry: ConfigEntry,  # type: ignore[override]
     ) -> NespressoOptionsFlow:
         """Return the options flow handler."""
-        return NespressoOptionsFlow(config_entry)  # type: ignore[arg-type]
+        return NespressoOptionsFlow(config_entry)
 
     def __init__(self) -> None:
         self._discovery_info: BluetoothServiceInfoBleak | None = None

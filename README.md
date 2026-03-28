@@ -59,7 +59,6 @@ After installation, the integration will auto-discover Nespresso machines via Bl
 | State | Yes | Yes | No | Machine operational state (ready, brewing, standby, etc.) |
 | Firmware version | Yes | Yes | Yes | Current firmware version (diagnostic) |
 | Hardware version | Yes | Yes | No | Hardware revision (diagnostic) |
-| Water hardness | No | Yes | No | Configured water hardness level |
 | Auto power off | No | Yes | No | Auto power off time in minutes (diagnostic) |
 | Error code | No | Yes | No | Current error code (diagnostic) |
 | Device shadow | No | No | Yes | Device shadow JSON data (diagnostic) |
