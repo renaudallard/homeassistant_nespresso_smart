@@ -56,30 +56,46 @@ After installation, the integration will auto-discover Nespresso machines via Bl
 
 | Entity | Barista | Vertuo Next | VMini | Description |
 |--------|---------|-------------|-------|-------------|
-| State | Yes | Yes | No | Machine operational state (ready, brewing, standby, etc.) |
+| State | Yes | Yes | No | Machine operational state (enum with 32 translated states) |
 | Firmware version | Yes | Yes | Yes | Current firmware version (diagnostic) |
 | Hardware version | Yes | Yes | No | Hardware revision (diagnostic) |
-| Auto power off | No | Yes | No | Auto power off time in minutes (diagnostic) |
+| Bluetooth version | Yes | No | No | Bluetooth module version (diagnostic) |
+| Recipe DB version | No | Yes | No | Recipe database version (diagnostic) |
+| Connectivity FW | No | Yes | No | WiFi/connectivity firmware version (diagnostic) |
 | Error code | No | Yes | No | Current error code (diagnostic) |
 | Device shadow | No | No | Yes | Device shadow JSON data (diagnostic) |
+| FOTA status | No | No | Yes | Firmware update status (diagnostic) |
+| FOTA progress | No | No | Yes | Firmware update progress (diagnostic) |
 
 ### Binary Sensors
 
 | Entity | Barista | Vertuo Next | VMini | Description |
 |--------|---------|-------------|-------|-------------|
 | Error | Yes | Yes | No | Machine has an active error |
+| Induction heater | Yes | No | No | Induction heater is active |
 | Water tank empty | No | Yes | No | Water tank needs refilling |
 | Descaling needed | No | Yes | No | Machine needs descaling |
 | Cleaning needed | No | Yes | No | Machine needs cleaning |
 | Capsule container full | No | Yes | No | Used capsule container is full |
 | Milk frother | No | Yes | No | Milk frother is running |
+| LED signaling | No | Yes | No | LED signaling is active |
 
 ### Controls
 
 | Entity | Barista | Vertuo Next | VMini | Description |
 |--------|---------|-------------|-------|-------------|
 | Recipe | Yes | No | No | Select recipe (espresso, lungo, etc.) |
+| Language | Yes | No | No | Set machine display language |
 | Water hardness | No | Yes | No | Set water hardness level (0-6 slider) |
+| Auto power off | No | Yes | No | Set auto power off time (minutes) |
+
+### Events and Triggers
+
+The integration fires events on machine state changes, enabling automations:
+- **brewing_started** / **brewing_finished**
+- **error_occurred**
+- **ready** / **standby**
+- **descaling_needed** / **water_tank_empty**
 
 ### Device Info
 
@@ -104,8 +120,9 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 
 ## Limitations
 
-- **Vertuo brewing**: Vertuo machines use a complex command protocol for brewing. Recipe selection is only available for Barista machines.
-- **VMini**: Only device info and shadow data. The VMini uses a JSON-based protocol that needs further reverse engineering.
+- **Vertuo brewing**: Vertuo command protocol cmdID values are obfuscated in the APK. Recipe selection is only available for Barista machines. Needs BLE packet capture on real hardware.
+- **Maintenance commands**: Descaling, rinsing, emptying command IDs are not in the decompiled code. Needs real hardware testing.
+- **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
 - **Single client**: Only one BLE client can connect at a time. If the Nespresso app is connected, HA will retry on the next poll.
 
