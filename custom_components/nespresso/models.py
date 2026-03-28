@@ -38,6 +38,9 @@ class NespressoMachineData:
     firmware_version: str | None
     hardware_version: str | None
     serial_number: str | None
+    bluetooth_version: str | None = None
+    recipe_db_version: str | None = None
+    connectivity_fw_version: str | None = None
 
     # Vertuo Next specific
     water_tank_empty: bool | None = None

@@ -141,10 +141,12 @@ def parse_barista_machine_info(data: bytes) -> dict[str, str | None]:
 
     hw = parse_version_v2(_get_2bytes_unsigned_msb(data, 0))
     fw = parse_version_v2(_get_2bytes_unsigned_msb(data, 4))
+    bt = parse_version_v2(_get_2bytes_unsigned_msb(data, 6))
 
     return {
         "hardware_version": hw,
         "firmware_version": fw,
+        "bluetooth_version": bt,
     }
 
 
@@ -155,7 +157,7 @@ def parse_vertuonext_machine_info(data: bytes) -> dict[str, str | None]:
       bytes 0-1: hardwareVersion (MSB, getVersionV2)
       bytes 2-3: bootloaderVersion (MSB, getVersionV2)
       bytes 4-5: firmwareVersion (MSB, getVersionV2)
-      bytes 6-7: recipeDatabaseVersion (MSB)
+      bytes 6-7: recipeDatabaseVersion (MSB, getVersionV2)
       bytes 8-9: connectivityFirmwareVersion (MSB, getVersionV3)
       bytes 10-15: deviceAddress (MAC)
     """
@@ -166,10 +168,14 @@ def parse_vertuonext_machine_info(data: bytes) -> dict[str, str | None]:
 
     hw = parse_version_v2(_get_2bytes_unsigned_msb(data, 0))
     fw = parse_version_v2(_get_2bytes_unsigned_msb(data, 4))
+    recipe_db = parse_version_v2(_get_2bytes_unsigned_msb(data, 6))
+    conn_fw = parse_version_v3(_get_2bytes_unsigned_msb(data, 8))
 
     return {
         "hardware_version": hw,
         "firmware_version": fw,
+        "recipe_db_version": recipe_db,
+        "connectivity_fw_version": conn_fw,
     }
 
 
