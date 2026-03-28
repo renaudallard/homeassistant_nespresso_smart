@@ -1,4 +1,45 @@
 {
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "name": "State",
+        "state": {
+          "standby": "Standby",
+          "ready": "Ready",
+          "brewing": "Brewing",
+          "local_settings": "Local settings",
+          "error": "Error",
+          "overheated": "Overheated",
+          "setup": "Initial setup",
+          "paused": "Paused",
+          "factory_reset": "Factory reset",
+          "heating": "Heating up",
+          "descaling_ready": "Descaling ready",
+          "cleaning": "Cleaning",
+          "descaling": "Descaling",
+          "emptying": "Emptying",
+          "power_save": "Power save",
+          "cooldown": "Cooling down",
+          "service_mode": "Service mode",
+          "updating": "Updating firmware",
+          "rinsing": "Rinsing",
+          "capsule_reading": "Reading capsule",
+          "descale_decoding": "Descale decoding",
+          "tank_empty": "Tank empty",
+          "descaling_paused": "Descaling paused",
+          "initializing": "Initializing",
+          "rinsing_ready": "Rinsing ready",
+          "maintenance_menu": "Maintenance menu",
+          "cleaning_paused": "Cleaning paused",
+          "emptying_ready": "Emptying ready",
+          "cleaning_ready": "Cleaning ready",
+          "ready_old_capsule": "Ready (old capsule)",
+          "rinsing_paused": "Rinsing paused",
+          "unknown": "Unknown"
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "bluetooth_confirm": {
