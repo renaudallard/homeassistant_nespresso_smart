@@ -62,7 +62,8 @@
       "init": {
         "title": "Nespresso Options",
         "data": {
-          "scan_interval": "Poll interval (seconds)"
+          "scan_interval": "Poll interval (seconds)",
+          "persistent_connection": "Persistent connection (real-time updates, blocks Nespresso app)"
         }
       }
     }

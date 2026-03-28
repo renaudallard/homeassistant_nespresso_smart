@@ -44,6 +44,7 @@ from .const import (
 )
 
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_PERSISTENT_CONNECTION = "persistent_connection"
 
 
 class NespressoOptionsFlow(OptionsFlow):
@@ -59,6 +60,9 @@ class NespressoOptionsFlow(OptionsFlow):
         current_interval = self.config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
+        current_persistent = self.config_entry.options.get(
+            CONF_PERSISTENT_CONNECTION, False
+        )
 
         return self.async_show_form(
             step_id="init",
@@ -68,6 +72,10 @@ class NespressoOptionsFlow(OptionsFlow):
                         CONF_SCAN_INTERVAL,
                         default=current_interval,
                     ): vol.All(vol.Coerce(int), vol.Range(min=10, max=600)),
+                    vol.Required(
+                        CONF_PERSISTENT_CONNECTION,
+                        default=current_persistent,
+                    ): bool,
                 }
             ),
         )

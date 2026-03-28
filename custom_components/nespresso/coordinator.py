@@ -62,6 +62,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         address: str,
         family: MachineFamily,
         scan_interval: int = DEFAULT_SCAN_INTERVAL,
+        persistent: bool = False,
     ) -> None:
         super().__init__(
             hass,
@@ -71,6 +72,76 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         )
         self.address = address
         self.family = family
+        self.persistent = persistent
+        self._client: BleakClient | None = None
+        self._status_uuid = self._get_status_uuid()
+
+    def _get_status_uuid(self) -> str | None:
+        """Return the status characteristic UUID for GATT notifications."""
+        from .const import BARISTA_CHAR_STATUS, VERTUO_CHAR_STATUS
+
+        if self.family == MachineFamily.BARISTA:
+            return BARISTA_CHAR_STATUS
+        if self.family == MachineFamily.VERTUO_NEXT:
+            return VERTUO_CHAR_STATUS
+        return None
+
+    async def async_shutdown(self) -> None:
+        """Disconnect persistent client on shutdown."""
+        await self._disconnect()
+        await super().async_shutdown()
+
+    async def _disconnect(self) -> None:
+        """Disconnect the persistent BLE client if connected."""
+        if self._client is not None:
+            try:
+                await self._client.disconnect()
+            except (BleakError, TimeoutError):
+                pass
+            self._client = None
+
+    def _on_status_notification(self, _sender: object, data: bytearray) -> None:
+        """Handle BLE GATT notification for status changes."""
+        if self.data is None:
+            return
+        try:
+            if self.family == MachineFamily.BARISTA:
+                status = parse_barista_status(bytes(data))
+            elif self.family == MachineFamily.VERTUO_NEXT:
+                status = parse_vertuonext_status(bytes(data))
+            else:
+                return
+
+            from dataclasses import asdict
+
+            current = asdict(self.data)
+            current.update(
+                {
+                    "machine_state": str(status["machine_state"]),
+                    "error_present": bool(status["error_present"]),
+                }
+            )
+            if self.family == MachineFamily.VERTUO_NEXT:
+                current["water_tank_empty"] = bool(
+                    status.get("water_tank_empty", False)
+                )
+                current["descaling_needed"] = bool(
+                    status.get("descaling_needed", False)
+                )
+                current["cleaning_needed"] = bool(status.get("cleaning_needed", False))
+                current["capsule_container_full"] = bool(
+                    status.get("capsule_container_full", False)
+                )
+                current["brewing_unit_closed"] = bool(
+                    status.get("brewing_unit_closed", False)
+                )
+                current["milk_frother_running"] = bool(
+                    status.get("milk_frother_running", False)
+                )
+
+            self.async_set_updated_data(NespressoMachineData(**current))
+        except (ValueError, IndexError) as err:
+            _LOGGER.debug("Failed to parse notification: %s", err)
 
     async def _async_update_data(self) -> NespressoMachineData:
         """Connect, read all characteristics, parse, disconnect."""
@@ -78,6 +149,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             self.hass, self.address, connectable=True
         )
         if device is None:
+            await self._disconnect()
             raise UpdateFailed("Machine not found; it may be off or out of range")
 
         try:
@@ -93,12 +165,21 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         try:
             protocol = get_protocol(self.family)
             raw = await protocol.async_read_all(client)
+
+            # Subscribe to notifications in persistent mode
+            if self.persistent and self._status_uuid:
+                await client.start_notify(
+                    self._status_uuid, self._on_status_notification
+                )
+                self._client = client
+            else:
+                await client.disconnect()
         except (BleakError, TimeoutError) as err:
+            await client.disconnect()
             raise UpdateFailed(f"BLE read failed: {err}") from err
         except Exception as err:
-            raise UpdateFailed(f"Unexpected BLE error: {err}") from err
-        finally:
             await client.disconnect()
+            raise UpdateFailed(f"Unexpected BLE error: {err}") from err
 
         try:
             return self._parse(raw)

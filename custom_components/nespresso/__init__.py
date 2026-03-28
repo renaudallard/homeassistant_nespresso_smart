@@ -33,7 +33,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 
-from .config_flow import CONF_SCAN_INTERVAL
+from .config_flow import CONF_PERSISTENT_CONNECTION, CONF_SCAN_INTERVAL
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MachineFamily
 from .coordinator import NespressoCoordinator
 
@@ -52,8 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address: str = entry.data["address"]
     family = MachineFamily(entry.data["family"])
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    persistent = entry.options.get(CONF_PERSISTENT_CONNECTION, False)
 
-    coordinator = NespressoCoordinator(hass, address, family, scan_interval)
+    coordinator = NespressoCoordinator(hass, address, family, scan_interval, persistent)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
