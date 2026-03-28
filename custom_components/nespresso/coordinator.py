@@ -257,6 +257,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             motor_running=bool(status.get("motor_running", False)),
             induction_heating=bool(status.get("induction_heating", False)),
             setup_complete=bool(status.get("setup_complete", False)),
+            gatt_dump=raw.gatt_dump,
         )
 
     def _parse_vertuo(self, raw: RawMachineData) -> NespressoMachineData:
@@ -298,6 +299,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             water_hardness=water_hardness,
             auto_power_off=auto_power_off,
             error_code=error_code,
+            gatt_dump=raw.gatt_dump,
         )
 
     def _parse_vmini(self, raw: RawMachineData) -> NespressoMachineData:
@@ -319,4 +321,5 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             shadow_data=raw.shadow_header,
             fota_status=fota_status,
             fota_progress=fota_progress,
+            gatt_dump=raw.gatt_dump,
         )
