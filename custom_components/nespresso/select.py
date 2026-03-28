@@ -121,8 +121,15 @@ class NespressoRecipeSelect(CoordinatorEntity[NespressoCoordinator], SelectEntit
     async def async_select_option(self, option: str) -> None:
         """Write recipe index to machine via BLE."""
         if option not in BARISTA_RECIPES:
+            _LOGGER.debug("Invalid recipe option: %r", option)
             return
         index = BARISTA_RECIPES.index(option)
+        _LOGGER.debug(
+            "Writing recipe: option=%s index=%d char=%s",
+            option,
+            index,
+            BARISTA_CHAR_RECIPE_SELECTION,
+        )
 
         device = bluetooth.async_ble_device_from_address(
             self.hass, self._address, connectable=True
@@ -181,8 +188,15 @@ class NespressoLanguageSelect(CoordinatorEntity[NespressoCoordinator], SelectEnt
     async def async_select_option(self, option: str) -> None:
         """Write language code to machine via BLE."""
         if option not in BARISTA_LANGUAGES:
+            _LOGGER.debug("Invalid language option: %r", option)
             return
 
+        _LOGGER.debug(
+            "Writing language: option=%s bytes=%s char=%s",
+            option,
+            option.encode("utf-8")[:2].hex(),
+            BARISTA_CHAR_LANGUAGE,
+        )
         device = bluetooth.async_ble_device_from_address(
             self.hass, self._address, connectable=True
         )

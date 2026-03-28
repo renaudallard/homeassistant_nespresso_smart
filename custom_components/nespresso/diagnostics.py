@@ -58,9 +58,21 @@ async def async_get_config_entry_diagnostics(
     }
 
     if coordinator.data is not None:
-        diag["machine_data"] = asdict(coordinator.data)
+        data_dict = asdict(coordinator.data)
+        # Separate GATT dump for readability
+        gatt_dump = data_dict.pop("gatt_dump", None)
+        diag["machine_data"] = data_dict
+        if gatt_dump:
+            diag["gatt_characteristic_dump"] = gatt_dump
 
     if coordinator.last_exception is not None:
         diag["last_error"] = str(coordinator.last_exception)
+
+    diag["debug_info"] = {
+        "family": coordinator.family.value,
+        "address": coordinator.address,
+        "persistent_mode": coordinator.persistent,
+        "has_active_client": coordinator._client is not None,
+    }
 
     return diag

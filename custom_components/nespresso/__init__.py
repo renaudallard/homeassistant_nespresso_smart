@@ -56,6 +56,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     persistent = entry.options.get(CONF_PERSISTENT_CONNECTION, False)
 
+    _LOGGER.debug(
+        "Setting up Nespresso %s: family=%s interval=%ds persistent=%s",
+        address,
+        family.value,
+        scan_interval,
+        persistent,
+    )
+
     coordinator = NespressoCoordinator(hass, address, family, scan_interval, persistent)
     await coordinator.async_config_entry_first_refresh()
 
@@ -96,6 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _LOGGER.debug("Nespresso %s setup complete, device_id=%s", address, device_entry.id)
     return True
 
 

@@ -25,6 +25,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -43,6 +44,8 @@ from .const import (
     SERVICE_UUID_TO_FAMILY,
     MachineFamily,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_PERSISTENT_CONNECTION = "persistent_connection"
@@ -103,6 +106,20 @@ class NespressoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle BLE device discovery."""
+        _LOGGER.debug(
+            "BLE discovery: address=%s name=%r service_uuids=%s rssi=%s "
+            "manufacturer_data=%s service_data=%s",
+            discovery_info.address,
+            discovery_info.name,
+            discovery_info.service_uuids,
+            discovery_info.rssi,
+            {k: v.hex() for k, v in discovery_info.manufacturer_data.items()}
+            if discovery_info.manufacturer_data
+            else {},
+            {k: v.hex() for k, v in discovery_info.service_data.items()}
+            if discovery_info.service_data
+            else {},
+        )
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
@@ -117,6 +134,12 @@ class NespressoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._name = discovery_info.name or f"Nespresso {family_label}"
         self.context["title_placeholders"] = {"name": self._name}
 
+        _LOGGER.debug(
+            "Detected family=%s name=%r for %s",
+            self._family,
+            self._name,
+            discovery_info.address,
+        )
         return await self.async_step_bluetooth_confirm()
 
     async def async_step_bluetooth_confirm(

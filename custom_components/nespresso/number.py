@@ -112,6 +112,7 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
           byte 2: waterHardness (new value)
           byte 3: activeTime2StandBy (preserved from current)
         """
+        _LOGGER.debug("Writing water hardness: value=%d", int(value))
         device = bluetooth.async_ble_device_from_address(
             self.hass, self._address, connectable=True
         )
@@ -126,9 +127,11 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
             try:
                 # Read current settings to preserve other values
                 current = await client.read_gatt_char(VERTUO_CHAR_USER_SETTINGS)
+                _LOGGER.debug("Current user settings: %s", bytes(current).hex())
                 data = bytearray(current)
                 if len(data) >= 4:
                     data[2] = int(value) & 0xFF
+                    _LOGGER.debug("Writing user settings: %s", bytes(data).hex())
                     await client.write_gatt_char(VERTUO_CHAR_USER_SETTINGS, bytes(data))
                     _LOGGER.info("Water hardness set to %d", int(value))
             finally:
@@ -186,6 +189,7 @@ class NespressoAutoPowerOff(CoordinatorEntity[NespressoCoordinator], NumberEntit
           byte 2: waterHardness (preserved)
           byte 3: activeTime2StandBy (preserved)
         """
+        _LOGGER.debug("Writing auto power off: value=%d", int(value))
         device = bluetooth.async_ble_device_from_address(
             self.hass, self._address, connectable=True
         )
@@ -199,11 +203,13 @@ class NespressoAutoPowerOff(CoordinatorEntity[NespressoCoordinator], NumberEntit
             )
             try:
                 current = await client.read_gatt_char(VERTUO_CHAR_USER_SETTINGS)
+                _LOGGER.debug("Current user settings: %s", bytes(current).hex())
                 data = bytearray(current)
                 if len(data) >= 4:
                     val = int(value) & 0xFFFF
                     data[0] = val & 0xFF
                     data[1] = (val >> 8) & 0xFF
+                    _LOGGER.debug("Writing user settings: %s", bytes(data).hex())
                     await client.write_gatt_char(VERTUO_CHAR_USER_SETTINGS, bytes(data))
                     _LOGGER.info("Auto power off set to %d", int(value))
             finally:

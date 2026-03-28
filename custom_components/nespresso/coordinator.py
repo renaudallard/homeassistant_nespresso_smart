@@ -110,6 +110,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         if new_state == "standby":
             triggers.append("standby")
 
+        _LOGGER.debug(
+            "State transition: %s -> %s, triggers=%s", old_state, new_state, triggers
+        )
         for trigger_type in triggers:
             self.hass.bus.async_fire(
                 f"{DOMAIN}_state_change",
@@ -149,6 +152,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         This callback runs on the BLE thread, so schedule the update
         on the HA event loop.
         """
+        _LOGGER.debug("BLE notification received: %s (len=%d)", data.hex(), len(data))
         self.hass.loop.call_soon_threadsafe(self._handle_status_update, bytes(data))
 
     def _handle_status_update(self, data: bytes) -> None:
@@ -186,6 +190,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     async def _async_update_data(self) -> NespressoMachineData:
         """Connect, read all characteristics, parse, disconnect."""
+        _LOGGER.debug(
+            "Update cycle start: address=%s family=%s persistent=%s",
+            self.address,
+            self.family.value,
+            self.persistent,
+        )
         # Disconnect any stale persistent client before reconnecting
         await self._disconnect()
 
@@ -193,7 +203,15 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             self.hass, self.address, connectable=True
         )
         if device is None:
+            _LOGGER.debug("Device %s not found in BLE cache", self.address)
             raise UpdateFailed("Machine not found; it may be off or out of range")
+
+        _LOGGER.debug(
+            "Connecting to %s (name=%r rssi=%s)",
+            device.address,
+            device.name,
+            getattr(device, "rssi", "N/A"),
+        )
 
         try:
             client = await establish_connection(
@@ -203,7 +221,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 max_attempts=3,
             )
         except (BleakError, TimeoutError) as err:
+            _LOGGER.debug("Connection failed: %s", err)
             raise UpdateFailed(f"BLE connection failed: {err}") from err
+
+        _LOGGER.debug("Connected to %s, MTU=%s", self.address, client.mtu_size)
 
         try:
             protocol = get_protocol(self.family)
@@ -226,9 +247,19 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         try:
             result = self._parse(raw)
+            _LOGGER.debug(
+                "Parsed %s: state=%s error=%s fw=%s hw=%s serial=%s",
+                self.family.value,
+                result.machine_state,
+                result.error_present,
+                result.firmware_version,
+                result.hardware_version,
+                result.serial_number,
+            )
             self._fire_state_triggers(result)
             return result
         except (IndexError, ValueError, KeyError) as err:
+            _LOGGER.debug("Parse failed: %s (raw=%r)", err, raw)
             raise UpdateFailed(f"Failed to parse machine data: {err}") from err
 
     def _parse(self, raw: RawMachineData) -> NespressoMachineData:
