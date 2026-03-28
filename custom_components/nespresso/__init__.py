@@ -32,9 +32,10 @@ from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
 from .config_flow import CONF_PERSISTENT_CONNECTION, CONF_SCAN_INTERVAL
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MachineFamily
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MACHINE_FAMILY_NAMES, MachineFamily
 from .coordinator import NespressoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,6 +58,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = NespressoCoordinator(hass, address, family, scan_interval, persistent)
     await coordinator.async_config_entry_first_refresh()
+
+    # Register device and set device_id for trigger events
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, address)},
+        name=entry.data.get("name", "Nespresso"),
+        manufacturer="Nespresso",
+        model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
+    )
+    coordinator.set_device_id(device_entry.id)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {

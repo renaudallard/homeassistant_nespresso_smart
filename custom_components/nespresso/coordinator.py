@@ -52,6 +52,7 @@ from .ble.protocol import get_protocol
 from .const import (
     BARISTA_CHAR_STATUS,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     VERTUO_CHAR_STATUS,
     MachineFamily,
 )
@@ -82,6 +83,43 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.persistent = persistent
         self._client: BleakClient | None = None
         self._status_uuid = self._get_status_uuid()
+        self._device_id: str | None = None
+
+    def set_device_id(self, device_id: str) -> None:
+        """Set the HA device ID for event firing."""
+        self._device_id = device_id
+
+    def _fire_state_triggers(self, new_data: NespressoMachineData) -> None:
+        """Fire bus events for device triggers on state changes."""
+        if self._device_id is None or self.data is None:
+            return
+        old_state = self.data.machine_state
+        new_state = new_data.machine_state
+        if old_state == new_state:
+            return
+
+        triggers = []
+        if new_state == "brewing":
+            triggers.append("brewing_started")
+        if old_state == "brewing":
+            triggers.append("brewing_finished")
+        if new_state == "error":
+            triggers.append("error_occurred")
+        if new_state == "ready":
+            triggers.append("ready")
+        if new_state == "standby":
+            triggers.append("standby")
+
+        for trigger_type in triggers:
+            self.hass.bus.async_fire(
+                f"{DOMAIN}_state_change",
+                {
+                    "device_id": self._device_id,
+                    "type": trigger_type,
+                    "old_state": old_state,
+                    "new_state": new_state,
+                },
+            )
 
     def _get_status_uuid(self) -> str | None:
         """Return the status characteristic UUID for GATT notifications."""
@@ -187,7 +225,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             raise UpdateFailed(f"Unexpected BLE error: {err}") from err
 
         try:
-            return self._parse(raw)
+            result = self._parse(raw)
+            self._fire_state_triggers(result)
+            return result
         except (IndexError, ValueError, KeyError) as err:
             raise UpdateFailed(f"Failed to parse machine data: {err}") from err
 
