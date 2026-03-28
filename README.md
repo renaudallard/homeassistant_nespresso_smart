@@ -12,6 +12,8 @@ A Home Assistant custom integration for Nespresso Smart coffee machines via Blue
 
 Built by reverse-engineering the Nespresso Smart Android app (v1.2.5).
 
+> **Screenshot wanted:** If you have a Nespresso machine paired with this integration, please submit a screenshot of the HA device page via a [GitHub issue](https://github.com/renaudallard/homeassistant_nespresso_smart/issues).
+
 ---
 
 ## Supported Machines
