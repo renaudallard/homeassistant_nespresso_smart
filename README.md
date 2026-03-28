@@ -99,6 +99,12 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
 - **Single client**: Only one BLE client can connect at a time. If the Nespresso app is connected, HA will retry on the next poll.
 
+## Support
+
+If you find this integration useful, you can support its development:
+
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-blue.svg?logo=paypal)](https://www.paypal.me/RenaudAllard)
+
 ## Contributing
 
 To submit this integration to the HACS default repository:
