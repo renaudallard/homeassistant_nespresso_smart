@@ -1,0 +1,16 @@
+# Decompiled output (regenerable from APK)
+apktool_output/
+jadx_output/
+xapk_extracted/
+
+# Tools
+jadx_tool/
+jadx.zip
+
+# APK files (too large for git)
+*.apk
+*.xapk
+
+# Python
+__pycache__/
+*.pyc
