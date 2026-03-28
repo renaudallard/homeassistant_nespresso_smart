@@ -52,6 +52,8 @@ class NespressoMachineData:
 
     # Barista specific
     motor_running: bool | None = None
+    induction_heating: bool | None = None
+    setup_complete: bool | None = None
 
     # VMini specific
     shadow_data: str | None = None

@@ -211,6 +211,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             hardware_version=info.get("hardware_version"),
             serial_number=serial,
             motor_running=bool(status.get("motor_running", False)),
+            induction_heating=bool(status.get("induction_heating", False)),
+            setup_complete=bool(status.get("setup_complete", False)),
         )
 
     def _parse_vertuo(self, raw: RawMachineData) -> NespressoMachineData:

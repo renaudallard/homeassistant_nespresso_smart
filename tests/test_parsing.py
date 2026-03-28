@@ -149,6 +149,21 @@ class TestBaristaStatus:
         assert result["machine_state"] == "brewing"
         assert result["motor_running"] is True
 
+    def test_induction_heating(self) -> None:
+        # byte0: bit5=induction -> 0x20
+        result = parse_barista_status(b"\x20\x04")
+        assert result["induction_heating"] is True
+
+    def test_setup_complete(self) -> None:
+        # byte0: bit7=setup_complete -> 0x80
+        result = parse_barista_status(b"\x80\x04")
+        assert result["setup_complete"] is True
+
+    def test_last_cmid_valid(self) -> None:
+        # byte0: bit6=last_cmid_valid -> 0x40
+        result = parse_barista_status(b"\x40\x04")
+        assert result["last_cmid_valid"] is True
+
     def test_error_state(self) -> None:
         # byte0: bit3=error -> 0x08
         # byte1: state ERROR=4, (4 << 2) = 0x10

@@ -98,6 +98,15 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
         value_fn=lambda d: d.capsule_container_full,
     ),
     NespressoBinarySensorDescription(
+        key="induction_heating",
+        translation_key="induction_heating",
+        name="Induction heater",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        icon="mdi:radiator",
+        families=frozenset({MachineFamily.BARISTA}),
+        value_fn=lambda d: d.induction_heating,
+    ),
+    NespressoBinarySensorDescription(
         key="milk_frother_running",
         translation_key="milk_frother_running",
         name="Milk frother",

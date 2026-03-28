@@ -86,6 +86,9 @@ def parse_barista_status(data: bytes) -> dict[str, object]:
         "machine_state": BARISTA_STATE_NAMES.get(state_val, "unknown"),
         "error_present": _get_bit(b0, 3),
         "motor_running": _get_bit(b0, 4),
+        "induction_heating": _get_bit(b0, 5),
+        "last_cmid_valid": _get_bit(b0, 6),
+        "setup_complete": _get_bit(b0, 7),
     }
 
 
