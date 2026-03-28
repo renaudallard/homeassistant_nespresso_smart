@@ -14,9 +14,23 @@ Built by reverse-engineering the Nespresso Smart Android app (v1.2.5).
 
 ## Installation
 
-Copy `custom_components/nespresso/` into your Home Assistant `config/custom_components/` directory.
+### HACS (recommended)
 
-Restart Home Assistant. The integration will auto-discover Nespresso machines via Bluetooth.
+1. Open HACS in your Home Assistant instance
+2. Go to **Integrations**
+3. Click the three dots in the top right corner and select **Custom repositories**
+4. Add `https://github.com/renaudallard/homeassistant_nespresso_smart` with category **Integration**
+5. Click **Add**
+6. Search for "Nespresso Smart" in HACS and install it
+7. Restart Home Assistant
+
+### Manual
+
+Copy `custom_components/nespresso/` into your Home Assistant `config/custom_components/` directory and restart Home Assistant.
+
+### Setup
+
+After installation, the integration will auto-discover Nespresso machines via Bluetooth. You can also go to **Settings > Devices & Services > Add Integration** and search for "Nespresso Smart".
 
 ### Requirements
 
