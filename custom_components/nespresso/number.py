@@ -61,6 +61,7 @@ async def async_setup_entry(
     entities: list[NumberEntity] = []
     if family == MachineFamily.VERTUO_NEXT:
         entities.append(NespressoWaterHardness(coordinator, entry))
+        entities.append(NespressoAutoPowerOff(coordinator, entry))
     async_add_entities(entities)
 
 
@@ -135,3 +136,78 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set water hardness: %s", err)
+
+
+class NespressoAutoPowerOff(CoordinatorEntity[NespressoCoordinator], NumberEntity):
+    """Number entity for Vertuo Next auto power off time."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Auto power off"
+    _attr_icon = "mdi:timer-off-outline"
+    _attr_native_min_value = 0
+    _attr_native_max_value = 65535
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = "min"
+    _attr_mode = NumberMode.BOX
+
+    def __init__(
+        self,
+        coordinator: NespressoCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        super().__init__(coordinator)
+        self._address = entry.data["address"]
+        self._attr_unique_id = f"{self._address}_auto_power_off_setting"
+        family = MachineFamily(entry.data["family"])
+        data = coordinator.data
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._address)},
+            name=entry.data.get("name", "Nespresso"),
+            manufacturer="Nespresso",
+            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
+            serial_number=data.serial_number if data else None,
+            sw_version=data.firmware_version if data else None,
+            hw_version=data.hardware_version if data else None,
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the current auto power off time."""
+        if self.coordinator.data is None:
+            return None
+        apo = self.coordinator.data.auto_power_off
+        return float(apo) if apo is not None else None
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Write auto power off time to machine via BLE.
+
+        Writes all 4 bytes of CHAR_GENERAL_USER_SETTINGS:
+          bytes 0-1: machineAPOTime (LSB, new value)
+          byte 2: waterHardness (preserved)
+          byte 3: activeTime2StandBy (preserved)
+        """
+        device = bluetooth.async_ble_device_from_address(
+            self.hass, self._address, connectable=True
+        )
+        if device is None:
+            _LOGGER.error("Machine not found for auto power off write")
+            return
+
+        try:
+            client = await establish_connection(
+                BleakClient, device, self._address, max_attempts=2
+            )
+            try:
+                current = await client.read_gatt_char(VERTUO_CHAR_USER_SETTINGS)
+                data = bytearray(current)
+                if len(data) >= 4:
+                    val = int(value) & 0xFFFF
+                    data[0] = val & 0xFF
+                    data[1] = (val >> 8) & 0xFF
+                    await client.write_gatt_char(VERTUO_CHAR_USER_SETTINGS, bytes(data))
+                    _LOGGER.info("Auto power off set to %d", int(value))
+            finally:
+                await client.disconnect()
+            await self.coordinator.async_request_refresh()
+        except (BleakError, TimeoutError) as err:
+            _LOGGER.error("Failed to set auto power off: %s", err)
