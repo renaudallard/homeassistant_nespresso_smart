@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Confirm Nespresso Machine",
+        "description": "Found {name}. Do you want to add this machine?",
+        "data": {}
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "This integration requires Bluetooth. Machines are discovered automatically."
+      }
+    },
+    "abort": {
+      "already_configured": "Machine is already configured.",
+      "bluetooth_only": "This integration discovers machines via Bluetooth automatically. Ensure Bluetooth is enabled and the machine is powered on."
+    }
+  }
+}
