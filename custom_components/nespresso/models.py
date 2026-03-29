@@ -64,6 +64,7 @@ class NespressoMachineData:
     induction_heating: bool | None = None
     setup_complete: bool | None = None
     ble_disabled: bool | None = None
+    recipe_count: int | None = None
 
     # VMini specific
     shadow_data: str | None = None
@@ -83,6 +84,7 @@ class RawMachineData:
     serial_bytes: bytes | None = None
     profile_version_bytes: bytes | None = None
     machine_params_bytes: bytes | None = None
+    recipe_info_bytes: bytes | None = None
     user_settings_bytes: bytes | None = None
     error_info_bytes: bytes | None = None
     caps_counter_bytes: bytes | None = None

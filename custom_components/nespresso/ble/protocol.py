@@ -42,6 +42,7 @@ from ..const import (
     BARISTA_CHAR_INFO,
     BARISTA_CHAR_MACHINE_PARAMS,
     BARISTA_CHAR_PROFILE_VERSION,
+    BARISTA_CHAR_RECIPE_INFO,
     BARISTA_CHAR_ONBOARD_STATUS,
     BARISTA_CHAR_PAIR,
     BARISTA_CHAR_SERIAL,
@@ -355,6 +356,13 @@ class BaristaProtocol(AbstractNespressoProtocol):
         params = await _read_char(
             client, BARISTA_CHAR_MACHINE_PARAMS, "machine_params", auth_key, f
         )
+        # Recipe information (optional)
+        recipe_info = None
+        try:
+            recipe_info = await client.read_gatt_char(BARISTA_CHAR_RECIPE_INFO)
+            _LOGGER.debug("Recipe info raw: %s", recipe_info.hex())
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Recipe info not available")
         # GATT dump only when debug logging is active
         gatt_dump = None
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -366,6 +374,7 @@ class BaristaProtocol(AbstractNespressoProtocol):
             serial_bytes=bytes(serial),
             profile_version_bytes=bytes(profile),
             machine_params_bytes=bytes(params),
+            recipe_info_bytes=bytes(recipe_info) if recipe_info else None,
             gatt_dump=gatt_dump,
         )
 

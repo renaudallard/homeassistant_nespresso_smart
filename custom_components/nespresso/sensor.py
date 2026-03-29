@@ -92,6 +92,15 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         value_fn=lambda d: d.hardware_version,
     ),
     NespressoSensorDescription(
+        key="recipe_count",
+        translation_key="recipe_count",
+        name="Recipe slots",
+        icon="mdi:book-open-variant",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.BARISTA}),
+        value_fn=lambda d: d.recipe_count,
+    ),
+    NespressoSensorDescription(
         key="profile_version",
         translation_key="profile_version",
         name="Profile version",

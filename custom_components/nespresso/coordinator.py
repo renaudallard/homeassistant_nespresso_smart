@@ -52,6 +52,7 @@ from .ble.parsing import (
     parse_vmini_fota_status,
 )
 from .ble.protocol import generate_auth_key, get_protocol
+from .ble.recipe import parse_recipe_info
 from .const import (
     BARISTA_CHAR_STATUS,
     DEFAULT_SCAN_INTERVAL,
@@ -299,6 +300,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             motor_running=bool(status.get("motor_running", False)),
             induction_heating=bool(status.get("induction_heating", False)),
             setup_complete=bool(status.get("setup_complete", False)),
+            recipe_count=parse_recipe_info(raw.recipe_info_bytes).max_recipes
+            if raw.recipe_info_bytes and len(raw.recipe_info_bytes) >= 8
+            else None,
             ble_disabled=parse_barista_machine_params(raw.machine_params_bytes).get(
                 "ble_disabled", False
             )
