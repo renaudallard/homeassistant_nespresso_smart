@@ -43,6 +43,7 @@ from .ble.parsing import (
     parse_barista_status,
     parse_caps_counter,
     parse_error_information,
+    parse_profile_version,
     parse_general_user_settings,
     parse_serial_number,
     parse_vertuonext_machine_info,
@@ -290,6 +291,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             firmware_version=info.get("firmware_version"),
             hardware_version=info.get("hardware_version"),
             serial_number=serial,
+            profile_version=parse_profile_version(raw.profile_version_bytes)
+            if raw.profile_version_bytes
+            else None,
             bluetooth_version=info.get("bluetooth_version"),
             motor_running=bool(status.get("motor_running", False)),
             induction_heating=bool(status.get("induction_heating", False)),
@@ -327,6 +331,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             firmware_version=info.get("firmware_version"),
             hardware_version=info.get("hardware_version"),
             serial_number=serial,
+            profile_version=parse_profile_version(raw.profile_version_bytes)
+            if raw.profile_version_bytes
+            else None,
             recipe_db_version=info.get("recipe_db_version"),
             connectivity_fw_version=info.get("connectivity_fw_version"),
             water_tank_empty=bool(status.get("water_tank_empty", False)),

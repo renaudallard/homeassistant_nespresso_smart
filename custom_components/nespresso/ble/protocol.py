@@ -40,12 +40,14 @@ from bleak import BleakClient
 from ..const import (
     BARISTA_CHAR_AUTH,
     BARISTA_CHAR_INFO,
+    BARISTA_CHAR_PROFILE_VERSION,
     BARISTA_CHAR_ONBOARD_STATUS,
     BARISTA_CHAR_PAIR,
     BARISTA_CHAR_SERIAL,
     BARISTA_CHAR_STATUS,
     VERTUO_CHAR_AUTH,
     VERTUO_CHAR_CAPS_COUNTER,
+    VERTUO_CHAR_PROFILE_VERSION,
     VERTUO_CHAR_COMMAND_RSP,
     VERTUO_CHAR_ONBOARD_STATUS,
     VERTUO_CHAR_PAIR,
@@ -343,6 +345,9 @@ class BaristaProtocol(AbstractNespressoProtocol):
         status = await _read_char(client, BARISTA_CHAR_STATUS, "status", auth_key, f)
         info = await _read_char(client, BARISTA_CHAR_INFO, "machine_info", auth_key, f)
         serial = await _read_char(client, BARISTA_CHAR_SERIAL, "serial", auth_key, f)
+        profile = await _read_char(
+            client, BARISTA_CHAR_PROFILE_VERSION, "profile_version", auth_key, f
+        )
         # GATT dump only when debug logging is active
         gatt_dump = None
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -352,6 +357,7 @@ class BaristaProtocol(AbstractNespressoProtocol):
             status_bytes=bytes(status),
             info_bytes=bytes(info),
             serial_bytes=bytes(serial),
+            profile_version_bytes=bytes(profile),
             gatt_dump=gatt_dump,
         )
 
@@ -366,6 +372,9 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         status = await _read_char(client, VERTUO_CHAR_STATUS, "status", auth_key, f)
         info = await _read_char(client, VERTUO_CHAR_INFO, "machine_info", auth_key, f)
         serial = await _read_char(client, VERTUO_CHAR_SERIAL, "serial", auth_key, f)
+        profile = await _read_char(
+            client, VERTUO_CHAR_PROFILE_VERSION, "profile_version", auth_key, f
+        )
         settings = await _read_char(
             client, VERTUO_CHAR_USER_SETTINGS, "user_settings", auth_key, f
         )
@@ -396,6 +405,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
             status_bytes=bytes(status),
             info_bytes=bytes(info),
             serial_bytes=bytes(serial),
+            profile_version_bytes=bytes(profile),
             user_settings_bytes=bytes(settings),
             error_info_bytes=bytes(error_info),
             caps_counter_bytes=bytes(caps_counter) if caps_counter else None,

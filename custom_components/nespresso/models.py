@@ -38,6 +38,7 @@ class NespressoMachineData:
     firmware_version: str | None
     hardware_version: str | None
     serial_number: str | None
+    profile_version: str | None = None
     bluetooth_version: str | None = None
     recipe_db_version: str | None = None
     connectivity_fw_version: str | None = None
@@ -77,6 +78,7 @@ class RawMachineData:
     status_bytes: bytes | None = None
     info_bytes: bytes | None = None
     serial_bytes: bytes | None = None
+    profile_version_bytes: bytes | None = None
     user_settings_bytes: bytes | None = None
     error_info_bytes: bytes | None = None
     caps_counter_bytes: bytes | None = None

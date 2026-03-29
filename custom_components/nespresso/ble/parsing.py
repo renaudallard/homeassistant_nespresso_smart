@@ -60,6 +60,13 @@ def parse_version_v3(value: int) -> str:
     return f"{major}.{remainder // 100}.{remainder % 100}"
 
 
+def parse_profile_version(data: bytes) -> str:
+    """Parse 4-byte profile version. Bytes 0-1 MSB via getVersionV2."""
+    if len(data) < 2:
+        return "0.0"
+    return parse_version_v2(_get_2bytes_unsigned_msb(data, 0))
+
+
 def parse_serial_number(data: bytes) -> str:
     """Decode null-terminated UTF-8 serial number. All families use this."""
     return data.split(b"\x00", 1)[0].decode("utf-8", errors="replace")
