@@ -313,32 +313,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 self.auth_key = generate_auth_key()
                 _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
 
-            # Try BLE pair upfront (Android does this transparently).
-            # If it corrupts the service cache, reconnect immediately.
-            try:
-                await client.pair()
-                _LOGGER.debug("BLE pair() returned successfully")
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("BLE pair(): %s", err)
-
-            # Verify connection is still valid after pair()
-            try:
-                await client.read_gatt_char(
-                    list(client.services.characteristics.keys())[0]
-                    if client.services and client.services.characteristics
-                    else "00002a00-0000-1000-8000-00805f9b34fb"
-                )
-            except Exception:  # noqa: BLE001
-                _LOGGER.info("Service cache lost after pair(), reconnecting")
-                try:
-                    await client.disconnect()
-                except Exception:  # noqa: BLE001
-                    pass
-                client = await establish_connection(
-                    BleakClient, device, self.address, max_attempts=3
-                )
-                _LOGGER.debug("Reconnected, MTU=%s", client.mtu_size)
-
             from .ble.protocol import _authenticate
 
             auth_ok = await _authenticate(client, self.auth_key, self.family)

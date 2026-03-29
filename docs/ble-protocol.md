@@ -521,18 +521,21 @@ entirely application-level via CMID.
 
 ### HA Integration Connection Flow
 
-The integration matches the APK flow. No BLE-level pairing (createBond/pair)
-is used, only application-level CMID authentication.
+The integration matches the APK flow. No BLE-level pairing (`createBond`/`pair()`)
+is used, only application-level CMID authentication. The auth key is generated
+once, persisted in the config entry, and reused across restarts.
 
 1. **Acquire BLE lock**: Prevent concurrent connections (machine supports one client)
 2. **Disconnect stale client**: Clean up any persistent connection
 3. **Connect**: `establish_connection()` with 3 retry attempts
-4. **Authenticate**: `_authenticate()` writes CMID/MachineToken (all families require this)
-5. **Read all characteristics**: status, info, serial, profile, params, settings, errors
-6. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
-7. **Disconnect** (or keep alive in persistent mode)
-8. **Parse**: Convert raw bytes to `NespressoMachineData`
-9. **Fire triggers**: Compare old/new state, fire bus events
+4. **Authenticate**: `_authenticate()` writes CMID with response (all families require this)
+5. **Verify**: Read a protected characteristic to confirm auth succeeded
+6. **Retry** (on failure): Disconnect, reconnect, re-authenticate once
+7. **Read all characteristics**: status, info, serial, profile, params, settings, errors
+8. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
+9. **Disconnect** (or keep alive in persistent mode)
+10. **Parse**: Convert raw bytes to `NespressoMachineData`
+11. **Fire triggers**: Compare old/new state, fire bus events
 
 ### Write Operation Flow
 
@@ -540,7 +543,7 @@ All write operations (recipe, language, water hardness, APO, FOTA) use the same 
 
 1. **Acquire BLE lock**: Same lock as read, prevents concurrent access
 2. **Connect**: `establish_connection()` with 2 retry attempts
-3. **Authenticate**: `_try_pair()` + `_authenticate()` + sleep 1 second
+3. **Authenticate**: `_authenticate()` writes CMID with response
 4. **Write**: `write_gatt_char()` with `response=True`
 5. **Disconnect**: Always, even on error
 6. **Refresh**: `async_request_refresh()` to update sensors
