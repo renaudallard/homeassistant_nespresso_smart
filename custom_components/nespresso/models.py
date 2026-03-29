@@ -38,6 +38,7 @@ class NespressoMachineData:
     firmware_version: str | None
     hardware_version: str | None
     serial_number: str | None
+    bootloader_version: str | None = None
     profile_version: str | None = None
     bluetooth_version: str | None = None
     recipe_db_version: str | None = None

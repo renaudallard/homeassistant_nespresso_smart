@@ -110,6 +110,15 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         value_fn=lambda d: d.profile_version,
     ),
     NespressoSensorDescription(
+        key="bootloader_version",
+        translation_key="bootloader_version",
+        name="Bootloader version",
+        icon="mdi:chip",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda d: d.bootloader_version,
+    ),
+    NespressoSensorDescription(
         key="bluetooth_version",
         translation_key="bluetooth_version",
         name="Bluetooth version",

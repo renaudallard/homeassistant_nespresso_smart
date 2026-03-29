@@ -91,6 +91,7 @@ def parse_barista_status(data: bytes) -> dict[str, object]:
 
     return {
         "machine_state": BARISTA_STATE_NAMES.get(state_val, "unknown"),
+        "bootloader_active": _get_bit(b0, 0),
         "error_present": _get_bit(b0, 3),
         "motor_running": _get_bit(b0, 4),
         "induction_heating": _get_bit(b0, 5),
@@ -126,6 +127,7 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
         "descaling_needed": _get_bit(b0, 2),
         "led_signaling": _get_bit(b0, 3),
         "error_present": _get_bit(b0, 4),
+        "bootloader_active": _get_bit(b0, 7),
         "milk_frother_running": _get_bit(b1, 4),
         "cup_length_prog": _get_bit(b1, 5),
         "capsule_container_full": _get_bit(b1, 6),
@@ -147,11 +149,13 @@ def parse_barista_machine_info(data: bytes) -> dict[str, str | None]:
         raise ValueError(f"Barista machine info requires >= 8 bytes, got {len(data)}")
 
     hw = parse_version_v2(_get_2bytes_unsigned_msb(data, 0))
+    bl = parse_version_v2(_get_2bytes_unsigned_msb(data, 2))
     fw = parse_version_v2(_get_2bytes_unsigned_msb(data, 4))
     bt = parse_version_v2(_get_2bytes_unsigned_msb(data, 6))
 
     return {
         "hardware_version": hw,
+        "bootloader_version": bl,
         "firmware_version": fw,
         "bluetooth_version": bt,
     }
@@ -174,12 +178,14 @@ def parse_vertuonext_machine_info(data: bytes) -> dict[str, str | None]:
         )
 
     hw = parse_version_v2(_get_2bytes_unsigned_msb(data, 0))
+    bl = parse_version_v2(_get_2bytes_unsigned_msb(data, 2))
     fw = parse_version_v2(_get_2bytes_unsigned_msb(data, 4))
     recipe_db = parse_version_v2(_get_2bytes_unsigned_msb(data, 6))
     conn_fw = parse_version_v3(_get_2bytes_unsigned_msb(data, 8))
 
     return {
         "hardware_version": hw,
+        "bootloader_version": bl,
         "firmware_version": fw,
         "recipe_db_version": recipe_db,
         "connectivity_fw_version": conn_fw,
