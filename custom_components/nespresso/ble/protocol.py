@@ -45,6 +45,7 @@ from ..const import (
     BARISTA_CHAR_SERIAL,
     BARISTA_CHAR_STATUS,
     VERTUO_CHAR_AUTH,
+    VERTUO_CHAR_CAPS_COUNTER,
     VERTUO_CHAR_COMMAND_RSP,
     VERTUO_CHAR_ONBOARD_STATUS,
     VERTUO_CHAR_PAIR,
@@ -372,6 +373,14 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
             client, VERTUO_CHAR_ERROR_INFO, "error_info", auth_key, f
         )
 
+        # Capsule counter (optional, may not be available on all models)
+        caps_counter = None
+        try:
+            caps_counter = await client.read_gatt_char(VERTUO_CHAR_CAPS_COUNTER)
+            _LOGGER.debug("Capsule counter raw: %s", caps_counter.hex())
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Capsule counter not available")
+
         # Read command response for any unsolicited data (debugging)
         try:
             cmd_rsp = await client.read_gatt_char(VERTUO_CHAR_COMMAND_RSP)
@@ -389,6 +398,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
             serial_bytes=bytes(serial),
             user_settings_bytes=bytes(settings),
             error_info_bytes=bytes(error_info),
+            caps_counter_bytes=bytes(caps_counter) if caps_counter else None,
             gatt_dump=gatt_dump,
         )
 

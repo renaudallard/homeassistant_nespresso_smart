@@ -179,6 +179,13 @@ def parse_vertuonext_machine_info(data: bytes) -> dict[str, str | None]:
     }
 
 
+def parse_caps_counter(data: bytes) -> int:
+    """Parse capsule counter (2-byte unsigned MSB)."""
+    if len(data) < 2:
+        return data[0] & 0xFF if data else 0
+    return _get_2bytes_unsigned_msb(data, 0)
+
+
 def parse_error_information(data: bytes) -> dict[str, int]:
     """Parse Vertuo Next error information bytes.
 

@@ -41,6 +41,7 @@ from homeassistant.helpers.update_coordinator import (
 from .ble.parsing import (
     parse_barista_machine_info,
     parse_barista_status,
+    parse_caps_counter,
     parse_error_information,
     parse_general_user_settings,
     parse_serial_number,
@@ -316,6 +317,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             err = parse_error_information(raw.error_info_bytes)
             error_code = err.get("error_code")
 
+        caps_counter = None
+        if raw.caps_counter_bytes:
+            caps_counter = parse_caps_counter(raw.caps_counter_bytes)
+
         return NespressoMachineData(
             machine_state=str(status["machine_state"]),
             error_present=bool(status["error_present"]),
@@ -335,6 +340,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             water_hardness=water_hardness,
             auto_power_off=auto_power_off,
             error_code=error_code,
+            caps_counter=caps_counter,
             gatt_dump=raw.gatt_dump,
         )
 
