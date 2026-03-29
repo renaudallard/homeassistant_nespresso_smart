@@ -313,6 +313,16 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 self.auth_key = generate_auth_key()
                 _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
 
+            # BLE pair for link encryption (BlueZ needs this explicitly;
+            # Android does it transparently). Stay on the same connection
+            # like bulldog does -- no disconnect/reconnect.
+            try:
+                await client.pair()
+                _LOGGER.debug("BLE pair() returned successfully")
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("BLE pair(): %s", err)
+            await asyncio.sleep(2)
+
             from .ble.protocol import _authenticate
 
             auth_ok = await _authenticate(client, self.auth_key, self.family)

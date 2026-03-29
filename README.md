@@ -116,7 +116,7 @@ The integration connects to the machine via BLE at a configurable interval (defa
 
 Machine family is detected automatically from the advertised BLE service UUID during discovery. When the machine becomes available after being off or out of range, a BLE advertisement callback triggers an immediate refresh.
 
-Authentication is application-level only (CMID write with response), matching the official Nespresso Android app. No BLE-level pairing is used. The auth key is generated once and persisted in the config entry so the same key is reused across restarts.
+Authentication uses BLE `pair()` for link encryption (needed by BlueZ, Android does this transparently) followed by application-level CMID write with response, matching the bulldog integration approach. The auth key is generated once and persisted in the config entry so the same key is reused across restarts.
 
 ## Reverse Engineering Documentation
 
