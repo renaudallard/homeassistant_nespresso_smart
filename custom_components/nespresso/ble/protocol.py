@@ -137,30 +137,33 @@ async def _authenticate(
         _LOGGER.debug("Could not read onboard status: %s", err)
         is_onboarded = False
 
-    # Onboard if needed
+    auth_bytes = binascii.unhexlify(auth_key)
+
+    # Onboard if needed (each step isolated to prevent cascade failures)
     if not is_onboarded:
         _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
+
+        # Step 1: TX level write (optional, may require encryption)
         try:
             await client.write_gatt_char(uuids["pair"], bytearray([1]), response=True)
-            await client.write_gatt_char(
-                uuids["auth"], binascii.unhexlify(auth_key), response=True
-            )
-            await asyncio.sleep(2)
-
-            onboard_data = await client.read_gatt_char(uuids["onboard"])
-            is_onboarded = onboard_data != bytearray(b"\x00")
-            _LOGGER.debug("Onboard status after write: %s", is_onboarded)
+            _LOGGER.debug("TX level write OK")
         except Exception as err:  # noqa: BLE001
-            _LOGGER.warning("Onboarding failed for %s: %s", address, err)
+            _LOGGER.debug("TX level write failed (non-fatal): %s", err)
+
+        # Step 2: CMID write (the actual onboarding)
+        try:
+            await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
+            await asyncio.sleep(2)
+            _LOGGER.debug("Onboarding CMID write OK")
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Onboarding CMID write failed for %s: %s", address, err)
 
     # Authenticate with stored key
     try:
         _LOGGER.debug(
             "Authenticating %s with key %s...", address, auth_key[:4] + "****"
         )
-        await client.write_gatt_char(
-            uuids["auth"], binascii.unhexlify(auth_key), response=True
-        )
+        await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
         _LOGGER.debug("Auth key written successfully")
         return True
     except Exception as err:  # noqa: BLE001
