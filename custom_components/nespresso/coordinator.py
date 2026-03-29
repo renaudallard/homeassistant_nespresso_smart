@@ -26,9 +26,11 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from dataclasses import asdict
 from datetime import timedelta
+from pathlib import Path
 
 from bleak import BleakClient, BleakError
 from bleak_retry_connector import establish_connection
@@ -64,6 +66,10 @@ from .const import (
 from .models import NespressoMachineData, RawMachineData
 
 _LOGGER = logging.getLogger(__name__)
+
+_VERSION = json.loads((Path(__file__).parent / "manifest.json").read_text()).get(
+    "version", "unknown"
+)
 
 
 class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
@@ -266,7 +272,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     async def _async_update_data_locked(self) -> NespressoMachineData:
         """Actual update logic, must be called under _ble_lock."""
         _LOGGER.debug(
-            "Update cycle start: address=%s family=%s persistent=%s",
+            "Update cycle start: v%s address=%s family=%s persistent=%s",
+            _VERSION,
             self.address,
             self.family.value,
             self.persistent,
