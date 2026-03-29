@@ -310,6 +310,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 self.auth_key = generate_auth_key()
                 _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
 
+            # Auth upfront - all families require it (CMID or MachineToken)
+            from .ble.protocol import _authenticate, _try_pair
+
+            await _try_pair(client)
+            await _authenticate(client, self.auth_key, self.family)
+
             protocol = get_protocol(self.family)
             raw = await protocol.async_read_all(client, self.auth_key)
 

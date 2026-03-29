@@ -241,44 +241,14 @@ async def _read_char(
     auth_key: str | None = None,
     family: MachineFamily = MachineFamily.VERTUO_NEXT,
 ) -> bytearray:
-    """Read a GATT characteristic, auto-pairing and authenticating on NotPermitted."""
+    """Read a GATT characteristic. Auth is done upfront by the coordinator."""
     try:
         value = await client.read_gatt_char(char_uuid)
         _LOGGER.debug("Read %s [%s]: %s", name, char_uuid, value.hex())
         return value
     except Exception as err:
-        err_str = str(err).lower()
-        if "notpermitted" not in err_str and "not permitted" not in err_str:
-            _LOGGER.error("Failed to read %s [%s]: %s", name, char_uuid, err)
-            raise
-
-        _LOGGER.info(
-            "Read %s denied, attempting pair + auth for %s",
-            name,
-            client.address,
-        )
-
-        # Step 1: BLE-level pairing
-        await _try_pair(client)
-        await asyncio.sleep(1)
-
-        # Step 2: Application-level authentication
-        if auth_key:
-            await _authenticate(client, auth_key, family)
-            await asyncio.sleep(1)
-
-        # Retry after pair + auth
-        try:
-            value = await client.read_gatt_char(char_uuid)
-            _LOGGER.info("Read %s succeeded after pair + auth", name)
-            return value
-        except Exception as retry_err:
-            _LOGGER.error(
-                "Read %s still failed after pair + auth: %s",
-                name,
-                retry_err,
-            )
-            raise retry_err from err
+        _LOGGER.error("Failed to read %s [%s]: %s", name, char_uuid, err)
+        raise
 
 
 class AbstractNespressoProtocol(ABC):

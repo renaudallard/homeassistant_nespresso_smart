@@ -519,19 +519,14 @@ The official Nespresso app follows this sequence:
 
 ### HA Integration Connection Flow
 
-The integration uses a lazy auth approach for compatibility:
+The integration matches the APK flow with upfront auth on every connection:
 
 1. **Acquire BLE lock**: Prevent concurrent connections (machine supports one client)
 2. **Disconnect stale client**: Clean up any persistent connection
 3. **Connect**: `establish_connection()` with 3 retry attempts
-4. **Try Read**: Attempt to read `CHAR_MACHINE_STATUS` directly
-5. **If NotPermitted**: Trigger auth sequence:
-   a. `client.pair()` (BLE-level, result ignored)
-   b. Sleep 1 second
-   c. `_authenticate()`: check onboard, write TX level + CMID, write auth key
-   d. Sleep 1 second
-   e. Retry read
-6. **Read remaining characteristics**: info, serial, profile, params, settings, errors
+4. **BLE Pair**: `client.pair()` (result ignored, BLE-level encryption)
+5. **Authenticate**: `_authenticate()` writes CMID/MachineToken (all families require this)
+6. **Read all characteristics**: status, info, serial, profile, params, settings, errors
 7. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
 8. **Disconnect** (or keep alive in persistent mode)
 9. **Parse**: Convert raw bytes to `NespressoMachineData`
