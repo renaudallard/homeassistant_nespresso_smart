@@ -59,10 +59,16 @@ After installation, the integration will auto-discover Nespresso machines via Bl
 | State | Yes | Yes | No | Machine operational state (enum with 32 translated states) |
 | Firmware version | Yes | Yes | Yes | Current firmware version (diagnostic) |
 | Hardware version | Yes | Yes | No | Hardware revision (diagnostic) |
+| Bootloader version | Yes | Yes | No | Bootloader version (diagnostic) |
+| Profile version | Yes | Yes | No | BLE profile version (diagnostic) |
 | Bluetooth version | Yes | No | No | Bluetooth module version (diagnostic) |
 | Recipe DB version | No | Yes | No | Recipe database version (diagnostic) |
 | Connectivity FW | No | Yes | No | WiFi/connectivity firmware version (diagnostic) |
-| Error code | No | Yes | No | Current error code (diagnostic) |
+| Error code | No | Yes | No | Current active error code (diagnostic) |
+| Error log code | No | Yes | No | Error from error log (diagnostic) |
+| Capsule counter | No | Yes | No | Capsule counter |
+| IoT market | No | Yes | No | IoT market name (diagnostic) |
+| Recipe slots | Yes | No | No | Maximum recipe slots (diagnostic) |
 | Device shadow | No | No | Yes | Device shadow JSON data (diagnostic) |
 | FOTA status | No | No | Yes | Firmware update status (diagnostic) |
 | FOTA progress | No | No | Yes | Firmware update progress (diagnostic) |
@@ -88,10 +94,13 @@ After installation, the integration will auto-discover Nespresso machines via Bl
 | Language | Yes | No | No | Set machine display language |
 | Water hardness | No | Yes | No | Set water hardness level (0-6 slider) |
 | Auto power off | No | Yes | No | Set auto power off time (minutes) |
+| Check firmware update | No | No | Yes | Trigger firmware update check |
 
 ### Events and Triggers
 
-The integration fires events on machine state changes, enabling automations:
+Event entity fires on machine state changes (Barista and Vertuo Next).
+
+Device triggers for automations:
 - **brewing_started** / **brewing_finished**
 - **error_occurred**
 - **ready** / **standby**
