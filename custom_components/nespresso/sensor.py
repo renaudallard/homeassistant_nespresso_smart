@@ -49,6 +49,7 @@ from .const import (
 )
 from .coordinator import NespressoCoordinator
 from .models import NespressoMachineData
+from .timer_sensor import NespressoBrewingDuration
 
 ALL_STATE_OPTIONS: list[str] = sorted(
     set(BARISTA_STATE_NAMES.values()) | set(VERTUO_STATE_NAMES.values()) | {"unknown"}
@@ -220,11 +221,16 @@ async def async_setup_entry(
     coordinator: NespressoCoordinator = data["coordinator"]
     family = MachineFamily(entry.data["family"])
 
-    entities = [
+    entities: list[SensorEntity] = [
         NespressoSensor(coordinator, entry, desc)
         for desc in SENSOR_DESCRIPTIONS
         if family in desc.families
     ]
+
+    # Real-time brewing duration sensor
+    if family in (MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT):
+        entities.append(NespressoBrewingDuration(coordinator, entry))
+
     async_add_entities(entities)
 
 
