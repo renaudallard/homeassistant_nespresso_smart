@@ -40,6 +40,7 @@ from bleak import BleakClient
 from ..const import (
     BARISTA_CHAR_AUTH,
     BARISTA_CHAR_INFO,
+    BARISTA_CHAR_MACHINE_PARAMS,
     BARISTA_CHAR_PROFILE_VERSION,
     BARISTA_CHAR_ONBOARD_STATUS,
     BARISTA_CHAR_PAIR,
@@ -51,6 +52,7 @@ from ..const import (
     VERTUO_CHAR_ERROR_INFO,
     VERTUO_CHAR_INFO,
     VERTUO_CHAR_IOT_MARKET,
+    VERTUO_CHAR_MACHINE_PARAMS,
     VERTUO_CHAR_ONBOARD_STATUS,
     VERTUO_CHAR_PAIR,
     VERTUO_CHAR_PROFILE_VERSION,
@@ -349,6 +351,9 @@ class BaristaProtocol(AbstractNespressoProtocol):
         profile = await _read_char(
             client, BARISTA_CHAR_PROFILE_VERSION, "profile_version", auth_key, f
         )
+        params = await _read_char(
+            client, BARISTA_CHAR_MACHINE_PARAMS, "machine_params", auth_key, f
+        )
         # GATT dump only when debug logging is active
         gatt_dump = None
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -359,6 +364,7 @@ class BaristaProtocol(AbstractNespressoProtocol):
             info_bytes=bytes(info),
             serial_bytes=bytes(serial),
             profile_version_bytes=bytes(profile),
+            machine_params_bytes=bytes(params),
             gatt_dump=gatt_dump,
         )
 
@@ -375,6 +381,9 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         serial = await _read_char(client, VERTUO_CHAR_SERIAL, "serial", auth_key, f)
         profile = await _read_char(
             client, VERTUO_CHAR_PROFILE_VERSION, "profile_version", auth_key, f
+        )
+        params = await _read_char(
+            client, VERTUO_CHAR_MACHINE_PARAMS, "machine_params", auth_key, f
         )
         settings = await _read_char(
             client, VERTUO_CHAR_USER_SETTINGS, "user_settings", auth_key, f
@@ -415,6 +424,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
             info_bytes=bytes(info),
             serial_bytes=bytes(serial),
             profile_version_bytes=bytes(profile),
+            machine_params_bytes=bytes(params),
             user_settings_bytes=bytes(settings),
             error_info_bytes=bytes(error_info),
             caps_counter_bytes=bytes(caps_counter) if caps_counter else None,

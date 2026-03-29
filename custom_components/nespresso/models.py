@@ -62,6 +62,7 @@ class NespressoMachineData:
     motor_running: bool | None = None
     induction_heating: bool | None = None
     setup_complete: bool | None = None
+    ble_disabled: bool | None = None
 
     # VMini specific
     shadow_data: str | None = None
@@ -80,6 +81,7 @@ class RawMachineData:
     info_bytes: bytes | None = None
     serial_bytes: bytes | None = None
     profile_version_bytes: bytes | None = None
+    machine_params_bytes: bytes | None = None
     user_settings_bytes: bytes | None = None
     error_info_bytes: bytes | None = None
     caps_counter_bytes: bytes | None = None

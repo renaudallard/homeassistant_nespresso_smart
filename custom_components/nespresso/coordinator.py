@@ -42,6 +42,7 @@ from .ble.parsing import (
     parse_barista_machine_info,
     parse_barista_status,
     parse_caps_counter,
+    parse_barista_machine_params,
     parse_error_information,
     parse_profile_version,
     parse_general_user_settings,
@@ -298,6 +299,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             motor_running=bool(status.get("motor_running", False)),
             induction_heating=bool(status.get("induction_heating", False)),
             setup_complete=bool(status.get("setup_complete", False)),
+            ble_disabled=parse_barista_machine_params(raw.machine_params_bytes).get(
+                "ble_disabled", False
+            )
+            if raw.machine_params_bytes
+            else None,
             gatt_dump=raw.gatt_dump,
         )
 
