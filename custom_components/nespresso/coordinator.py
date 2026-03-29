@@ -146,12 +146,13 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     async def _disconnect(self) -> None:
         """Disconnect the persistent BLE client if connected."""
-        if self._client is not None:
+        client = self._client
+        self._client = None  # Clear reference first to prevent re-entry
+        if client is not None:
             try:
-                await self._client.disconnect()
-            except (BleakError, TimeoutError):
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
                 pass
-            self._client = None
 
     def _on_status_notification(self, _sender: object, data: bytearray) -> None:
         """Handle BLE GATT notification for status changes.
@@ -219,6 +220,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
                     await _try_pair(client)
                     await _authenticate(client, self.auth_key, self.family)
+                    await asyncio.sleep(1)
 
                 current = await client.read_gatt_char(char_uuid)
                 _LOGGER.debug(
@@ -248,12 +250,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 BleakClient, device, self.address, max_attempts=2
             )
             try:
-                # Authenticate before write
                 if self.auth_key:
                     from .ble.protocol import _authenticate, _try_pair
 
                     await _try_pair(client)
                     await _authenticate(client, self.auth_key, self.family)
+                    await asyncio.sleep(1)
 
                 await client.write_gatt_char(char_uuid, data, response=True)
                 _LOGGER.debug("Write %s: %s", char_uuid, data.hex())

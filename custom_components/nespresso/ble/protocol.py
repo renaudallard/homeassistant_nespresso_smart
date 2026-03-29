@@ -89,6 +89,8 @@ def generate_auth_key() -> str:
     return uuid.uuid4().hex[:16]
 
 
+# "pair" key maps to CHAR_TX_LEVEL_CHANGE_REQUEST in the APK.
+# Writing 0x01 (REDUCE_POWER) initiates the pairing/onboarding sequence.
 _AUTH_UUIDS: dict[str, dict[str, str]] = {
     MachineFamily.BARISTA: {
         "auth": BARISTA_CHAR_AUTH,
