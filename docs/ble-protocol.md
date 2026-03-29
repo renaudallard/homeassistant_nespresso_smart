@@ -169,26 +169,30 @@ Used by Barista and Vertuo Next machines for structured command/response communi
 
 ### CCommandReq (Request)
 
-Written to `CHAR_COMMAND_REQ`. Structure (minimum 5 bytes + payload):
+Written to `CHAR_COMMAND_REQ`. Wire format (19 bytes total):
 
 ```
 Offset  Size    Field
-0-1     2       cmdID (short, LSB first)
-2-3     2       subCmdID (short, LSB first)
-4       1       dataControl (bitfield, see below)
-5-20    0-16    data payload
+0       1       cmdID (unsigned byte)
+1       1       subCmdID (unsigned byte)
+2       1       dataControl (bitfield, see below)
+3-18    0-16    data payload
 ```
+
+Note: The CCommandReq model class uses `short` for cmdID/subCmdID, but the
+characteristic handler (`CharacCommandReq.java`) writes them as single bytes
+via `setByteUnsigned()` at offsets 0, 1, 2. Verified for both Barista and Vertuo Next.
 
 ### CCommandRsp (Response)
 
-Read from `CHAR_COMMAND_RSP` (via notification). Same layout as request:
+Read from `CHAR_COMMAND_RSP` (via notification). Same wire format as request:
 
 ```
 Offset  Size    Field
-0-1     2       cmdID (short)
-2-3     2       subCmdID (short)
-4-5     2       dataControl (short)
-6-21    0-16    data payload
+0       1       cmdID (unsigned byte)
+1       1       subCmdID (unsigned byte)
+2       1       dataControl (unsigned byte)
+3-18    0-16    data payload
 ```
 
 ### DataControl Bitfield
@@ -310,16 +314,18 @@ Read from `CHAR_MACHINE_STATUS`. Byte layout:
 
 ```
 Byte 0:
-  Bit 0:   bootloaderActive
-  Bits 5-6: pairingKeyState (PairingKeyState enum)
-  Bit 3:   errorPresent
-  Bit 4:   isMotorRunning
-  Bit 5:   isInductionHeatingActive
-  Bit 6:   isLastCmidValid
-  Bit 7:   isSetupComplete
+  Bit 0:     bootloaderActive
+  Bit 3:     errorPresent
+  Bit 4:     isMotorRunning
+  Bit 5:     isInductionHeatingActive
+  Bits 5-6:  pairingKeyState = (byte[0] & 0x60) >> 5
+             (dual interpretation: bits 5-6 are read BOTH individually
+              AND as a combined 2-bit pairingKeyState field)
+  Bit 6:     isLastCmidValid
+  Bit 7:     isSetupComplete
 
 Byte 1:
-  Bits 2-7: machineState (MachineState enum)
+  machineState = (byte[1] & 0xFC) >> 2
 ```
 
 ### Vertuo Next Machine Status
@@ -337,11 +343,16 @@ Byte 0:
   Bit 7:   bootloaderActive
 
 Byte 1:
-  Bit 4:   milkFrotherRunning
-  Bit 5:   manualProgCupLengthInProgress
-  Bit 6:   capsuleContainerFull
-  Bit 7:   brewingUnitClosed
-  Bits 0-5: machineStateVenus (MachineState enum)
+  Bits 0-3: machineStateVenus low nibble
+  Bit 4:    milkFrotherRunning
+  Bit 5:    manualProgCupLengthInProgress
+  Bit 6:    capsuleContainerFull
+  Bit 7:    brewingUnitClosed
+
+Byte 2:
+  Bits 4-7: machineStateVenus high nibble
+
+machineStateVenus = (byte[1] & 0x0F) + (byte[2] & 0xF0)
 ```
 
 ### VMini Pairing Status
