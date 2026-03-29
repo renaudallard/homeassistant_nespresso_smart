@@ -162,10 +162,13 @@ async def _authenticate(
         return await _try_strategy(client, uuids, auth_bytes, cached, address)
 
     # Try each strategy until one works
+    # fire_and_forget first: doesn't corrupt bleak if it fails
+    # direct second: may get ATT error that corrupts connection
+    # pair last: most disruptive, may corrupt connection
     for strategy in (
+        AUTH_STRATEGY_FIRE_AND_FORGET,
         AUTH_STRATEGY_DIRECT,
         AUTH_STRATEGY_PAIR_THEN_WRITE,
-        AUTH_STRATEGY_FIRE_AND_FORGET,
     ):
         _LOGGER.info("Trying auth strategy '%s' for %s", strategy, address)
         if await _try_strategy(client, uuids, auth_bytes, strategy, address):
