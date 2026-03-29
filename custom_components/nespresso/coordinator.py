@@ -25,6 +25,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import asdict
 from datetime import timedelta
@@ -86,6 +87,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.family = family
         self.persistent = persistent
         self.auth_key: str | None = None
+        self._ble_lock = asyncio.Lock()
         self._client: BleakClient | None = None
         self._status_uuid = self._get_status_uuid()
         self._device_id: str | None = None
@@ -193,8 +195,77 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         except (ValueError, IndexError) as err:
             _LOGGER.debug("Failed to parse notification: %s", err)
 
+    async def async_read_modify_write_char(
+        self, char_uuid: str, modify_fn: object
+    ) -> None:
+        """Read a characteristic, modify it, and write back atomically.
+
+        modify_fn receives a bytearray and should mutate it in place.
+        """
+        async with self._ble_lock:
+            device = bluetooth.async_ble_device_from_address(
+                self.hass, self.address, connectable=True
+            )
+            if device is None:
+                raise BleakError("Machine not found")
+
+            client = await establish_connection(
+                BleakClient, device, self.address, max_attempts=2
+            )
+            try:
+                if self.auth_key:
+                    from .ble.protocol import _authenticate, _try_pair
+
+                    await _try_pair(client)
+                    await _authenticate(client, self.auth_key, self.family)
+
+                current = await client.read_gatt_char(char_uuid)
+                _LOGGER.debug(
+                    "Read-modify-write %s current: %s", char_uuid, current.hex()
+                )
+                data = bytearray(current)
+                modify_fn(data)  # type: ignore[operator]
+                _LOGGER.debug("Read-modify-write %s new: %s", char_uuid, data.hex())
+                await client.write_gatt_char(char_uuid, bytes(data), response=True)
+            finally:
+                await client.disconnect()
+
+    async def async_write_char(self, char_uuid: str, data: bytes) -> None:
+        """Write to a BLE characteristic with proper locking and auth.
+
+        Acquires the BLE lock to prevent concurrent connections, connects
+        with auth, writes, disconnects, and refreshes.
+        """
+        async with self._ble_lock:
+            device = bluetooth.async_ble_device_from_address(
+                self.hass, self.address, connectable=True
+            )
+            if device is None:
+                raise BleakError("Machine not found")
+
+            client = await establish_connection(
+                BleakClient, device, self.address, max_attempts=2
+            )
+            try:
+                # Authenticate before write
+                if self.auth_key:
+                    from .ble.protocol import _authenticate, _try_pair
+
+                    await _try_pair(client)
+                    await _authenticate(client, self.auth_key, self.family)
+
+                await client.write_gatt_char(char_uuid, data, response=True)
+                _LOGGER.debug("Write %s: %s", char_uuid, data.hex())
+            finally:
+                await client.disconnect()
+
     async def _async_update_data(self) -> NespressoMachineData:
         """Connect, read all characteristics, parse, disconnect."""
+        async with self._ble_lock:
+            return await self._async_update_data_locked()
+
+    async def _async_update_data_locked(self) -> NespressoMachineData:
+        """Actual update logic, must be called under _ble_lock."""
         _LOGGER.debug(
             "Update cycle start: address=%s family=%s persistent=%s",
             self.address,

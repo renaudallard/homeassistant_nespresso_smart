@@ -27,9 +27,7 @@ from __future__ import annotations
 
 import logging
 
-from bleak import BleakClient, BleakError
-from bleak_retry_connector import establish_connection
-from homeassistant.components import bluetooth
+from bleak import BleakError
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -113,29 +111,17 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
           byte 3: activeTime2StandBy (preserved from current)
         """
         _LOGGER.debug("Writing water hardness: value=%d", int(value))
-        device = bluetooth.async_ble_device_from_address(
-            self.hass, self._address, connectable=True
-        )
-        if device is None:
-            _LOGGER.error("Machine not found for water hardness write")
-            return
+        int_val = int(value)
+
+        def modify(data: bytearray) -> None:
+            if len(data) >= 4:
+                data[2] = int_val & 0xFF
 
         try:
-            client = await establish_connection(
-                BleakClient, device, self._address, max_attempts=2
+            await self.coordinator.async_read_modify_write_char(
+                VERTUO_CHAR_USER_SETTINGS, modify
             )
-            try:
-                # Read current settings to preserve other values
-                current = await client.read_gatt_char(VERTUO_CHAR_USER_SETTINGS)
-                _LOGGER.debug("Current user settings: %s", bytes(current).hex())
-                data = bytearray(current)
-                if len(data) >= 4:
-                    data[2] = int(value) & 0xFF
-                    _LOGGER.debug("Writing user settings: %s", bytes(data).hex())
-                    await client.write_gatt_char(VERTUO_CHAR_USER_SETTINGS, bytes(data))
-                    _LOGGER.info("Water hardness set to %d", int(value))
-            finally:
-                await client.disconnect()
+            _LOGGER.info("Water hardness set to %d", int_val)
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set water hardness: %s", err)
@@ -190,30 +176,18 @@ class NespressoAutoPowerOff(CoordinatorEntity[NespressoCoordinator], NumberEntit
           byte 3: activeTime2StandBy (preserved)
         """
         _LOGGER.debug("Writing auto power off: value=%d", int(value))
-        device = bluetooth.async_ble_device_from_address(
-            self.hass, self._address, connectable=True
-        )
-        if device is None:
-            _LOGGER.error("Machine not found for auto power off write")
-            return
+        int_val = int(value) & 0xFFFF
+
+        def modify(data: bytearray) -> None:
+            if len(data) >= 4:
+                data[0] = int_val & 0xFF
+                data[1] = (int_val >> 8) & 0xFF
 
         try:
-            client = await establish_connection(
-                BleakClient, device, self._address, max_attempts=2
+            await self.coordinator.async_read_modify_write_char(
+                VERTUO_CHAR_USER_SETTINGS, modify
             )
-            try:
-                current = await client.read_gatt_char(VERTUO_CHAR_USER_SETTINGS)
-                _LOGGER.debug("Current user settings: %s", bytes(current).hex())
-                data = bytearray(current)
-                if len(data) >= 4:
-                    val = int(value) & 0xFFFF
-                    data[0] = val & 0xFF
-                    data[1] = (val >> 8) & 0xFF
-                    _LOGGER.debug("Writing user settings: %s", bytes(data).hex())
-                    await client.write_gatt_char(VERTUO_CHAR_USER_SETTINGS, bytes(data))
-                    _LOGGER.info("Auto power off set to %d", int(value))
-            finally:
-                await client.disconnect()
+            _LOGGER.info("Auto power off set to %d", int(value))
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set auto power off: %s", err)

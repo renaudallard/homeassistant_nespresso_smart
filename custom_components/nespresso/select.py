@@ -27,9 +27,7 @@ from __future__ import annotations
 
 import logging
 
-from bleak import BleakClient, BleakError
-from bleak_retry_connector import establish_connection
-from homeassistant.components import bluetooth
+from bleak import BleakError
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -124,33 +122,15 @@ class NespressoRecipeSelect(CoordinatorEntity[NespressoCoordinator], SelectEntit
             _LOGGER.debug("Invalid recipe option: %r", option)
             return
         index = BARISTA_RECIPES.index(option)
-        _LOGGER.debug(
-            "Writing recipe: option=%s index=%d char=%s",
-            option,
-            index,
-            BARISTA_CHAR_RECIPE_SELECTION,
-        )
-
-        device = bluetooth.async_ble_device_from_address(
-            self.hass, self._address, connectable=True
-        )
-        if device is None:
-            _LOGGER.error("Machine not found for recipe selection")
-            return
+        _LOGGER.debug("Writing recipe: option=%s index=%d", option, index)
 
         try:
-            client = await establish_connection(
-                BleakClient, device, self._address, max_attempts=2
+            await self.coordinator.async_write_char(
+                BARISTA_CHAR_RECIPE_SELECTION, bytes([index])
             )
-            try:
-                await client.write_gatt_char(
-                    BARISTA_CHAR_RECIPE_SELECTION, bytes([index])
-                )
-                self._attr_current_option = option
-                self.async_write_ha_state()
-                _LOGGER.info("Recipe set to %s (index %d)", option, index)
-            finally:
-                await client.disconnect()
+            self._attr_current_option = option
+            self.async_write_ha_state()
+            _LOGGER.info("Recipe set to %s (index %d)", option, index)
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set recipe: %s", err)
@@ -197,25 +177,12 @@ class NespressoLanguageSelect(CoordinatorEntity[NespressoCoordinator], SelectEnt
             option.encode("utf-8")[:2].hex(),
             BARISTA_CHAR_LANGUAGE,
         )
-        device = bluetooth.async_ble_device_from_address(
-            self.hass, self._address, connectable=True
-        )
-        if device is None:
-            _LOGGER.error("Machine not found for language setting")
-            return
 
         try:
-            client = await establish_connection(
-                BleakClient, device, self._address, max_attempts=2
-            )
-            try:
-                # Language is written as 2-byte UTF-8 string
-                lang_bytes = option.encode("utf-8")[:2].ljust(2, b"\x00")
-                await client.write_gatt_char(BARISTA_CHAR_LANGUAGE, lang_bytes)
-                self._attr_current_option = option
-                self.async_write_ha_state()
-                _LOGGER.info("Language set to %s", option)
-            finally:
-                await client.disconnect()
+            lang_bytes = option.encode("utf-8")[:2].ljust(2, b"\x00")
+            await self.coordinator.async_write_char(BARISTA_CHAR_LANGUAGE, lang_bytes)
+            self._attr_current_option = option
+            self.async_write_ha_state()
+            _LOGGER.info("Language set to %s", option)
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set language: %s", err)

@@ -27,9 +27,7 @@ from __future__ import annotations
 
 import logging
 
-from bleak import BleakClient, BleakError
-from bleak_retry_connector import establish_connection
-from homeassistant.components import bluetooth
+from bleak import BleakError
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -88,25 +86,11 @@ class NespressoFotaCheckButton(CoordinatorEntity[NespressoCoordinator], ButtonEn
 
     async def async_press(self) -> None:
         """Send CHECK_FOR_UPDATE command (0x00) to CHAR_FOTA_COMMAND."""
-        device = bluetooth.async_ble_device_from_address(
-            self.hass, self._address, connectable=True
-        )
-        if device is None:
-            _LOGGER.error("Machine not found for FOTA check")
-            return
-
         try:
-            client = await establish_connection(
-                BleakClient, device, self._address, max_attempts=2
+            await self.coordinator.async_write_char(
+                VMINI_CHAR_FOTA_COMMAND, bytes([0x00])
             )
-            try:
-                _LOGGER.debug("Sending FOTA CHECK_FOR_UPDATE to %s", self._address)
-                await client.write_gatt_char(
-                    VMINI_CHAR_FOTA_COMMAND, bytes([0x00]), response=True
-                )
-                _LOGGER.info("FOTA check command sent to %s", self._address)
-            finally:
-                await client.disconnect()
+            _LOGGER.info("FOTA check command sent to %s", self._address)
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to send FOTA check: %s", err)
