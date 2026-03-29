@@ -378,13 +378,98 @@ Version format (getVersionV2): `major.minor` from 2-byte MSB value.
 
 ---
 
+## Authentication
+
+Source: `com.sdataway.vertuonext.sdk.characteristics.CharacCMID`, `CharacCMIDType`, `CharacTXLevelChangeRequest`
+
+Nespresso machines require **application-level authentication** after BLE pairing. Without writing a valid auth key (CMID), GATT characteristic reads are denied with `org.bluez.Error.NotPermitted`.
+
+### Authentication Characteristics
+
+| Characteristic | UUID | Access | Description |
+|---------------|------|--------|-------------|
+| CHAR_CMID (Auth Key) | `06AA3A41-F22A-11E3-9DAA-0002A5D5C51B` | Write | 8-byte auth key |
+| CHAR_CMID_TYPE (Onboard Status) | `06AA3A51-F22A-11E3-9DAA-0002A5D5C51B` | Read/Notify | Pairing state enum |
+| CHAR_TX_LEVEL_CHANGE_REQUEST | `06AA3A61-F22A-11E3-9DAA-0002A5D5C51B` | Write | 1-byte TX power level |
+
+### CMID Type (Onboard Status) Values
+
+Source: `com.sdataway.vertuonext.sdk.models.CCMIDType.CMIDTypeEnum`
+
+| Value | State | Description |
+|-------|-------|-------------|
+| 0 | NONE | Not onboarded, no auth key registered |
+| 1 | TEMPORARY | Temporary auth key (onboarding in progress) |
+| 2 | FINAL | Permanent auth key established |
+| 3 | UNDEFINED | Undefined state |
+| 255 | UNKNOWN | Could not determine state |
+
+### Auth Key Format
+
+Source: `com.sdataway.vertuonext.sdk.models.CCMID`
+
+- **Size:** 8 bytes (`byte[] cMID = new byte[8]`)
+- **Generation:** Random 8 bytes (or 16 hex characters converted to 8 bytes)
+- **Persistence:** Must be stored and reused on subsequent connections
+
+### Onboarding Flow (First Connection)
+
+1. **BLE Pair**: `client.pair()` to establish BLE-level encryption
+2. **Check Status**: Read `CHAR_CMID_TYPE` - if value is `0` (NONE), machine is not onboarded
+3. **Set TX Level**: Write `0x01` to `CHAR_TX_LEVEL_CHANGE_REQUEST` (set low power for pairing)
+4. **Write Auth Key**: Write 8-byte random key to `CHAR_CMID`
+5. **Wait**: Sleep 2-3 seconds for machine to process
+6. **Verify**: Read `CHAR_CMID_TYPE` again - should be `2` (FINAL) if successful
+
+### Subsequent Connection Flow
+
+1. **BLE Pair**: `client.pair()` (may be instant if already bonded)
+2. **Authenticate**: Write stored 8-byte auth key to `CHAR_CMID`
+3. **Read**: All GATT characteristics are now accessible
+
+---
+
+## Brew Command Protocol
+
+Source: `github.com/bulldog5046/ha_nespresso_integration`
+
+Brew commands are written to `CHAR_COMMAND_REQ` (`06AA3A42`) as a 10-byte buffer:
+
+```
+Offset  Value   Description
+0       3       Command prefix
+1       5       Command prefix
+2       7       Command prefix
+3       4       Command prefix
+4-7     0       Reserved
+8       temp    Temperature (LOW=1, MEDIUM=0, HIGH=2)
+9       brew    Brew type (see below)
+```
+
+### Brew Types
+
+| Value | Type |
+|-------|------|
+| 0 | Ristretto |
+| 1 | Espresso |
+| 2 | Lungo |
+| 4 | Hot Water |
+| 5 | Americano |
+| 7 | Custom |
+
+### Command Response
+
+Responses are received via notification on `CHAR_COMMAND_RSP` (`06AA3A52`).
+
+---
+
 ## Encryption
 
 Source: `com.sdataway.barista.machine.utils.crypto.impl.CryptoImpl`
 
 - **Algorithm:** AES/ECB/PKCS5Padding
 - **Usage:** Primarily for firmware update (FOTA) validation and IoT configuration decryption
-- BLE characteristic data itself is not application-layer encrypted (relies on BLE link-layer encryption)
+- BLE characteristic data is protected by application-level auth (CMID), not application-layer encryption
 
 ---
 
@@ -400,17 +485,20 @@ Source: `com.sdataway.ble2.AbstractCharacteristicHelper`, `ScanService`
 | Characteristic Write | 30,000 ms |
 | BLE Scan Duration | 10,000 ms (default) |
 
-### Connection Flow
+### Full Connection Flow
 
 1. **Scan**: `ScanService` scans for devices advertising the expected service UUIDs
 2. **Connect**: Establish GATT connection to selected device
 3. **Discover Services**: Enumerate all GATT services and characteristics
-4. **Enable Notifications**: Subscribe to status and response characteristics
-5. **Read Status**: Read `CHAR_MACHINE_STATUS` to get current state
-6. **Read Info**: Read `CHAR_MACHINE_INFO` for hardware/firmware versions
-7. **Read Serial**: Read `CHAR_SERIAL_NUMBER` for device identification
-8. **Authenticate**: Write CMID to `CHAR_CMID` (8-byte Capsule Machine ID)
-9. **Operate**: Send commands via `CHAR_COMMAND_REQ`, receive responses via `CHAR_COMMAND_RSP`
+4. **BLE Pair**: `client.pair()` for BLE-level encryption
+5. **Check Onboard**: Read `CHAR_CMID_TYPE` for auth state
+6. **Onboard** (if needed): Write TX level + auth key to `CHAR_CMID`
+7. **Authenticate**: Write stored auth key to `CHAR_CMID`
+8. **Enable Notifications**: Subscribe to status and response characteristics
+9. **Read Status**: Read `CHAR_MACHINE_STATUS` to get current state
+10. **Read Info**: Read `CHAR_MACHINE_INFO` for hardware/firmware versions
+11. **Read Serial**: Read `CHAR_SERIAL_NUMBER` for device identification
+12. **Operate**: Send commands via `CHAR_COMMAND_REQ`, receive responses via `CHAR_COMMAND_RSP`
 
 ### Thread Safety
 
