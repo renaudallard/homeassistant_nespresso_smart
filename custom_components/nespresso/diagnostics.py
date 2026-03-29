@@ -34,6 +34,13 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import NespressoCoordinator
 
+REDACT_KEYS = {"address", "serial_number", "auth_key"}
+
+
+def _redact(data: dict[str, Any]) -> dict[str, Any]:
+    """Redact sensitive fields from a dictionary."""
+    return {k: "**REDACTED**" if k in REDACT_KEYS else v for k, v in data.items()}
+
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
@@ -43,12 +50,14 @@ async def async_get_config_entry_diagnostics(
     coordinator: NespressoCoordinator = data["coordinator"]
 
     diag: dict[str, Any] = {
-        "config_entry": {
-            "address": entry.data.get("address"),
-            "family": entry.data.get("family"),
-            "name": entry.data.get("name"),
-            "options": dict(entry.options),
-        },
+        "config_entry": _redact(
+            {
+                "address": entry.data.get("address"),
+                "family": entry.data.get("family"),
+                "name": entry.data.get("name"),
+                "options": dict(entry.options),
+            }
+        ),
         "coordinator": {
             "last_update_success": coordinator.last_update_success,
             "update_interval_seconds": coordinator.update_interval.total_seconds()
@@ -59,9 +68,8 @@ async def async_get_config_entry_diagnostics(
 
     if coordinator.data is not None:
         data_dict = asdict(coordinator.data)
-        # Separate GATT dump for readability
         gatt_dump = data_dict.pop("gatt_dump", None)
-        diag["machine_data"] = data_dict
+        diag["machine_data"] = _redact(data_dict)
         if gatt_dump:
             diag["gatt_characteristic_dump"] = gatt_dump
 
@@ -70,7 +78,6 @@ async def async_get_config_entry_diagnostics(
 
     diag["debug_info"] = {
         "family": coordinator.family.value,
-        "address": coordinator.address,
         "persistent_mode": coordinator.persistent,
         "has_active_client": coordinator._client is not None,
     }
