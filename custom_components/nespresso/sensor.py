@@ -137,6 +137,15 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         value_fn=lambda d: d.error_code,
     ),
     NespressoSensorDescription(
+        key="iot_market_name",
+        translation_key="iot_market_name",
+        name="IoT market",
+        icon="mdi:earth",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda d: d.iot_market_name,
+    ),
+    NespressoSensorDescription(
         key="caps_counter",
         translation_key="caps_counter",
         name="Capsule counter",

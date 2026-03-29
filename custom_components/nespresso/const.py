@@ -71,6 +71,7 @@ VERTUO_CHAR_PAIR: Final = "06aa3a61-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_CAPS_COUNTER: Final = "06aa3a15-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_COMMAND_RSP: Final = "06aa3a52-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_ERROR_INFO: Final = "06aa3a23-f22a-11e3-9daa-0002a5d5c51b"
+VERTUO_CHAR_IOT_MARKET: Final = "06aa3a79-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_USER_SETTINGS: Final = "06aa3a44-f22a-11e3-9daa-0002a5d5c51b"
 
 # ---------------------------------------------------------------------------

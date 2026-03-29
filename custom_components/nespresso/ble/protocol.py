@@ -47,10 +47,16 @@ from ..const import (
     BARISTA_CHAR_STATUS,
     VERTUO_CHAR_AUTH,
     VERTUO_CHAR_CAPS_COUNTER,
-    VERTUO_CHAR_PROFILE_VERSION,
     VERTUO_CHAR_COMMAND_RSP,
+    VERTUO_CHAR_ERROR_INFO,
+    VERTUO_CHAR_INFO,
+    VERTUO_CHAR_IOT_MARKET,
     VERTUO_CHAR_ONBOARD_STATUS,
     VERTUO_CHAR_PAIR,
+    VERTUO_CHAR_PROFILE_VERSION,
+    VERTUO_CHAR_SERIAL,
+    VERTUO_CHAR_STATUS,
+    VERTUO_CHAR_USER_SETTINGS,
     VMINI_CHAR_MACHINE_TOKEN,
     VMINI_CHAR_FOTA_STATUS,
     VMINI_CHAR_FW_REV,
@@ -62,11 +68,6 @@ from ..const import (
     VMINI_CHAR_SW_REV,
     VMINI_CHAR_WIFI_CURRENT,
     VMINI_CHAR_WIFI_MAC,
-    VERTUO_CHAR_ERROR_INFO,
-    VERTUO_CHAR_INFO,
-    VERTUO_CHAR_SERIAL,
-    VERTUO_CHAR_STATUS,
-    VERTUO_CHAR_USER_SETTINGS,
     MachineFamily,
 )
 from ..models import RawMachineData
@@ -390,6 +391,14 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Capsule counter not available")
 
+        # IoT market name (optional)
+        iot_market = None
+        try:
+            iot_market = await client.read_gatt_char(VERTUO_CHAR_IOT_MARKET)
+            _LOGGER.debug("IoT market name: %s", _decode_ble_string(bytes(iot_market)))
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("IoT market name not available")
+
         # Read command response for any unsolicited data (debugging)
         try:
             cmd_rsp = await client.read_gatt_char(VERTUO_CHAR_COMMAND_RSP)
@@ -409,6 +418,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
             user_settings_bytes=bytes(settings),
             error_info_bytes=bytes(error_info),
             caps_counter_bytes=bytes(caps_counter) if caps_counter else None,
+            iot_market_bytes=bytes(iot_market) if iot_market else None,
             gatt_dump=gatt_dump,
         )
 
