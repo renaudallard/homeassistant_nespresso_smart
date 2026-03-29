@@ -143,17 +143,19 @@ async def _authenticate(
     if not is_onboarded:
         _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
 
-        # Step 1: TX level write (optional, may require encryption)
+        # Step 1: TX level write (fire-and-forget to avoid ATT error corrupting bleak)
         try:
-            await client.write_gatt_char(uuids["pair"], bytearray([1]), response=True)
-            _LOGGER.debug("TX level write OK")
+            await client.write_gatt_char(uuids["pair"], bytearray([1]), response=False)
+            _LOGGER.debug("TX level write sent")
         except Exception as err:  # noqa: BLE001
             _LOGGER.debug("TX level write failed (non-fatal): %s", err)
 
-        # Step 2: CMID write (the actual onboarding)
+        await asyncio.sleep(1)
+
+        # Step 2: CMID write (fire-and-forget for same reason)
         try:
-            await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
-            _LOGGER.debug("Onboarding CMID write OK")
+            await client.write_gatt_char(uuids["auth"], auth_bytes, response=False)
+            _LOGGER.debug("Onboarding CMID write sent")
         except Exception as err:  # noqa: BLE001
             _LOGGER.warning("Onboarding CMID write failed for %s: %s", address, err)
 
@@ -165,7 +167,8 @@ async def _authenticate(
         _LOGGER.debug(
             "Authenticating %s with key %s...", address, auth_key[:4] + "****"
         )
-        await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
+        await client.write_gatt_char(uuids["auth"], auth_bytes, response=False)
+        await asyncio.sleep(1)
         _LOGGER.debug("Auth key written successfully")
         return True
     except Exception as err:  # noqa: BLE001
