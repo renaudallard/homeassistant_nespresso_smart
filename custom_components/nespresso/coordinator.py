@@ -216,10 +216,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             )
             try:
                 if self.auth_key:
-                    from .ble.protocol import _authenticate, _try_pair
+                    from .ble.protocol import _authenticate
 
-                    await _try_pair(client)
-                    await asyncio.sleep(2)
                     await _authenticate(client, self.auth_key, self.family)
 
                 current = await client.read_gatt_char(char_uuid)
@@ -251,10 +249,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             )
             try:
                 if self.auth_key:
-                    from .ble.protocol import _authenticate, _try_pair
+                    from .ble.protocol import _authenticate
 
-                    await _try_pair(client)
-                    await asyncio.sleep(2)
                     await _authenticate(client, self.auth_key, self.family)
 
                 await client.write_gatt_char(char_uuid, data, response=True)
@@ -311,10 +307,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
 
             # Auth upfront - all families require it (CMID or MachineToken)
-            from .ble.protocol import _authenticate, _try_pair
+            from .ble.protocol import _authenticate
 
-            await _try_pair(client)
-            await asyncio.sleep(2)
             await _authenticate(client, self.auth_key, self.family)
 
             protocol = get_protocol(self.family)
