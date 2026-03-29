@@ -153,10 +153,12 @@ async def _authenticate(
         # Step 2: CMID write (the actual onboarding)
         try:
             await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
-            await asyncio.sleep(2)
             _LOGGER.debug("Onboarding CMID write OK")
         except Exception as err:  # noqa: BLE001
             _LOGGER.warning("Onboarding CMID write failed for %s: %s", address, err)
+
+        # Wait for machine to process onboarding (APK and bulldog both wait here)
+        await asyncio.sleep(3)
 
     # Authenticate with stored key
     try:
