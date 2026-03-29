@@ -354,6 +354,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             auto_power_off=auto_power_off,
             error_code=error_code,
             caps_counter=caps_counter,
+            error_list_code=parse_error_information(raw.error_list_bytes).get(
+                "error_code"
+            )
+            if raw.error_list_bytes and len(raw.error_list_bytes) >= 3
+            else None,
             iot_market_name=parse_serial_number(raw.iot_market_bytes)
             if raw.iot_market_bytes
             else None,

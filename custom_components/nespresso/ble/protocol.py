@@ -50,6 +50,7 @@ from ..const import (
     VERTUO_CHAR_CAPS_COUNTER,
     VERTUO_CHAR_COMMAND_RSP,
     VERTUO_CHAR_ERROR_INFO,
+    VERTUO_CHAR_ERROR_SELECTION,
     VERTUO_CHAR_INFO,
     VERTUO_CHAR_IOT_MARKET,
     VERTUO_CHAR_MACHINE_PARAMS,
@@ -388,9 +389,28 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         settings = await _read_char(
             client, VERTUO_CHAR_USER_SETTINGS, "user_settings", auth_key, f
         )
+        # Select current active error (index 0) then read error info
+        try:
+            await client.write_gatt_char(
+                VERTUO_CHAR_ERROR_SELECTION, bytes([0]), response=True
+            )
+            _LOGGER.debug("Error selection set to index 0 (current active)")
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Error selection write not available")
         error_info = await _read_char(
             client, VERTUO_CHAR_ERROR_INFO, "error_info", auth_key, f
         )
+
+        # Also read error at index 1 (error present in list) for diagnostics
+        error_list_entry = None
+        try:
+            await client.write_gatt_char(
+                VERTUO_CHAR_ERROR_SELECTION, bytes([1]), response=True
+            )
+            error_list_entry = await client.read_gatt_char(VERTUO_CHAR_ERROR_INFO)
+            _LOGGER.debug("Error list entry raw: %s", error_list_entry.hex())
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Error list entry not available")
 
         # Capsule counter (optional, may not be available on all models)
         caps_counter = None
@@ -428,6 +448,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
             user_settings_bytes=bytes(settings),
             error_info_bytes=bytes(error_info),
             caps_counter_bytes=bytes(caps_counter) if caps_counter else None,
+            error_list_bytes=bytes(error_list_entry) if error_list_entry else None,
             iot_market_bytes=bytes(iot_market) if iot_market else None,
             gatt_dump=gatt_dump,
         )
