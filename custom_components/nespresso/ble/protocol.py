@@ -166,12 +166,13 @@ async def _authenticate(
         )
 
     # Try each strategy until one works
-    # fire_and_forget first: doesn't corrupt bleak if it fails
-    # direct second: may get ATT error that corrupts connection
-    # pair last: most disruptive, may corrupt connection
+    # direct first: matches bulldog/APK approach (write with response)
+    # pair() is already done upfront by the coordinator, so bond should exist
+    # fire_and_forget second: fallback if direct fails
+    # pair last: redundant since coordinator already paired, but handles edge cases
     for strategy in (
-        AUTH_STRATEGY_FIRE_AND_FORGET,
         AUTH_STRATEGY_DIRECT,
+        AUTH_STRATEGY_FIRE_AND_FORGET,
         AUTH_STRATEGY_PAIR_THEN_WRITE,
     ):
         _LOGGER.info("Trying auth strategy '%s' for %s", strategy, address)
