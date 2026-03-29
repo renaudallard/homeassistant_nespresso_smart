@@ -219,8 +219,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     from .ble.protocol import _authenticate, _try_pair
 
                     await _try_pair(client)
+                    await asyncio.sleep(2)
                     await _authenticate(client, self.auth_key, self.family)
-                    await asyncio.sleep(1)
 
                 current = await client.read_gatt_char(char_uuid)
                 _LOGGER.debug(
@@ -254,8 +254,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     from .ble.protocol import _authenticate, _try_pair
 
                     await _try_pair(client)
+                    await asyncio.sleep(2)
                     await _authenticate(client, self.auth_key, self.family)
-                    await asyncio.sleep(1)
 
                 await client.write_gatt_char(char_uuid, data, response=True)
                 _LOGGER.debug("Write %s: %s", char_uuid, data.hex())
@@ -314,6 +314,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             from .ble.protocol import _authenticate, _try_pair
 
             await _try_pair(client)
+            await asyncio.sleep(2)
             await _authenticate(client, self.auth_key, self.family)
 
             protocol = get_protocol(self.family)
