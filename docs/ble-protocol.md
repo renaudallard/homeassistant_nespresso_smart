@@ -496,21 +496,58 @@ Source: `com.sdataway.ble2.AbstractCharacteristicHelper`, `ScanService`
 | Characteristic Write | 30,000 ms |
 | BLE Scan Duration | 10,000 ms (default) |
 
-### Full Connection Flow
+### Full Connection Flow (APK)
+
+The official Nespresso app follows this sequence:
 
 1. **Scan**: `ScanService` scans for devices advertising the expected service UUIDs
 2. **Connect**: Establish GATT connection to selected device
 3. **Discover Services**: Enumerate all GATT services and characteristics
 4. **BLE Pair**: `client.pair()` for BLE-level encryption
-5. **Check Onboard**: Read `CHAR_CMID_TYPE` for auth state
-6. **Onboard** (if needed): Write TX level + auth key to `CHAR_CMID`
-7. **Authenticate**: Write stored auth key to `CHAR_CMID`
-8. **Enable Notifications**: Subscribe to status and response characteristics
-9. **Read Status**: Read `CHAR_MACHINE_STATUS` to get current state
-10. **Read Info**: Read `CHAR_MACHINE_INFO` for hardware/firmware versions
-11. **Read Serial**: Read `CHAR_SERIAL_NUMBER` for device identification
+5. **Check Onboard**: Read `CHAR_CMID_TYPE` for auth state (0=NONE, 2=FINAL)
+6. **Onboard** (if CMID_TYPE is NONE):
+   a. Write `0x01` (REDUCE_POWER) to `CHAR_TX_LEVEL_CHANGE_REQUEST`
+   b. Write 8-byte auth key to `CHAR_CMID`
+   c. Wait 2 seconds
+   d. Read `CHAR_CMID_TYPE` again to verify onboarding succeeded
+7. **Authenticate**: Write stored 8-byte auth key to `CHAR_CMID`
+8. **Read Status**: Read `CHAR_MACHINE_STATUS` to get current state
+9. **Read Info**: Read `CHAR_MACHINE_INFO` for hardware/firmware versions
+10. **Read Serial**: Read `CHAR_SERIAL_NUMBER` for device identification
+11. **Enable Notifications**: Subscribe to status and response characteristics
 12. **Operate**: Send commands via `CHAR_COMMAND_REQ`, receive responses via `CHAR_COMMAND_RSP`
+
+### HA Integration Connection Flow
+
+The integration uses a lazy auth approach for compatibility:
+
+1. **Acquire BLE lock**: Prevent concurrent connections (machine supports one client)
+2. **Disconnect stale client**: Clean up any persistent connection
+3. **Connect**: `establish_connection()` with 3 retry attempts
+4. **Try Read**: Attempt to read `CHAR_MACHINE_STATUS` directly
+5. **If NotPermitted**: Trigger auth sequence:
+   a. `client.pair()` (BLE-level, result ignored)
+   b. Sleep 1 second
+   c. `_authenticate()`: check onboard, write TX level + CMID, write auth key
+   d. Sleep 1 second
+   e. Retry read
+6. **Read remaining characteristics**: info, serial, profile, params, settings, errors
+7. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
+8. **Disconnect** (or keep alive in persistent mode)
+9. **Parse**: Convert raw bytes to `NespressoMachineData`
+10. **Fire triggers**: Compare old/new state, fire bus events
+
+### Write Operation Flow
+
+All write operations (recipe, language, water hardness, APO, FOTA) use the same pattern:
+
+1. **Acquire BLE lock**: Same lock as read, prevents concurrent access
+2. **Connect**: `establish_connection()` with 2 retry attempts
+3. **Authenticate**: `_try_pair()` + `_authenticate()` + sleep 1 second
+4. **Write**: `write_gatt_char()` with `response=True`
+5. **Disconnect**: Always, even on error
+6. **Refresh**: `async_request_refresh()` to update sensors
 
 ### Thread Safety
 
-All characteristic operations use `StaticBusyLocker` to prevent concurrent reads/writes on the same characteristic.
+All characteristic operations use `StaticBusyLocker` (APK) or `asyncio.Lock` (HA integration) to prevent concurrent reads/writes on the same characteristic.
