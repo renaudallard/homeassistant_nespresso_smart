@@ -38,13 +38,17 @@ from abc import ABC, abstractmethod
 from bleak import BleakClient
 
 from ..const import (
+    BARISTA_CHAR_AUTH,
     BARISTA_CHAR_INFO,
+    BARISTA_CHAR_ONBOARD_STATUS,
+    BARISTA_CHAR_PAIR,
     BARISTA_CHAR_SERIAL,
     BARISTA_CHAR_STATUS,
     VERTUO_CHAR_AUTH,
     VERTUO_CHAR_COMMAND_RSP,
     VERTUO_CHAR_ONBOARD_STATUS,
     VERTUO_CHAR_PAIR,
+    VMINI_CHAR_MACHINE_TOKEN,
     VMINI_CHAR_FOTA_STATUS,
     VMINI_CHAR_FW_REV,
     VMINI_CHAR_MANUFACTURER,
@@ -77,19 +81,41 @@ def generate_auth_key() -> str:
     return uuid.uuid4().hex[:16]
 
 
-async def _authenticate(client: BleakClient, auth_key: str) -> bool:
+_AUTH_UUIDS: dict[str, dict[str, str]] = {
+    MachineFamily.BARISTA: {
+        "auth": BARISTA_CHAR_AUTH,
+        "onboard": BARISTA_CHAR_ONBOARD_STATUS,
+        "pair": BARISTA_CHAR_PAIR,
+    },
+    MachineFamily.VERTUO_NEXT: {
+        "auth": VERTUO_CHAR_AUTH,
+        "onboard": VERTUO_CHAR_ONBOARD_STATUS,
+        "pair": VERTUO_CHAR_PAIR,
+    },
+}
+
+
+async def _authenticate(
+    client: BleakClient, auth_key: str, family: MachineFamily
+) -> bool:
     """Authenticate with the Nespresso machine after BLE pairing.
 
-    Nespresso machines require application-level auth: a 16-char hex key
-    written to CHAR_AUTH (CMID). Without this, GATT reads are denied.
-
-    Based on: github.com/bulldog5046/ha_nespresso_integration
+    Barista and Vertuo Next use CMID auth (8-byte key written to CHAR_AUTH).
+    VMini uses a 36-byte MachineToken written to CHAR_MACHINE_TOKEN.
     """
     address = client.address
 
+    if family == MachineFamily.VMINI:
+        return await _authenticate_vmini(client, auth_key)
+
+    uuids = _AUTH_UUIDS.get(family)
+    if not uuids:
+        _LOGGER.debug("No auth UUIDs for family %s", family)
+        return False
+
     # Check onboard status
     try:
-        onboard_data = await client.read_gatt_char(VERTUO_CHAR_ONBOARD_STATUS)
+        onboard_data = await client.read_gatt_char(uuids["onboard"])
         is_onboarded = onboard_data != bytearray(b"\x00")
         _LOGGER.debug(
             "Onboard status for %s: %s (raw=%s)",
@@ -103,17 +129,15 @@ async def _authenticate(client: BleakClient, auth_key: str) -> bool:
 
     # Onboard if needed
     if not is_onboarded:
-        _LOGGER.info("Onboarding %s with new auth key", address)
+        _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
         try:
+            await client.write_gatt_char(uuids["pair"], bytearray([1]), response=True)
             await client.write_gatt_char(
-                VERTUO_CHAR_PAIR, bytearray([1]), response=True
-            )
-            await client.write_gatt_char(
-                VERTUO_CHAR_AUTH, binascii.unhexlify(auth_key), response=True
+                uuids["auth"], binascii.unhexlify(auth_key), response=True
             )
             await asyncio.sleep(2)
 
-            onboard_data = await client.read_gatt_char(VERTUO_CHAR_ONBOARD_STATUS)
+            onboard_data = await client.read_gatt_char(uuids["onboard"])
             is_onboarded = onboard_data != bytearray(b"\x00")
             _LOGGER.debug("Onboard status after write: %s", is_onboarded)
         except Exception as err:  # noqa: BLE001
@@ -125,12 +149,30 @@ async def _authenticate(client: BleakClient, auth_key: str) -> bool:
             "Authenticating %s with key %s...", address, auth_key[:4] + "****"
         )
         await client.write_gatt_char(
-            VERTUO_CHAR_AUTH, binascii.unhexlify(auth_key), response=True
+            uuids["auth"], binascii.unhexlify(auth_key), response=True
         )
         _LOGGER.debug("Auth key written successfully")
         return True
     except Exception as err:  # noqa: BLE001
         _LOGGER.error("Authentication failed for %s: %s", address, err)
+        return False
+
+
+async def _authenticate_vmini(client: BleakClient, auth_key: str) -> bool:
+    """Authenticate VMini using 36-byte MachineToken."""
+    address = client.address
+    try:
+        token = auth_key.encode("utf-8").ljust(36, b"\x00")
+        _LOGGER.debug(
+            "Writing VMini machine token for %s: %s...",
+            address,
+            token[:8].hex(),
+        )
+        await client.write_gatt_char(VMINI_CHAR_MACHINE_TOKEN, token, response=True)
+        _LOGGER.debug("VMini machine token written successfully")
+        return True
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.error("VMini authentication failed for %s: %s", address, err)
         return False
 
 
@@ -238,6 +280,7 @@ async def _read_char(
     char_uuid: str,
     name: str,
     auth_key: str | None = None,
+    family: MachineFamily = MachineFamily.VERTUO_NEXT,
 ) -> bytearray:
     """Read a GATT characteristic, auto-pairing and authenticating on NotPermitted."""
     try:
@@ -262,7 +305,7 @@ async def _read_char(
 
         # Step 2: Application-level authentication
         if auth_key:
-            await _authenticate(client, auth_key)
+            await _authenticate(client, auth_key, family)
             await asyncio.sleep(1)
 
         # Retry after pair + auth
@@ -295,9 +338,10 @@ class BaristaProtocol(AbstractNespressoProtocol):
     async def async_read_all(
         self, client: BleakClient, auth_key: str | None = None
     ) -> RawMachineData:
-        status = await _read_char(client, BARISTA_CHAR_STATUS, "status", auth_key)
-        info = await _read_char(client, BARISTA_CHAR_INFO, "machine_info", auth_key)
-        serial = await _read_char(client, BARISTA_CHAR_SERIAL, "serial", auth_key)
+        f = MachineFamily.BARISTA
+        status = await _read_char(client, BARISTA_CHAR_STATUS, "status", auth_key, f)
+        info = await _read_char(client, BARISTA_CHAR_INFO, "machine_info", auth_key, f)
+        serial = await _read_char(client, BARISTA_CHAR_SERIAL, "serial", auth_key, f)
         # GATT dump only when debug logging is active
         gatt_dump = None
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -317,14 +361,15 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
     async def async_read_all(
         self, client: BleakClient, auth_key: str | None = None
     ) -> RawMachineData:
-        status = await _read_char(client, VERTUO_CHAR_STATUS, "status", auth_key)
-        info = await _read_char(client, VERTUO_CHAR_INFO, "machine_info", auth_key)
-        serial = await _read_char(client, VERTUO_CHAR_SERIAL, "serial", auth_key)
+        f = MachineFamily.VERTUO_NEXT
+        status = await _read_char(client, VERTUO_CHAR_STATUS, "status", auth_key, f)
+        info = await _read_char(client, VERTUO_CHAR_INFO, "machine_info", auth_key, f)
+        serial = await _read_char(client, VERTUO_CHAR_SERIAL, "serial", auth_key, f)
         settings = await _read_char(
-            client, VERTUO_CHAR_USER_SETTINGS, "user_settings", auth_key
+            client, VERTUO_CHAR_USER_SETTINGS, "user_settings", auth_key, f
         )
         error_info = await _read_char(
-            client, VERTUO_CHAR_ERROR_INFO, "error_info", auth_key
+            client, VERTUO_CHAR_ERROR_INFO, "error_info", auth_key, f
         )
 
         # Read command response for any unsolicited data (debugging)
@@ -354,13 +399,14 @@ class VMiniProtocol(AbstractNespressoProtocol):
     async def async_read_all(
         self, client: BleakClient, auth_key: str | None = None
     ) -> RawMachineData:
-        serial = await _read_char(client, VMINI_CHAR_SERIAL, "serial", auth_key)
-        pairing = await _read_char(client, VMINI_CHAR_PAIRING, "pairing", auth_key)
-        fw = await _read_char(client, VMINI_CHAR_FW_REV, "firmware_rev", auth_key)
-        sw = await _read_char(client, VMINI_CHAR_SW_REV, "software_rev", auth_key)
-        model = await _read_char(client, VMINI_CHAR_MODEL, "model", auth_key)
+        f = MachineFamily.VMINI
+        serial = await _read_char(client, VMINI_CHAR_SERIAL, "serial", auth_key, f)
+        pairing = await _read_char(client, VMINI_CHAR_PAIRING, "pairing", auth_key, f)
+        fw = await _read_char(client, VMINI_CHAR_FW_REV, "firmware_rev", auth_key, f)
+        sw = await _read_char(client, VMINI_CHAR_SW_REV, "software_rev", auth_key, f)
+        model = await _read_char(client, VMINI_CHAR_MODEL, "model", auth_key, f)
         manufacturer = await _read_char(
-            client, VMINI_CHAR_MANUFACTURER, "manufacturer", auth_key
+            client, VMINI_CHAR_MANUFACTURER, "manufacturer", auth_key, f
         )
         # Optional chars that may not be available before WiFi setup
         wifi_mac = None
