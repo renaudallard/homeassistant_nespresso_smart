@@ -105,13 +105,25 @@ _AUTH_UUIDS: dict[str, dict[str, str]] = {
 }
 
 
+# Strategies tried in order. The working one is remembered.
+AUTH_STRATEGY_UNKNOWN = "unknown"
+AUTH_STRATEGY_DIRECT = "direct"  # No pair, write with response
+AUTH_STRATEGY_PAIR_THEN_WRITE = "pair"  # pair() + write with response
+AUTH_STRATEGY_FIRE_AND_FORGET = "fire_and_forget"  # No pair, write without response
+
+# Module-level cache: address -> working strategy
+_auth_strategy_cache: dict[str, str] = {}
+
+
 async def _authenticate(
     client: BleakClient, auth_key: str, family: MachineFamily
 ) -> bool:
-    """Authenticate with the Nespresso machine after BLE pairing.
+    """Authenticate with the Nespresso machine.
 
-    Barista and Vertuo Next use CMID auth (8-byte key written to CHAR_AUTH).
-    VMini uses a 36-byte MachineToken written to CHAR_MACHINE_TOKEN.
+    Tries multiple strategies and remembers which one works:
+    1. Direct: write CMID with response (no BLE pairing)
+    2. Pair then write: client.pair() + write CMID with response
+    3. Fire and forget: write CMID without response (avoids ATT errors)
     """
     address = client.address
 
@@ -122,6 +134,8 @@ async def _authenticate(
     if not uuids:
         _LOGGER.debug("No auth UUIDs for family %s", family)
         return False
+
+    auth_bytes = binascii.unhexlify(auth_key)
 
     # Check onboard status
     try:
@@ -137,42 +151,93 @@ async def _authenticate(
         _LOGGER.debug("Could not read onboard status: %s", err)
         is_onboarded = False
 
-    auth_bytes = binascii.unhexlify(auth_key)
-
-    # Onboard if needed (each step isolated to prevent cascade failures)
+    # Onboard if needed
     if not is_onboarded:
-        _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
+        await _onboard(client, uuids, auth_bytes, address, family)
 
-        # Step 1: TX level write (fire-and-forget to avoid ATT error corrupting bleak)
-        try:
-            await client.write_gatt_char(uuids["pair"], bytearray([1]), response=False)
-            _LOGGER.debug("TX level write sent")
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.debug("TX level write failed (non-fatal): %s", err)
+    # Authenticate using known strategy or try all
+    cached = _auth_strategy_cache.get(address)
+    if cached and cached != AUTH_STRATEGY_UNKNOWN:
+        _LOGGER.debug("Using cached auth strategy: %s", cached)
+        return await _try_strategy(client, uuids, auth_bytes, cached, address)
 
-        await asyncio.sleep(1)
+    # Try each strategy until one works
+    for strategy in (
+        AUTH_STRATEGY_DIRECT,
+        AUTH_STRATEGY_PAIR_THEN_WRITE,
+        AUTH_STRATEGY_FIRE_AND_FORGET,
+    ):
+        _LOGGER.info("Trying auth strategy '%s' for %s", strategy, address)
+        if await _try_strategy(client, uuids, auth_bytes, strategy, address):
+            _auth_strategy_cache[address] = strategy
+            _LOGGER.info(
+                "Auth strategy '%s' succeeded for %s, remembering", strategy, address
+            )
+            return True
 
-        # Step 2: CMID write (fire-and-forget for same reason)
-        try:
-            await client.write_gatt_char(uuids["auth"], auth_bytes, response=False)
-            _LOGGER.debug("Onboarding CMID write sent")
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.warning("Onboarding CMID write failed for %s: %s", address, err)
+    _LOGGER.error("All auth strategies failed for %s", address)
+    return False
 
-        # Wait for machine to process onboarding (APK and bulldog both wait here)
-        await asyncio.sleep(3)
 
-    # Authenticate with stored key
+async def _onboard(
+    client: BleakClient,
+    uuids: dict[str, str],
+    auth_bytes: bytes,
+    address: str,
+    family: MachineFamily,
+) -> None:
+    """Onboard a new machine: write TX level + CMID."""
+    _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
+
     try:
-        _LOGGER.debug(
-            "Authenticating %s with key %s...", address, auth_key[:4] + "****"
-        )
-        await client.write_gatt_char(uuids["auth"], auth_bytes, response=False)
-        await asyncio.sleep(1)
-        _LOGGER.debug("Auth key written successfully")
-        return True
+        await client.write_gatt_char(uuids["pair"], bytearray([1]), response=False)
+        _LOGGER.debug("TX level write sent")
     except Exception as err:  # noqa: BLE001
-        _LOGGER.error("Authentication failed for %s: %s", address, err)
+        _LOGGER.debug("TX level write failed (non-fatal): %s", err)
+
+    await asyncio.sleep(1)
+
+    try:
+        await client.write_gatt_char(uuids["auth"], auth_bytes, response=False)
+        _LOGGER.debug("Onboarding CMID write sent")
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.warning("Onboarding CMID write failed for %s: %s", address, err)
+
+    await asyncio.sleep(3)
+
+
+async def _try_strategy(
+    client: BleakClient,
+    uuids: dict[str, str],
+    auth_bytes: bytes,
+    strategy: str,
+    address: str,
+) -> bool:
+    """Try a single auth strategy. Returns True if the subsequent read works."""
+    try:
+        if strategy == AUTH_STRATEGY_PAIR_THEN_WRITE:
+            try:
+                await client.pair()
+                await asyncio.sleep(2)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("pair() failed: %s", err)
+                return False
+            await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
+
+        elif strategy == AUTH_STRATEGY_DIRECT:
+            await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
+
+        elif strategy == AUTH_STRATEGY_FIRE_AND_FORGET:
+            await client.write_gatt_char(uuids["auth"], auth_bytes, response=False)
+            await asyncio.sleep(1)
+
+        # Verify auth worked by reading a protected characteristic
+        await client.read_gatt_char(uuids["onboard"])
+        _LOGGER.debug("Strategy '%s' auth verified", strategy)
+        return True
+
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("Strategy '%s' failed: %s", strategy, err)
         return False
 
 

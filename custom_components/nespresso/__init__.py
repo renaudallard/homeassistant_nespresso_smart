@@ -67,19 +67,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = NespressoCoordinator(hass, address, family, scan_interval, persistent)
 
-    # Restore or generate auth key for machine authentication
+    # Restore auth key and strategy
     auth_key = entry.data.get("auth_key")
     if auth_key:
         coordinator.auth_key = auth_key
         _LOGGER.debug("Restored auth key: %s****", auth_key[:4])
 
+    auth_strategy = entry.data.get("auth_strategy")
+    if auth_strategy:
+        from .ble.protocol import _auth_strategy_cache
+
+        _auth_strategy_cache[address] = auth_strategy
+        _LOGGER.debug("Restored auth strategy: %s", auth_strategy)
+
     await coordinator.async_config_entry_first_refresh()
 
-    # Persist auth key if newly generated
-    if coordinator.auth_key and coordinator.auth_key != auth_key:
-        new_data = {**entry.data, "auth_key": coordinator.auth_key}
+    # Persist auth key and strategy if changed
+    from .ble.protocol import _auth_strategy_cache
+
+    current_strategy = _auth_strategy_cache.get(address)
+    if (coordinator.auth_key and coordinator.auth_key != auth_key) or (
+        current_strategy and current_strategy != auth_strategy
+    ):
+        new_data = {
+            **entry.data,
+            "auth_key": coordinator.auth_key or auth_key,
+            "auth_strategy": current_strategy or auth_strategy,
+        }
         hass.config_entries.async_update_entry(entry, data=new_data)
-        _LOGGER.debug("Persisted new auth key")
+        _LOGGER.debug("Persisted auth key and strategy: %s", current_strategy)
 
     # Register device and set device_id for trigger events
     device_registry = dr.async_get(hass)

@@ -307,9 +307,19 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
 
             # Auth upfront - all families require it (CMID or MachineToken)
+            # If auth fails (e.g. pair() corrupts bleak), reconnect and retry
             from .ble.protocol import _authenticate
 
-            await _authenticate(client, self.auth_key, self.family)
+            auth_ok = await _authenticate(client, self.auth_key, self.family)
+            if not auth_ok:
+                _LOGGER.info("Auth failed, reconnecting to try next strategy")
+                await client.disconnect()
+                client = await establish_connection(
+                    BleakClient, device, self.address, max_attempts=3
+                )
+                auth_ok = await _authenticate(client, self.auth_key, self.family)
+                if not auth_ok:
+                    _LOGGER.info("Auth failed on second attempt, trying without auth")
 
             protocol = get_protocol(self.family)
             raw = await protocol.async_read_all(client, self.auth_key)
