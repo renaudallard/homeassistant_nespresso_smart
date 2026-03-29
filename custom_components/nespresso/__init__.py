@@ -36,6 +36,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .config_flow import CONF_PERSISTENT_CONNECTION, CONF_SCAN_INTERVAL
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MACHINE_FAMILY_NAMES, MachineFamily
+from .ble.protocol import generate_auth_key
 from .coordinator import NespressoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,11 +68,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = NespressoCoordinator(hass, address, family, scan_interval, persistent)
 
-    # Restore auth key and strategy
+    # Restore or generate auth key (must persist before first_refresh
+    # so the same key survives ConfigEntryNotReady retries)
     auth_key = entry.data.get("auth_key")
     if auth_key:
         coordinator.auth_key = auth_key
         _LOGGER.debug("Restored auth key: %s****", auth_key[:4])
+    else:
+        auth_key = generate_auth_key()
+        coordinator.auth_key = auth_key
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "auth_key": auth_key}
+        )
+        _LOGGER.debug("Generated and persisted auth key: %s****", auth_key[:4])
 
     # Only restore cached strategy if saved by the same version
     # (verification logic may change between versions)
