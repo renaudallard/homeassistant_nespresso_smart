@@ -425,8 +425,10 @@ Source: `com.sdataway.vertuonext.sdk.models.CCMID`
 
 ### Onboarding Flow (First Connection)
 
-1. **BLE Pair**: `client.pair()` to establish BLE-level encryption
-2. **Check Status**: Read `CHAR_CMID_TYPE` - if value is `0` (NONE), machine is not onboarded
+Note: No BLE-level pairing (`createBond`/`pair()`) is needed. The APK does not
+call `BluetoothDevice.createBond()`. Authentication is purely application-level.
+
+1. **Check Status**: Read `CHAR_CMID_TYPE` - if value is `0` (NONE), machine is not onboarded
 3. **Set TX Level**: Write `0x01` to `CHAR_TX_LEVEL_CHANGE_REQUEST` (set low power for pairing)
 4. **Write Auth Key**: Write 8-byte random key to `CHAR_CMID`
 5. **Wait**: Sleep 2-3 seconds for machine to process
@@ -434,9 +436,8 @@ Source: `com.sdataway.vertuonext.sdk.models.CCMID`
 
 ### Subsequent Connection Flow
 
-1. **BLE Pair**: `client.pair()` (may be instant if already bonded)
-2. **Authenticate**: Write stored 8-byte auth key to `CHAR_CMID`
-3. **Read**: All GATT characteristics are now accessible
+1. **Authenticate**: Write stored 8-byte auth key to `CHAR_CMID`
+2. **Read**: All GATT characteristics are now accessible
 
 ---
 
@@ -498,39 +499,40 @@ Source: `com.sdataway.ble2.AbstractCharacteristicHelper`, `ScanService`
 
 ### Full Connection Flow (APK)
 
-The official Nespresso app follows this sequence:
+The official Nespresso app follows this sequence. Note: the APK does NOT call
+Android's `BluetoothDevice.createBond()` (BLE pairing). Authentication is
+entirely application-level via CMID.
 
 1. **Scan**: `ScanService` scans for devices advertising the expected service UUIDs
 2. **Connect**: Establish GATT connection to selected device
 3. **Discover Services**: Enumerate all GATT services and characteristics
-4. **BLE Pair**: `client.pair()` for BLE-level encryption
-5. **Check Onboard**: Read `CHAR_CMID_TYPE` for auth state (0=NONE, 2=FINAL)
-6. **Onboard** (if CMID_TYPE is NONE):
+4. **Check Onboard**: Read `CHAR_CMID_TYPE` for auth state (0=NONE, 2=FINAL)
+5. **Onboard** (if CMID_TYPE is NONE):
    a. Write `0x01` (REDUCE_POWER) to `CHAR_TX_LEVEL_CHANGE_REQUEST`
    b. Write 8-byte auth key to `CHAR_CMID`
    c. Wait 2 seconds
    d. Read `CHAR_CMID_TYPE` again to verify onboarding succeeded
-7. **Authenticate**: Write stored 8-byte auth key to `CHAR_CMID`
-8. **Read Status**: Read `CHAR_MACHINE_STATUS` to get current state
-9. **Read Info**: Read `CHAR_MACHINE_INFO` for hardware/firmware versions
-10. **Read Serial**: Read `CHAR_SERIAL_NUMBER` for device identification
-11. **Enable Notifications**: Subscribe to status and response characteristics
-12. **Operate**: Send commands via `CHAR_COMMAND_REQ`, receive responses via `CHAR_COMMAND_RSP`
+6. **Authenticate**: Write stored 8-byte auth key to `CHAR_CMID`
+7. **Read Status**: Read `CHAR_MACHINE_STATUS` to get current state
+8. **Read Info**: Read `CHAR_MACHINE_INFO` for hardware/firmware versions
+9. **Read Serial**: Read `CHAR_SERIAL_NUMBER` for device identification
+10. **Enable Notifications**: Subscribe to status and response characteristics
+11. **Operate**: Send commands via `CHAR_COMMAND_REQ`, receive responses via `CHAR_COMMAND_RSP`
 
 ### HA Integration Connection Flow
 
-The integration matches the APK flow with upfront auth on every connection:
+The integration matches the APK flow. No BLE-level pairing (createBond/pair)
+is used, only application-level CMID authentication.
 
 1. **Acquire BLE lock**: Prevent concurrent connections (machine supports one client)
 2. **Disconnect stale client**: Clean up any persistent connection
 3. **Connect**: `establish_connection()` with 3 retry attempts
-4. **BLE Pair**: `client.pair()` (result ignored, BLE-level encryption)
-5. **Authenticate**: `_authenticate()` writes CMID/MachineToken (all families require this)
-6. **Read all characteristics**: status, info, serial, profile, params, settings, errors
-7. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
-8. **Disconnect** (or keep alive in persistent mode)
-9. **Parse**: Convert raw bytes to `NespressoMachineData`
-10. **Fire triggers**: Compare old/new state, fire bus events
+4. **Authenticate**: `_authenticate()` writes CMID/MachineToken (all families require this)
+5. **Read all characteristics**: status, info, serial, profile, params, settings, errors
+6. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
+7. **Disconnect** (or keep alive in persistent mode)
+8. **Parse**: Convert raw bytes to `NespressoMachineData`
+9. **Fire triggers**: Compare old/new state, fire bus events
 
 ### Write Operation Flow
 

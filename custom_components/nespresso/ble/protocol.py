@@ -186,15 +186,6 @@ async def _authenticate_vmini(client: BleakClient, auth_key: str) -> bool:
         return False
 
 
-async def _try_pair(client: BleakClient) -> None:
-    """Attempt BLE-level pairing. Result is ignored since CMID auth is what matters."""
-    try:
-        result = await client.pair()
-        _LOGGER.debug("BLE pair() returned: %s", result)
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.debug("BLE pair() not available: %s", err)
-
-
 async def _dump_all_characteristics(client: BleakClient) -> dict[str, str]:
     """Read and log every readable characteristic on the device.
 
