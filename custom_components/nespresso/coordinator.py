@@ -498,7 +498,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         if raw.fota_status_bytes:
             fota = parse_vmini_fota_status(raw.fota_status_bytes)
             fota_status = str(fota.get("fota_status", "unknown"))
-            fota_progress = int(fota.get("fota_progress", 0))
+            raw_progress = fota.get("fota_progress", 0)
+            fota_progress = (
+                int(raw_progress) if isinstance(raw_progress, (int, float, str)) else 0
+            )
 
         return NespressoMachineData(
             machine_state="unknown",

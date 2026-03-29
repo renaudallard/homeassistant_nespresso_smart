@@ -95,7 +95,7 @@ class NespressoConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,  # type: ignore[override]
     ) -> NespressoOptionsFlow:
         """Return the options flow handler."""
-        return NespressoOptionsFlow(config_entry)
+        return NespressoOptionsFlow()
 
     def __init__(self) -> None:
         self._discovery_info: BluetoothServiceInfoBleak | None = None
