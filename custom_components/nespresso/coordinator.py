@@ -48,7 +48,7 @@ from .ble.parsing import (
     parse_vertuonext_status,
     parse_vmini_fota_status,
 )
-from .ble.protocol import get_protocol
+from .ble.protocol import generate_auth_key, get_protocol
 from .const import (
     BARISTA_CHAR_STATUS,
     DEFAULT_SCAN_INTERVAL,
@@ -81,6 +81,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.address = address
         self.family = family
         self.persistent = persistent
+        self.auth_key: str | None = None
         self._client: BleakClient | None = None
         self._status_uuid = self._get_status_uuid()
         self._device_id: str | None = None
@@ -227,8 +228,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         _LOGGER.debug("Connected to %s, MTU=%s", self.address, client.mtu_size)
 
         try:
+            if self.auth_key is None:
+                self.auth_key = generate_auth_key()
+                _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
+
             protocol = get_protocol(self.family)
-            raw = await protocol.async_read_all(client)
+            raw = await protocol.async_read_all(client, self.auth_key)
 
             # Subscribe to notifications in persistent mode
             if self.persistent and self._status_uuid:

@@ -65,7 +65,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     coordinator = NespressoCoordinator(hass, address, family, scan_interval, persistent)
+
+    # Restore or generate auth key for machine authentication
+    auth_key = entry.data.get("auth_key")
+    if auth_key:
+        coordinator.auth_key = auth_key
+        _LOGGER.debug("Restored auth key: %s****", auth_key[:4])
+
     await coordinator.async_config_entry_first_refresh()
+
+    # Persist auth key if newly generated
+    if coordinator.auth_key and coordinator.auth_key != auth_key:
+        new_data = {**entry.data, "auth_key": coordinator.auth_key}
+        hass.config_entries.async_update_entry(entry, data=new_data)
+        _LOGGER.debug("Persisted new auth key")
 
     # Register device and set device_id for trigger events
     device_registry = dr.async_get(hass)
