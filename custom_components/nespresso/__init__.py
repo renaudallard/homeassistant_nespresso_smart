@@ -73,12 +73,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator.auth_key = auth_key
         _LOGGER.debug("Restored auth key: %s****", auth_key[:4])
 
-    auth_strategy = entry.data.get("auth_strategy")
-    if auth_strategy:
-        from .ble.protocol import _auth_strategy_cache
+    # Only restore cached strategy if saved by the same version
+    # (verification logic may change between versions)
+    from .ble.protocol import _auth_strategy_cache
 
+    saved_version = entry.data.get("auth_version")
+    auth_strategy = entry.data.get("auth_strategy")
+    from .coordinator import _VERSION
+
+    if auth_strategy and saved_version == _VERSION:
         _auth_strategy_cache[address] = auth_strategy
         _LOGGER.debug("Restored auth strategy: %s", auth_strategy)
+    elif auth_strategy:
+        _LOGGER.debug(
+            "Discarding cached strategy %s (saved by v%s, now v%s)",
+            auth_strategy,
+            saved_version,
+            _VERSION,
+        )
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -93,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             **entry.data,
             "auth_key": coordinator.auth_key or auth_key,
             "auth_strategy": current_strategy or auth_strategy,
+            "auth_version": _VERSION,
         }
         hass.config_entries.async_update_entry(entry, data=new_data)
         _LOGGER.debug("Persisted auth key and strategy: %s", current_strategy)

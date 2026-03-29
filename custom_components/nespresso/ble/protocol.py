@@ -96,11 +96,13 @@ _AUTH_UUIDS: dict[str, dict[str, str]] = {
         "auth": BARISTA_CHAR_AUTH,
         "onboard": BARISTA_CHAR_ONBOARD_STATUS,
         "pair": BARISTA_CHAR_PAIR,
+        "verify": BARISTA_CHAR_STATUS,
     },
     MachineFamily.VERTUO_NEXT: {
         "auth": VERTUO_CHAR_AUTH,
         "onboard": VERTUO_CHAR_ONBOARD_STATUS,
         "pair": VERTUO_CHAR_PAIR,
+        "verify": VERTUO_CHAR_STATUS,
     },
 }
 
@@ -159,7 +161,9 @@ async def _authenticate(
     cached = _auth_strategy_cache.get(address)
     if cached and cached != AUTH_STRATEGY_UNKNOWN:
         _LOGGER.debug("Using cached auth strategy: %s", cached)
-        return await _try_strategy(client, uuids, auth_bytes, cached, address)
+        return await _try_strategy(
+            client, uuids, auth_bytes, cached, address, uuids.get("verify")
+        )
 
     # Try each strategy until one works
     # fire_and_forget first: doesn't corrupt bleak if it fails
@@ -171,7 +175,9 @@ async def _authenticate(
         AUTH_STRATEGY_PAIR_THEN_WRITE,
     ):
         _LOGGER.info("Trying auth strategy '%s' for %s", strategy, address)
-        if await _try_strategy(client, uuids, auth_bytes, strategy, address):
+        if await _try_strategy(
+            client, uuids, auth_bytes, strategy, address, uuids.get("verify")
+        ):
             _auth_strategy_cache[address] = strategy
             _LOGGER.info(
                 "Auth strategy '%s' succeeded for %s, remembering", strategy, address
@@ -215,8 +221,9 @@ async def _try_strategy(
     auth_bytes: bytes,
     strategy: str,
     address: str,
+    verify_uuid: str | None = None,
 ) -> bool:
-    """Try a single auth strategy. Returns True if the subsequent read works."""
+    """Try a single auth strategy. Returns True if a protected read works."""
     try:
         if strategy == AUTH_STRATEGY_PAIR_THEN_WRITE:
             try:
@@ -234,8 +241,11 @@ async def _try_strategy(
             await client.write_gatt_char(uuids["auth"], auth_bytes, response=False)
             await asyncio.sleep(1)
 
-        # Verify auth worked by reading a protected characteristic
-        await client.read_gatt_char(uuids["onboard"])
+        # Verify auth by reading a PROTECTED characteristic (not CMID_TYPE
+        # which is always readable). Use CHAR_MACHINE_STATUS if available.
+        test_uuid = verify_uuid or uuids.get("onboard")
+        if test_uuid:
+            await client.read_gatt_char(test_uuid)
         _LOGGER.debug("Strategy '%s' auth verified", strategy)
         return True
 
