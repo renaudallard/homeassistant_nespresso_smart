@@ -312,9 +312,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         if client.services:
             for service in client.services:
                 for char in service.characteristics:
-                    _LOGGER.debug(
-                        "GATT %s flags=%s", char.uuid, char.properties
-                    )
+                    _LOGGER.debug("GATT %s flags=%s", char.uuid, char.properties)
 
         try:
             if self.auth_key is None:
