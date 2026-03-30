@@ -44,17 +44,22 @@ Copy `custom_components/nespresso/` into your Home Assistant `config/custom_comp
 
 After installation, the integration will auto-discover Nespresso machines via Bluetooth. Ensure your machine is powered on and within BLE range.
 
-During setup, you can optionally provide an **auth token** (16 hex characters). This is only needed if the machine is already paired with the Nespresso app and you don't want to reset it. If left empty, the integration generates a new token and onboards the machine (requires pressing the Bluetooth pairing button on the machine first).
+During setup, you can optionally provide an **auth token** (16 hex characters). This is only needed if the machine is already paired with the Nespresso app and you don't want to reset it. If left empty, the integration generates a new token and onboards the machine (requires a factory reset first if the machine was previously paired).
 
 ### Machine already paired with the Nespresso app
 
-Each machine stores one auth token (CMID). If the Nespresso app already onboarded it, the integration needs the same token or the machine needs to be reset. Two options:
+Each machine stores one auth token (CMID). If the Nespresso app already onboarded it, the integration needs the same token or the machine needs to be factory reset. Two options:
 
-**Option A: Reset the machine (simplest)**
+**Option A: Factory reset the machine (simplest)**
 
-Press the Bluetooth pairing button on the machine (usually hold the main button for 5-7 seconds while on). This resets the stored auth token. The integration will onboard with a new token. The Nespresso app will need to re-pair afterward.
+A factory reset clears the stored auth token and all settings. The Bluetooth pairing button alone is not sufficient; a full factory reset is required.
 
-**Option B: Extract the existing token**
+- **Vertuo Next / Vertuo Pop**: Close the head, press the button 3 times within 2 seconds. The light blinks orange to confirm.
+- **Barista**: Consult the Nespresso support page for your model's reset procedure.
+
+After reset, remove and re-add the integration in HA. The Nespresso app will also need to re-pair.
+
+**Option B: Extract the existing token (Android only)**
 
 Capture the auth token from the Nespresso app using Android's BLE logging:
 
@@ -65,6 +70,8 @@ Capture the auth token from the Nespresso app using Android's BLE logging:
 5. Pull the log: `adb pull /data/misc/bluetooth/logs/btsnoop_hci.log` (or find it at the path shown in Developer Options)
 6. Open in **Wireshark**, filter: `btatt.handle` and look for a Write Request to the auth characteristic (UUID `06aa3a41` for Vertuo Next, `65243a41` for Barista)
 7. The 8-byte value written is the auth token. Convert to 16 hex characters and enter it during setup.
+
+This method is not available on iOS.
 
 ### Requirements
 
@@ -138,7 +145,7 @@ The integration connects to the machine via BLE at a configurable interval (defa
 
 Machine family is detected automatically from the advertised BLE service UUID during discovery. When the machine becomes available after being off or out of range, a BLE advertisement callback triggers an immediate refresh.
 
-Authentication is application-level only (CMID write with response), matching the official Nespresso Android app. No BLE-level pairing is needed. The auth key is generated once and persisted in the config entry so the same key is reused across restarts. If the machine was previously paired with the Nespresso app, press the Bluetooth pairing button on the machine to allow re-onboarding.
+Authentication is application-level only (CMID write with response), matching the official Nespresso Android app. No BLE-level pairing is needed. The auth key is generated once and persisted in the config entry so the same key is reused across restarts. If the machine was previously paired with the Nespresso app, a factory reset is required before the integration can onboard.
 
 ## Reverse Engineering Documentation
 
