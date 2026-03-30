@@ -40,8 +40,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.helpers import entity_registry as er
-
 from .const import (
     BARISTA_STATE_NAMES,
     DOMAIN,
@@ -213,18 +211,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
 )
 
 
-def _has_data(
-    desc: NespressoSensorDescription, data: NespressoMachineData | None
-) -> bool:
-    """Check if the coordinator has meaningful data for this sensor."""
-    if data is None:
-        return True  # no data yet, keep all (first refresh pending)
-    # machine_state is always present
-    if desc.key == "machine_state":
-        return True
-    return desc.value_fn(data) is not None
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -234,21 +220,12 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator: NespressoCoordinator = data["coordinator"]
     family = MachineFamily(entry.data["family"])
-    address = entry.data["address"]
-    registry = er.async_get(hass)
 
-    entities: list[SensorEntity] = []
-    for desc in SENSOR_DESCRIPTIONS:
-        if family not in desc.families:
-            continue
-        if _has_data(desc, coordinator.data):
-            entities.append(NespressoSensor(coordinator, entry, desc))
-        else:
-            # Remove stale entity from registry
-            uid = f"{address}_{desc.key}"
-            entity_id = registry.async_get_entity_id("sensor", DOMAIN, uid)
-            if entity_id:
-                registry.async_remove(entity_id)
+    entities: list[SensorEntity] = [
+        NespressoSensor(coordinator, entry, desc)
+        for desc in SENSOR_DESCRIPTIONS
+        if family in desc.families
+    ]
 
     # Real-time brewing duration sensor
     if family in (MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT):
