@@ -443,7 +443,16 @@ call `BluetoothDevice.createBond()`. Authentication is purely application-level.
 
 ## Brew Command Protocol
 
-Source: `github.com/bulldog5046/ha_nespresso_integration`, verified against decompiled APK
+Source: `github.com/bulldog5046/ha_nespresso_integration` (BLE captures), decompiled APK (smali)
+
+**Important:** The Nespresso APK does NOT send brew commands over BLE. The
+`VertuoNextMachine.configure()` method is an empty stub. The app sends brew
+commands through the IoT/MQTT cloud layer (AWS IoT). However, the machine
+firmware does accept direct BLE brew commands via `CCommandReq`, as discovered
+by the bulldog integration through BLE packet captures.
+
+The `cmdID=3` family is confirmed from the APK: factory reset uses
+`cmdID=3, subCmdID=7` (from `VertuoNextMachine$performFactoryReset$1.smali`).
 
 ### Simple Brew (Predefined Recipes)
 
@@ -471,9 +480,16 @@ Source: bulldog integration
 | 1 | Low |
 | 2 | High |
 
+### Known Command IDs (cmdID=3 family)
+
+| cmdID | subCmdID | Source | Description |
+|-------|----------|--------|-------------|
+| 3 | 5 | bulldog (BLE capture) | Start brew |
+| 3 | 7 | APK (smali) | Factory reset |
+
 ### Brew Types
 
-Source: bulldog integration
+Source: bulldog integration (BLE capture)
 
 | Value | Type |
 |-------|------|
