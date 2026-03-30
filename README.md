@@ -42,7 +42,29 @@ Copy `custom_components/nespresso/` into your Home Assistant `config/custom_comp
 
 ### Setup
 
-After installation, the integration will auto-discover Nespresso machines via Bluetooth. Ensure your machine is powered on and within BLE range. No manual configuration is needed.
+After installation, the integration will auto-discover Nespresso machines via Bluetooth. Ensure your machine is powered on and within BLE range.
+
+During setup, you can optionally provide an **auth token** (16 hex characters). This is only needed if the machine is already paired with the Nespresso app and you don't want to reset it. If left empty, the integration generates a new token and onboards the machine (requires pressing the Bluetooth pairing button on the machine first).
+
+### Machine already paired with the Nespresso app
+
+Each machine stores one auth token (CMID). If the Nespresso app already onboarded it, the integration needs the same token or the machine needs to be reset. Two options:
+
+**Option A: Reset the machine (simplest)**
+
+Press the Bluetooth pairing button on the machine (usually hold the main button for 5-7 seconds while on). This resets the stored auth token. The integration will onboard with a new token. The Nespresso app will need to re-pair afterward.
+
+**Option B: Extract the existing token**
+
+Capture the auth token from the Nespresso app using Android's BLE logging:
+
+1. On your Android phone, enable **Developer Options** (Settings > About > tap Build Number 7 times)
+2. In Developer Options, enable **Bluetooth HCI snoop log**
+3. Open the Nespresso app and let it connect to the machine
+4. Disable Bluetooth HCI snoop log
+5. Pull the log: `adb pull /data/misc/bluetooth/logs/btsnoop_hci.log` (or find it at the path shown in Developer Options)
+6. Open in **Wireshark**, filter: `btatt.handle` and look for a Write Request to the auth characteristic (UUID `06aa3a41` for Vertuo Next, `65243a41` for Barista)
+7. The 8-byte value written is the auth token. Convert to 16 hex characters and enter it during setup.
 
 ### Requirements
 

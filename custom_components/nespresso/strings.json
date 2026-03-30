@@ -44,8 +44,10 @@
     "step": {
       "bluetooth_confirm": {
         "title": "Confirm Nespresso Machine",
-        "description": "Found {name}. Do you want to add this machine?",
-        "data": {}
+        "description": "Found {name}. Leave auth token empty to generate a new one (requires pressing the Bluetooth pairing button on the machine). If the machine is already paired with the Nespresso app, provide the existing auth token (16 hex characters).",
+        "data": {
+          "auth_token": "Auth token (optional, 16 hex chars)"
+        }
       },
       "user": {
         "title": "Nespresso Smart",

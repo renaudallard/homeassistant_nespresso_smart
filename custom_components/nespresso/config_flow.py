@@ -147,22 +147,28 @@ class NespressoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovered device."""
         if user_input is not None:
-            return self.async_create_entry(
-                title=self._name,
-                data={
-                    "address": self._discovery_info.address  # type: ignore[union-attr]
-                    if self._discovery_info
-                    else "",
-                    "family": self._family.value
-                    if self._family
-                    else MachineFamily.VERTUO_NEXT.value,
-                    "name": self._name,
-                },
-            )
+            data: dict[str, Any] = {
+                "address": self._discovery_info.address  # type: ignore[union-attr]
+                if self._discovery_info
+                else "",
+                "family": self._family.value
+                if self._family
+                else MachineFamily.VERTUO_NEXT.value,
+                "name": self._name,
+            }
+            token = user_input.get("auth_token", "").strip()
+            if token:
+                data["auth_key"] = token
+            return self.async_create_entry(title=self._name, data=data)
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders={"name": self._name},
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("auth_token", default=""): str,
+                }
+            ),
         )
 
     async def async_step_user(
