@@ -160,7 +160,30 @@ async def _authenticate(
             await client.read_gatt_char(verify_uuid)
         except Exception as err:  # noqa: BLE001
             _LOGGER.debug("Auth verify read failed for %s: %s", address, err)
-            return False
+            if not is_onboarded:
+                return False
+            # Machine was already onboarded (likely by the Nespresso app).
+            # Force re-onboard to register our CMID, then retry auth.
+            _LOGGER.info(
+                "Force re-onboard for %s (was onboarded=0x%s)",
+                address,
+                onboard_data.hex(),
+            )
+            await _onboard(client, uuids, auth_bytes, address, family)
+            try:
+                await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
+            except Exception as err2:  # noqa: BLE001
+                _LOGGER.debug(
+                    "CMID write after re-onboard failed for %s: %s", address, err2
+                )
+                return False
+            try:
+                await client.read_gatt_char(verify_uuid)
+            except Exception as err2:  # noqa: BLE001
+                _LOGGER.debug(
+                    "Auth still failed after re-onboard for %s: %s", address, err2
+                )
+                return False
 
     _LOGGER.debug("Auth succeeded for %s", address)
     return True
