@@ -98,6 +98,7 @@ This method is not available on iOS.
 | Capsule counter | No | Yes | No | Capsule counter |
 | IoT market | No | Yes | No | IoT market name (diagnostic) |
 | Recipe slots | Yes | No | No | Maximum recipe slots (diagnostic) |
+| Brewing duration | Yes | Yes | No | Time elapsed since brewing started (seconds) |
 | Device shadow | No | No | Yes | Device shadow JSON data (diagnostic) |
 | FOTA status | No | No | Yes | Firmware update status (diagnostic) |
 | FOTA progress | No | No | Yes | Firmware update progress (diagnostic) |

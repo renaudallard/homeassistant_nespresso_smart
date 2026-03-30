@@ -429,15 +429,31 @@ Note: No BLE-level pairing (`createBond`/`pair()`) is needed. The APK does not
 call `BluetoothDevice.createBond()`. Authentication is purely application-level.
 
 1. **Check Status**: Read `CHAR_CMID_TYPE` - if value is `0` (NONE), machine is not onboarded
-3. **Set TX Level**: Write `0x01` to `CHAR_TX_LEVEL_CHANGE_REQUEST` (set low power for pairing)
-4. **Write Auth Key**: Write 8-byte random key to `CHAR_CMID`
-5. **Wait**: Sleep 2-3 seconds for machine to process
-6. **Verify**: Read `CHAR_CMID_TYPE` again - should be `2` (FINAL) if successful
+2. **Set TX Level**: Write `0x01` to `CHAR_TX_LEVEL_CHANGE_REQUEST` (set low power for pairing)
+3. **Write Auth Key**: Write 8-byte random key to `CHAR_CMID`
+4. **Wait**: Sleep 2 seconds for machine to process
+5. **Verify**: Read `CHAR_CMID_TYPE` again - should be `2` (FINAL) if successful
 
 ### Subsequent Connection Flow
 
 1. **Authenticate**: Write stored 8-byte auth key to `CHAR_CMID`
 2. **Read**: All GATT characteristics are now accessible
+
+### VMini Authentication
+
+Source: `com.sdataway.vmini.sdk`
+
+VMini uses a different authentication mechanism. Instead of an 8-byte CMID, it
+writes a 36-byte MachineToken to `CHAR_MACHINE_TOKEN` (`96600102-526E-4676-A11A-AF1EB848165B`).
+
+The token is the auth key encoded as UTF-8 and zero-padded to 36 bytes.
+
+### Force Re-onboard (HA Integration)
+
+If a machine was previously onboarded by the Nespresso app (`CMID_TYPE=FINAL`),
+the integration tries the normal CMID write first. If the verify read fails
+(NotPermitted), it forces the onboarding flow (TX level + CMID write + verify)
+to register its own CMID. This requires a factory reset of the machine first.
 
 ---
 
@@ -619,14 +635,15 @@ once, persisted in the config entry, and reused across restarts.
 1. **Acquire BLE lock**: Prevent concurrent connections (machine supports one client)
 2. **Disconnect stale client**: Clean up any persistent connection
 3. **Connect**: `establish_connection()` with 3 retry attempts
-4. **Authenticate**: `_authenticate()` writes CMID with response (all families require this)
+4. **Authenticate**: `_authenticate()` checks onboard status, onboards if needed, writes CMID with response
 5. **Verify**: Read a protected characteristic to confirm auth succeeded
-6. **Retry** (on failure): Disconnect, reconnect, re-authenticate once
-7. **Read all characteristics**: status, info, serial, profile, params, settings, errors
-8. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
-9. **Disconnect** (or keep alive in persistent mode)
-10. **Parse**: Convert raw bytes to `NespressoMachineData`
-11. **Fire triggers**: Compare old/new state, fire bus events
+6. **Force re-onboard** (if verify fails on already-onboarded machine): TX level + CMID write + verify
+7. **Retry** (on failure): Disconnect, reconnect, re-authenticate once (steps 4-6 again)
+8. **Read all characteristics**: status, info, serial, profile, params, settings, errors
+9. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
+10. **Disconnect** (or keep alive in persistent mode)
+11. **Parse**: Convert raw bytes to `NespressoMachineData`
+12. **Fire triggers**: Compare old/new state, fire bus events
 
 ### Write Operation Flow
 
