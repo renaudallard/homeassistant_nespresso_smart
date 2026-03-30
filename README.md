@@ -57,7 +57,13 @@ A factory reset clears the stored auth token and all settings. The Bluetooth pai
 - **Vertuo Next / Vertuo Pop**: Close the head, press the button 3 times within 2 seconds. The light blinks orange to confirm.
 - **Barista**: Consult the Nespresso support page for your model's reset procedure.
 
-After reset, remove and re-add the integration in HA. The Nespresso app will also need to re-pair.
+After reset, clear the stale Bluetooth bond on the HA host and restart HA:
+
+```bash
+bluetoothctl remove <MACHINE_MAC_ADDRESS>
+```
+
+Then remove and re-add the integration in HA. The Nespresso app will also need to re-pair.
 
 **Option B: Extract the existing token (Android only)**
 
@@ -169,6 +175,26 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
 - **Single client**: Only one BLE client can connect at a time. If the Nespresso app is connected, HA will retry on the next poll.
+
+## Troubleshooting
+
+### "Software caused connection abort"
+
+BlueZ has a stale bond from a previous pairing. Clear it:
+
+```bash
+bluetoothctl remove <MACHINE_MAC_ADDRESS>
+```
+
+Then restart HA. This is needed after a factory reset of the machine.
+
+### All entities show "unavailable"
+
+The machine is temporarily unreachable via BLE. Ensure it is powered on, within range, and not connected to the Nespresso app. Entities recover automatically on the next successful poll.
+
+### Auth fails with "NotPermitted"
+
+The machine was onboarded by the Nespresso app with a different auth token. Factory reset the machine (see setup instructions above).
 
 ## Support
 
