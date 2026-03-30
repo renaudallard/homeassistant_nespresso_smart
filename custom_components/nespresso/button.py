@@ -143,13 +143,14 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         brew_type = VERTUO_BREW_TYPE_VALUES.get(self.coordinator.brew_type, 1)
         temp = VERTUO_TEMPERATURE_VALUES.get(self.coordinator.brew_temperature, 0)
 
-        buf = bytearray(10)
+        # CCommandReq wire format: 19 bytes (matches APK CharacCommandReq.setValue)
+        buf = bytearray(19)
         buf[0] = 3  # cmdID: machine command
         buf[1] = 5  # subCmdID: start brew
         buf[2] = 7  # dataControl: dataLength=7
-        buf[3] = 4  # brew subtype
-        buf[8] = temp
-        buf[9] = brew_type
+        buf[3] = 4  # data[0]: brew subtype
+        buf[8] = temp  # data[5]: temperature
+        buf[9] = brew_type  # data[6]: brew type
 
         _LOGGER.info(
             "Brewing on %s: type=%d temp=%d cmd=%s",
