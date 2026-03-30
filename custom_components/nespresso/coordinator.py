@@ -319,35 +319,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 self.auth_key = generate_auth_key()
                 _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
 
-            # BLE pair for link encryption (BlueZ needs this explicitly;
-            # Android does it transparently). Unpair first to clear any
-            # stale bond that might have wrong security level or LTK.
-            try:
-                await client.unpair()
-                _LOGGER.debug("BLE unpair() completed")
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("BLE unpair(): %s", err)
-            # Wait for host BlueZ to flush the bond (RemoveDevice goes
-            # through Docker D-Bus to the host daemon).
-            await asyncio.sleep(5)
-            # Re-fetch device: the old BLEDevice's D-Bus path is gone
-            # after RemoveDevice, need a fresh one from HA's scanner.
-            device = bluetooth.async_ble_device_from_address(
-                self.hass, self.address, connectable=True
-            )
-            if device is None:
-                raise BleakError("Device not found after unpair")
-            client = await establish_connection(
-                BleakClient, device, self.address, max_attempts=3
-            )
-            _LOGGER.debug("Reconnected after unpair, MTU=%s", client.mtu_size)
-            try:
-                await client.pair()
-                _LOGGER.debug("BLE pair() returned successfully")
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("BLE pair(): %s", err)
-            await asyncio.sleep(2)
-
             from .ble.protocol import _authenticate
 
             auth_ok = await _authenticate(client, self.auth_key, self.family)

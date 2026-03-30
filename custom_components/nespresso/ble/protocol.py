@@ -195,8 +195,11 @@ async def _onboard(
     auth_bytes: bytes,
     address: str,
     family: MachineFamily,
-) -> None:
-    """Onboard a new machine: write TX level + CMID."""
+) -> bool:
+    """Onboard a new machine: write TX level + CMID, verify.
+
+    Matches the APK flow: TX level, CMID, wait 2s, verify CMID_TYPE.
+    """
     _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
 
     try:
@@ -205,13 +208,26 @@ async def _onboard(
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("TX level write failed (non-fatal): %s", err)
 
-    await asyncio.sleep(2)
-
     try:
         await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
         _LOGGER.debug("Onboarding CMID write sent")
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Onboarding CMID write failed for %s: %s", address, err)
+        return False
+
+    await asyncio.sleep(2)
+
+    # Verify onboarding succeeded
+    try:
+        onboard_data = await client.read_gatt_char(uuids["onboard"])
+        is_final = onboard_data != bytearray(b"\x00")
+        _LOGGER.debug(
+            "Onboard verify for %s: %s (raw=%s)", address, is_final, onboard_data.hex()
+        )
+        return is_final
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("Onboard verify read failed for %s: %s", address, err)
+        return False
 
 
 async def _authenticate_vmini(client: BleakClient, auth_key: str) -> bool:
