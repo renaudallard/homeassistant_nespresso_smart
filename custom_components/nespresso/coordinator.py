@@ -314,8 +314,17 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
 
             # BLE pair for link encryption (BlueZ needs this explicitly;
-            # Android does it transparently). Stay on the same connection
-            # like bulldog does -- no disconnect/reconnect.
+            # Android does it transparently). Unpair first to clear any
+            # stale bond that might have wrong security level or LTK.
+            try:
+                await client.unpair()
+                _LOGGER.debug("BLE unpair() completed")
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("BLE unpair(): %s", err)
+            client = await establish_connection(
+                BleakClient, device, self.address, max_attempts=3
+            )
+            _LOGGER.debug("Reconnected after unpair, MTU=%s", client.mtu_size)
             try:
                 await client.pair()
                 _LOGGER.debug("BLE pair() returned successfully")
