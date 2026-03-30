@@ -121,6 +121,9 @@ This method is not available on iOS.
 |--------|---------|-------------|-------|-------------|
 | Recipe | Yes | No | No | Select recipe (espresso, lungo, etc.) |
 | Language | Yes | No | No | Set machine display language |
+| Brew type | No | Yes | No | Select brew type (ristretto, espresso, lungo, hot water, americano) |
+| Brew temperature | No | Yes | No | Select brew temperature (low, medium, high) |
+| Brew | No | Yes | No | Start brewing with selected type and temperature |
 | Water hardness | No | Yes | No | Set water hardness level (0-6 slider) |
 | Auto power off | No | Yes | No | Set auto power off time (minutes) |
 | Check firmware update | No | No | Yes | Trigger firmware update check |
@@ -160,7 +163,7 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 
 ## Limitations
 
-- **Vertuo brewing**: Brew command protocol is known (cmdID=3, subCmdID=5) but not yet implemented as HA controls. Recipe selection is available for Barista machines.
+- **Vertuo brewing**: Predefined brew types are supported (ristretto, espresso, lungo, hot water, americano). Custom recipes with exact ml volumes are not yet supported.
 - **Maintenance commands**: Descaling, rinsing, emptying command IDs are not in the decompiled code. Needs real hardware testing.
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.

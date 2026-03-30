@@ -69,6 +69,34 @@ BARISTA_RECIPES = [
     "custom",
 ]
 
+VERTUO_BREW_TYPES = [
+    "ristretto",
+    "espresso",
+    "lungo",
+    "hot_water",
+    "americano",
+]
+
+VERTUO_BREW_TYPE_VALUES: dict[str, int] = {
+    "ristretto": 0,
+    "espresso": 1,
+    "lungo": 2,
+    "hot_water": 4,
+    "americano": 5,
+}
+
+VERTUO_TEMPERATURES = [
+    "low",
+    "medium",
+    "high",
+]
+
+VERTUO_TEMPERATURE_VALUES: dict[str, int] = {
+    "low": 1,
+    "medium": 0,
+    "high": 2,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -84,6 +112,9 @@ async def async_setup_entry(
     if family == MachineFamily.BARISTA:
         entities.append(NespressoRecipeSelect(coordinator, entry))
         entities.append(NespressoLanguageSelect(coordinator, entry))
+    if family == MachineFamily.VERTUO_NEXT:
+        entities.append(NespressoVertuoBrewTypeSelect(coordinator, entry))
+        entities.append(NespressoVertuoTemperatureSelect(coordinator, entry))
     async_add_entities(entities)
 
 
@@ -186,3 +217,74 @@ class NespressoLanguageSelect(CoordinatorEntity[NespressoCoordinator], SelectEnt
             _LOGGER.info("Language set to %s", option)
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set language: %s", err)
+
+
+class NespressoVertuoBrewTypeSelect(
+    CoordinatorEntity[NespressoCoordinator], SelectEntity
+):
+    """Select entity for Vertuo Next brew type."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Brew type"
+    _attr_icon = "mdi:coffee"
+    _attr_options = VERTUO_BREW_TYPES
+    _attr_current_option = "espresso"
+
+    def __init__(
+        self,
+        coordinator: NespressoCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        super().__init__(coordinator)
+        self._address = entry.data["address"]
+        self._attr_unique_id = f"{self._address}_vertuo_brew_type"
+        family = MachineFamily(entry.data["family"])
+        data = coordinator.data
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._address)},
+            name=entry.data.get("name", "Nespresso"),
+            manufacturer="Nespresso",
+            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
+            serial_number=data.serial_number if data else None,
+            sw_version=data.firmware_version if data else None,
+            hw_version=data.hardware_version if data else None,
+        )
+
+    async def async_select_option(self, option: str) -> None:
+        """Select brew type (no BLE write, used by brew button)."""
+        if option not in VERTUO_BREW_TYPES:
+            return
+        self._attr_current_option = option
+        self.async_write_ha_state()
+
+
+class NespressoVertuoTemperatureSelect(
+    CoordinatorEntity[NespressoCoordinator], SelectEntity
+):
+    """Select entity for Vertuo Next brew temperature."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Brew temperature"
+    _attr_icon = "mdi:thermometer"
+    _attr_options = VERTUO_TEMPERATURES
+    _attr_current_option = "medium"
+
+    def __init__(
+        self,
+        coordinator: NespressoCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        super().__init__(coordinator)
+        self._address = entry.data["address"]
+        self._attr_unique_id = f"{self._address}_vertuo_brew_temp"
+        family = MachineFamily(entry.data["family"])
+        data = coordinator.data
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._address)},
+            name=entry.data.get("name", "Nespresso"),
+            manufacturer="Nespresso",
+            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
+            serial_number=data.serial_number if data else None,
+            sw_version=data.firmware_version if data else None,
+            hw_version=data.hardware_version if data else None,
+        )

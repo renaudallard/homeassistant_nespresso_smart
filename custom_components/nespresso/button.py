@@ -35,7 +35,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MACHINE_FAMILY_NAMES, VMINI_CHAR_FOTA_COMMAND, MachineFamily
+from .const import (
+    DOMAIN,
+    MACHINE_FAMILY_NAMES,
+    VERTUO_CHAR_COMMAND_REQ,
+    VMINI_CHAR_FOTA_COMMAND,
+    MachineFamily,
+)
 from .coordinator import NespressoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +60,8 @@ async def async_setup_entry(
     entities: list[ButtonEntity] = []
     if family == MachineFamily.VMINI:
         entities.append(NespressoFotaCheckButton(coordinator, entry))
+    if family == MachineFamily.VERTUO_NEXT:
+        entities.append(NespressoVertuoBrewButton(coordinator, entry))
     async_add_entities(entities)
 
 
@@ -94,3 +102,77 @@ class NespressoFotaCheckButton(CoordinatorEntity[NespressoCoordinator], ButtonEn
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to send FOTA check: %s", err)
+
+
+class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonEntity):
+    """Button to start brewing on Vertuo Next.
+
+    Uses the brew type and temperature from the corresponding select entities.
+    Command format: [cmdID=3, subCmdID=5, dataControl=7, 4, 0, 0, 0, 0, temp, brew_type]
+    Written to CHAR_COMMAND_REQ (06AA3A42).
+    """
+
+    _attr_has_entity_name = True
+    _attr_name = "Brew"
+    _attr_icon = "mdi:coffee"
+
+    def __init__(
+        self,
+        coordinator: NespressoCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        super().__init__(coordinator)
+        self._address = entry.data["address"]
+        self._attr_unique_id = f"{self._address}_vertuo_brew"
+        family = MachineFamily(entry.data["family"])
+        data = coordinator.data
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._address)},
+            name=entry.data.get("name", "Nespresso"),
+            manufacturer="Nespresso",
+            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
+            serial_number=data.serial_number if data else None,
+            sw_version=data.firmware_version if data else None,
+            hw_version=data.hardware_version if data else None,
+        )
+
+    async def async_press(self) -> None:
+        """Send brew command to the machine."""
+        from .select import VERTUO_BREW_TYPE_VALUES, VERTUO_TEMPERATURE_VALUES
+
+        # Read current selections from entity registry
+        brew_type_id = f"select.{self._address.replace(':', '_').lower()}_brew_type"
+        temp_id = f"select.{self._address.replace(':', '_').lower()}_brew_temperature"
+
+        brew_state = self.hass.states.get(brew_type_id)
+        temp_state = self.hass.states.get(temp_id)
+
+        brew_type = VERTUO_BREW_TYPE_VALUES.get(
+            brew_state.state if brew_state else "espresso", 1
+        )
+        temp = VERTUO_TEMPERATURE_VALUES.get(
+            temp_state.state if temp_state else "medium", 0
+        )
+
+        buf = bytearray(10)
+        buf[0] = 3  # cmdID: machine command
+        buf[1] = 5  # subCmdID: start brew
+        buf[2] = 7  # dataControl: dataLength=7
+        buf[3] = 4  # brew subtype
+        buf[8] = temp
+        buf[9] = brew_type
+
+        _LOGGER.info(
+            "Brewing on %s: type=%d temp=%d cmd=%s",
+            self._address,
+            brew_type,
+            temp,
+            buf.hex(),
+        )
+
+        try:
+            await self.coordinator.async_write_char(VERTUO_CHAR_COMMAND_REQ, bytes(buf))
+            _LOGGER.info("Brew command sent to %s", self._address)
+            await self.coordinator.async_request_refresh()
+        except (BleakError, TimeoutError) as err:
+            _LOGGER.error("Failed to send brew command: %s", err)
