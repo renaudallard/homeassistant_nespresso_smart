@@ -39,6 +39,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from homeassistant.helpers import entity_registry as er
+
 from .const import DOMAIN, MACHINE_FAMILY_NAMES, MachineFamily
 from .coordinator import NespressoCoordinator
 from .models import NespressoMachineData
@@ -126,6 +128,16 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
 )
 
 
+def _has_data(
+    desc: NespressoBinarySensorDescription, data: NespressoMachineData | None
+) -> bool:
+    """Check if the coordinator has meaningful data for this binary sensor."""
+    if data is None:
+        return True
+    # Check the raw field on the dataclass (not value_fn which may coerce None to False)
+    return getattr(data, desc.key, None) is not None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -135,12 +147,21 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator: NespressoCoordinator = data["coordinator"]
     family = MachineFamily(entry.data["family"])
+    address = entry.data["address"]
+    registry = er.async_get(hass)
 
-    entities = [
-        NespressoBinarySensor(coordinator, entry, desc)
-        for desc in BINARY_SENSOR_DESCRIPTIONS
-        if family in desc.families
-    ]
+    entities: list[BinarySensorEntity] = []
+    for desc in BINARY_SENSOR_DESCRIPTIONS:
+        if family not in desc.families:
+            continue
+        if _has_data(desc, coordinator.data):
+            entities.append(NespressoBinarySensor(coordinator, entry, desc))
+        else:
+            uid = f"{address}_{desc.key}"
+            entity_id = registry.async_get_entity_id("binary_sensor", DOMAIN, uid)
+            if entity_id:
+                registry.async_remove(entity_id)
+
     async_add_entities(entities)
 
 
