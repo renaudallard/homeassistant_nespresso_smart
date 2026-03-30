@@ -160,7 +160,7 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 
 ## Limitations
 
-- **Vertuo brewing**: Vertuo command protocol cmdID values are obfuscated in the APK. Recipe selection is only available for Barista machines. Needs BLE packet capture on real hardware.
+- **Vertuo brewing**: Brew command protocol is known (cmdID=3, subCmdID=5) but not yet implemented as HA controls. Recipe selection is available for Barista machines.
 - **Maintenance commands**: Descaling, rinsing, emptying command IDs are not in the decompiled code. Needs real hardware testing.
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.

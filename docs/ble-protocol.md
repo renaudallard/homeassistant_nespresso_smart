@@ -443,22 +443,37 @@ call `BluetoothDevice.createBond()`. Authentication is purely application-level.
 
 ## Brew Command Protocol
 
-Source: `github.com/bulldog5046/ha_nespresso_integration`
+Source: `github.com/bulldog5046/ha_nespresso_integration`, verified against decompiled APK
 
-Brew commands are written to `CHAR_COMMAND_REQ` (`06AA3A42`) as a 10-byte buffer:
+### Simple Brew (Predefined Recipes)
+
+Brew commands use the `CCommandReq` wire format written to `CHAR_COMMAND_REQ`
+(`06AA3A42`). The bulldog integration uses a 10-byte subset:
 
 ```
-Offset  Value   Description
-0       3       Command prefix
-1       5       Command prefix
-2       7       Command prefix
-3       4       Command prefix
-4-7     0       Reserved
-8       temp    Temperature (LOW=1, MEDIUM=0, HIGH=2)
-9       brew    Brew type (see below)
+Offset  Value   CCommandReq Field   Description
+0       3       cmdID               Brew command
+1       5       subCmdID            Start brew
+2       7       dataControl         Data length = 7 bytes
+3       4       data[0]             Brew subtype
+4-7     0       data[1-4]           Reserved
+8       temp    data[5]             Temperature
+9       brew    data[6]             Brew type
 ```
+
+### Temperature Values
+
+Source: bulldog integration
+
+| Value | Level |
+|-------|-------|
+| 0 | Medium (default) |
+| 1 | Low |
+| 2 | High |
 
 ### Brew Types
+
+Source: bulldog integration
 
 | Value | Type |
 |-------|------|
@@ -468,6 +483,66 @@ Offset  Value   Description
 | 4 | Hot Water |
 | 5 | Americano |
 | 7 | Custom |
+
+Note: These values do NOT match the `VertuoNextRecipeType` enum ordinals from the
+APK (ESPRESSO=0, LUNGO=1, EXTRALUNGO=2, CAPPUCCINO=3, LATTEMACCHIATO=4, CUSTOM=5).
+The brew type byte uses a different encoding than the enum.
+
+### APK Recipe Types
+
+Source: `com.sdataway.vertuonext.machine.machine.actions.model.VertuoNextRecipeType`
+
+| Ordinal | Type | String |
+|---------|------|--------|
+| 0 | ESPRESSO | "espresso" |
+| 1 | LUNGO | "lungo" |
+| 2 | EXTRALUNGO | "extralungo" |
+| 3 | CAPPUCCINO | "cappuccino" |
+| 4 | LATTEMACCHIATO | "lattemacchiato" |
+| 5 | CUSTOM | "custom" |
+
+### Custom Brew (SendRecipe via BST)
+
+Source: `com.sdataway.vertuonext.machine.machine.actions.model.VertuoNextSendRecipeOptions`
+
+The APK supports a more advanced recipe mechanism using BST (Byte Sequence Transfer)
+protocol for custom recipes with exact volumes:
+
+```
+Fields:
+  store      (boolean)  Whether to store the recipe on the machine
+  run        (boolean)  Whether to immediately execute the recipe
+  recipeData (String)   Slash-separated recipe parameters
+  sig        (String)   Recipe signature (empty by default)
+```
+
+Default recipeData: `"3/0/1000/0/500/0/0/2/94/85/155/498/0/50/0/0/0"` (17 fields)
+
+The meaning of each field in the recipeData string is not documented in the
+decompiled code. Likely encodes: recipe version, volume (ml), temperature,
+motor parameters, timing, and other machine-specific settings.
+
+The bulldog integration also supports custom brew with explicit ml values:
+
+```
+Preparation buffer (10 bytes):
+  [1, 16, 8, 0, 0, COFFEE_INGREDIENT, coffee_ml(2 bytes), WATER_INGREDIENT, water_ml(2 bytes)]
+
+Followed by the standard brew command with brew_type = CUSTOM (7)
+```
+
+Where COFFEE_INGREDIENT and WATER_INGREDIENT are ingredient type identifiers.
+
+### Recipe Options
+
+Source: `com.sdataway.vertuonext.machine.machine.actions.model.VertuoNextRecipeOptions`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| volume | int | 3 | Volume setting |
+| venusRecipe | VertuoNextRecipeType | CUSTOM | Recipe type |
+| temperature | int | 80 | Temperature setting |
+| customer | String | "anonymous" | Customer identifier |
 
 ### Command Response
 
