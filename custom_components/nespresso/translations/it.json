@@ -1,0 +1,73 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "name": "Stato",
+        "state": {
+          "standby": "Standby",
+          "ready": "Pronto",
+          "brewing": "Preparazione",
+          "local_settings": "Impostazioni locali",
+          "error": "Errore",
+          "overheated": "Surriscaldato",
+          "setup": "Configurazione iniziale",
+          "paused": "In pausa",
+          "factory_reset": "Ripristino di fabbrica",
+          "heating": "Riscaldamento",
+          "descaling_ready": "Decalcificazione pronta",
+          "cleaning": "Pulizia",
+          "descaling": "Decalcificazione",
+          "emptying": "Svuotamento",
+          "power_save": "Risparmio energetico",
+          "cooldown": "Raffreddamento",
+          "service_mode": "Modalità assistenza",
+          "updating": "Aggiornamento firmware",
+          "rinsing": "Risciacquo",
+          "capsule_reading": "Lettura capsula",
+          "descale_decoding": "Decodifica decalcificazione",
+          "tank_empty": "Serbatoio vuoto",
+          "descaling_paused": "Decalcificazione in pausa",
+          "initializing": "Inizializzazione",
+          "rinsing_ready": "Risciacquo pronto",
+          "maintenance_menu": "Menu manutenzione",
+          "cleaning_paused": "Pulizia in pausa",
+          "emptying_ready": "Svuotamento pronto",
+          "cleaning_ready": "Pulizia pronta",
+          "ready_old_capsule": "Pronto (vecchia capsula)",
+          "rinsing_paused": "Risciacquo in pausa",
+          "unknown": "Sconosciuto"
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Conferma macchina Nespresso",
+        "description": "Trovata {name}. Lascia vuoto il token per generarne uno nuovo (richiede la pressione del pulsante Bluetooth sulla macchina). Se la macchina è già associata all'app Nespresso, inserisci il token esistente (16 caratteri esadecimali).",
+        "data": {
+          "auth_token": "Token di autenticazione (opzionale, 16 caratteri hex)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "Questa integrazione richiede il Bluetooth. Le macchine vengono scoperte automaticamente."
+      }
+    },
+    "abort": {
+      "already_configured": "La macchina è già configurata.",
+      "bluetooth_only": "Questa integrazione scopre le macchine via Bluetooth automaticamente. Verifica che il Bluetooth sia attivo e la macchina accesa."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opzioni Nespresso",
+        "data": {
+          "scan_interval": "Intervallo di aggiornamento (secondi)",
+          "persistent_connection": "Connessione persistente (aggiornamenti in tempo reale, blocca l'app Nespresso)"
+        }
+      }
+    }
+  }
+}

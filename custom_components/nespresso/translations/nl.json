@@ -1,0 +1,73 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "name": "Status",
+        "state": {
+          "standby": "Stand-by",
+          "ready": "Gereed",
+          "brewing": "Aan het zetten",
+          "local_settings": "Lokale instellingen",
+          "error": "Fout",
+          "overheated": "Oververhit",
+          "setup": "Eerste installatie",
+          "paused": "Gepauzeerd",
+          "factory_reset": "Fabrieksinstellingen",
+          "heating": "Opwarmen",
+          "descaling_ready": "Ontkalking gereed",
+          "cleaning": "Reiniging",
+          "descaling": "Ontkalking",
+          "emptying": "Legen",
+          "power_save": "Energiebesparing",
+          "cooldown": "Afkoelen",
+          "service_mode": "Servicemodus",
+          "updating": "Firmware bijwerken",
+          "rinsing": "Spoelen",
+          "capsule_reading": "Capsule lezen",
+          "descale_decoding": "Ontkalkingsdecodering",
+          "tank_empty": "Reservoir leeg",
+          "descaling_paused": "Ontkalking gepauzeerd",
+          "initializing": "Initialiseren",
+          "rinsing_ready": "Spoelen gereed",
+          "maintenance_menu": "Onderhoudsmenu",
+          "cleaning_paused": "Reiniging gepauzeerd",
+          "emptying_ready": "Legen gereed",
+          "cleaning_ready": "Reiniging gereed",
+          "ready_old_capsule": "Gereed (oude capsule)",
+          "rinsing_paused": "Spoelen gepauzeerd",
+          "unknown": "Onbekend"
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Nespresso machine bevestigen",
+        "description": "{name} gevonden. Laat het token leeg om een nieuw token te genereren (vereist het indrukken van de Bluetooth-knop op de machine). Als de machine al gekoppeld is met de Nespresso-app, vul dan het bestaande token in (16 hexadecimale tekens).",
+        "data": {
+          "auth_token": "Authenticatietoken (optioneel, 16 hex tekens)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "Deze integratie vereist Bluetooth. Machines worden automatisch ontdekt."
+      }
+    },
+    "abort": {
+      "already_configured": "Machine is al geconfigureerd.",
+      "bluetooth_only": "Deze integratie ontdekt machines automatisch via Bluetooth. Zorg dat Bluetooth is ingeschakeld en de machine aan staat."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nespresso-opties",
+        "data": {
+          "scan_interval": "Verversingsinterval (seconden)",
+          "persistent_connection": "Persistente verbinding (realtime updates, blokkeert Nespresso-app)"
+        }
+      }
+    }
+  }
+}

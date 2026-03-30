@@ -1,0 +1,73 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "name": "Stan",
+        "state": {
+          "standby": "Czuwanie",
+          "ready": "Gotowy",
+          "brewing": "Parzenie",
+          "local_settings": "Ustawienia lokalne",
+          "error": "Błąd",
+          "overheated": "Przegrzanie",
+          "setup": "Konfiguracja początkowa",
+          "paused": "Wstrzymano",
+          "factory_reset": "Przywracanie ustawień fabrycznych",
+          "heating": "Nagrzewanie",
+          "descaling_ready": "Odkamienianie gotowe",
+          "cleaning": "Czyszczenie",
+          "descaling": "Odkamienianie",
+          "emptying": "Opróżnianie",
+          "power_save": "Oszczędzanie energii",
+          "cooldown": "Schładzanie",
+          "service_mode": "Tryb serwisowy",
+          "updating": "Aktualizacja oprogramowania",
+          "rinsing": "Płukanie",
+          "capsule_reading": "Odczyt kapsułki",
+          "descale_decoding": "Dekodowanie odkamieniania",
+          "tank_empty": "Zbiornik pusty",
+          "descaling_paused": "Odkamienianie wstrzymane",
+          "initializing": "Inicjalizacja",
+          "rinsing_ready": "Płukanie gotowe",
+          "maintenance_menu": "Menu konserwacji",
+          "cleaning_paused": "Czyszczenie wstrzymane",
+          "emptying_ready": "Opróżnianie gotowe",
+          "cleaning_ready": "Czyszczenie gotowe",
+          "ready_old_capsule": "Gotowy (stara kapsułka)",
+          "rinsing_paused": "Płukanie wstrzymane",
+          "unknown": "Nieznany"
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Potwierdź ekspres Nespresso",
+        "description": "Znaleziono {name}. Pozostaw token pusty, aby wygenerować nowy (wymaga naciśnięcia przycisku Bluetooth na ekspresie). Jeśli ekspres jest już sparowany z aplikacją Nespresso, podaj istniejący token (16 znaków szesnastkowych).",
+        "data": {
+          "auth_token": "Token uwierzytelniania (opcjonalny, 16 znaków hex)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "Ta integracja wymaga Bluetooth. Ekspresy są wykrywane automatycznie."
+      }
+    },
+    "abort": {
+      "already_configured": "Ekspres jest już skonfigurowany.",
+      "bluetooth_only": "Ta integracja wykrywa ekspresy przez Bluetooth automatycznie. Upewnij się, że Bluetooth jest włączony i ekspres jest uruchomiony."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje Nespresso",
+        "data": {
+          "scan_interval": "Interwał odświeżania (sekundy)",
+          "persistent_connection": "Trwałe połączenie (aktualizacje w czasie rzeczywistym, blokuje aplikację Nespresso)"
+        }
+      }
+    }
+  }
+}
