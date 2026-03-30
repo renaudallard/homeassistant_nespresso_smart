@@ -251,9 +251,10 @@ class NespressoVertuoBrewTypeSelect(
         )
 
     async def async_select_option(self, option: str) -> None:
-        """Select brew type (no BLE write, used by brew button)."""
+        """Select brew type (stored on coordinator, used by brew button)."""
         if option not in VERTUO_BREW_TYPES:
             return
+        self.coordinator.brew_type = option
         self._attr_current_option = option
         self.async_write_ha_state()
 
@@ -267,7 +268,15 @@ class NespressoVertuoTemperatureSelect(
     _attr_name = "Brew temperature"
     _attr_icon = "mdi:thermometer"
     _attr_options = VERTUO_TEMPERATURES
-    _attr_current_option = "medium"
+    _attr_current_option: str | None = "medium"
+
+    async def async_select_option(self, option: str) -> None:
+        """Select brew temperature (stored on coordinator, used by brew button)."""
+        if option not in VERTUO_TEMPERATURES:
+            return
+        self.coordinator.brew_temperature = option
+        self._attr_current_option = option
+        self.async_write_ha_state()
 
     def __init__(
         self,

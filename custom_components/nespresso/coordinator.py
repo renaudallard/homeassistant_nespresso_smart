@@ -93,6 +93,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.family = family
         self.persistent = persistent
         self.auth_key: str | None = None
+        self.brew_type: str = "espresso"
+        self.brew_temperature: str = "medium"
         self._ble_lock = asyncio.Lock()
         self._client: BleakClient | None = None
         self._status_uuid = self._get_status_uuid()

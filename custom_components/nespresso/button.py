@@ -140,19 +140,8 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         """Send brew command to the machine."""
         from .select import VERTUO_BREW_TYPE_VALUES, VERTUO_TEMPERATURE_VALUES
 
-        # Read current selections from entity registry
-        brew_type_id = f"select.{self._address.replace(':', '_').lower()}_brew_type"
-        temp_id = f"select.{self._address.replace(':', '_').lower()}_brew_temperature"
-
-        brew_state = self.hass.states.get(brew_type_id)
-        temp_state = self.hass.states.get(temp_id)
-
-        brew_type = VERTUO_BREW_TYPE_VALUES.get(
-            brew_state.state if brew_state else "espresso", 1
-        )
-        temp = VERTUO_TEMPERATURE_VALUES.get(
-            temp_state.state if temp_state else "medium", 0
-        )
+        brew_type = VERTUO_BREW_TYPE_VALUES.get(self.coordinator.brew_type, 1)
+        temp = VERTUO_TEMPERATURE_VALUES.get(self.coordinator.brew_temperature, 0)
 
         buf = bytearray(10)
         buf[0] = 3  # cmdID: machine command
