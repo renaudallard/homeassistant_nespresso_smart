@@ -321,6 +321,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 _LOGGER.debug("BLE unpair() completed")
             except Exception as err:  # noqa: BLE001
                 _LOGGER.debug("BLE unpair(): %s", err)
+            await asyncio.sleep(5)
             client = await establish_connection(
                 BleakClient, device, self.address, max_attempts=3
             )
