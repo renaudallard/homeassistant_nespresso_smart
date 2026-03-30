@@ -521,17 +521,16 @@ entirely application-level via CMID.
 
 ### HA Integration Connection Flow
 
-The integration matches the APK flow with an added `pair()` call for BlueZ
-link encryption (Android handles this transparently). The auth key is generated
+The integration matches the APK flow. No BLE-level pairing is needed (GATT
+characteristic flags show no encryption requirements). The auth key is generated
 once, persisted in the config entry, and reused across restarts.
 
 1. **Acquire BLE lock**: Prevent concurrent connections (machine supports one client)
 2. **Disconnect stale client**: Clean up any persistent connection
 3. **Connect**: `establish_connection()` with 3 retry attempts
-4. **Pair**: `client.pair()` + 2s sleep for BlueZ link encryption (same connection)
-5. **Authenticate**: `_authenticate()` writes CMID with response (all families require this)
-6. **Verify**: Read a protected characteristic to confirm auth succeeded
-7. **Retry** (on failure): Disconnect, reconnect, re-authenticate once
+4. **Authenticate**: `_authenticate()` writes CMID with response (all families require this)
+5. **Verify**: Read a protected characteristic to confirm auth succeeded
+6. **Retry** (on failure): Disconnect, reconnect, re-authenticate once
 7. **Read all characteristics**: status, info, serial, profile, params, settings, errors
 8. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
 9. **Disconnect** (or keep alive in persistent mode)
