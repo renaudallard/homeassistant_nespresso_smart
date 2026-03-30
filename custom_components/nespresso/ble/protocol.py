@@ -203,7 +203,7 @@ async def _onboard(
     _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
 
     try:
-        await client.write_gatt_char(uuids["pair"], bytearray([1]), response=True)
+        await client.write_gatt_char(uuids["pair"], bytearray([1]), response=False)
         _LOGGER.debug("TX level write sent")
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("TX level write failed (non-fatal): %s", err)
