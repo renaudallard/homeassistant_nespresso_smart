@@ -308,6 +308,14 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         _LOGGER.debug("Connected to %s, MTU=%s", self.address, client.mtu_size)
 
+        # Dump GATT characteristic flags for diagnostics (security requirements)
+        if client.services:
+            for service in client.services:
+                for char in service.characteristics:
+                    _LOGGER.debug(
+                        "GATT %s flags=%s", char.uuid, char.properties
+                    )
+
         try:
             if self.auth_key is None:
                 self.auth_key = generate_auth_key()
