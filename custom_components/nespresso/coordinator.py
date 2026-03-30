@@ -321,7 +321,16 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 _LOGGER.debug("BLE unpair() completed")
             except Exception as err:  # noqa: BLE001
                 _LOGGER.debug("BLE unpair(): %s", err)
+            # Wait for host BlueZ to flush the bond (RemoveDevice goes
+            # through Docker D-Bus to the host daemon).
             await asyncio.sleep(5)
+            # Re-fetch device: the old BLEDevice's D-Bus path is gone
+            # after RemoveDevice, need a fresh one from HA's scanner.
+            device = bluetooth.async_ble_device_from_address(
+                self.hass, self.address, connectable=True
+            )
+            if device is None:
+                raise BleakError("Device not found after unpair")
             client = await establish_connection(
                 BleakClient, device, self.address, max_attempts=3
             )
