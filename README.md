@@ -173,6 +173,7 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 - **Vertuo brewing**: Predefined brew types are supported (ristretto, espresso, lungo, hot water, americano). Custom recipes with exact ml volumes are not yet supported.
 - **Maintenance commands**: Descaling, rinsing, emptying command IDs are not in the decompiled code. Needs real hardware testing.
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
+- **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
 - **Single client**: Only one BLE client can connect at a time. If the Nespresso app is connected, HA will retry on the next poll.
 
