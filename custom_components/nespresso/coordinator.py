@@ -305,8 +305,36 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 max_attempts=3,
             )
         except (BleakError, TimeoutError) as err:
-            _LOGGER.debug("Connection failed: %s", err)
-            raise UpdateFailed(f"BLE connection failed: {err}") from err
+            if "connection abort" not in str(err).lower():
+                _LOGGER.debug("Connection failed: %s", err)
+                raise UpdateFailed(f"BLE connection failed: {err}") from err
+            # Stale BlueZ bond from a factory-reset machine.
+            # Remove device via D-Bus (no connection needed) and retry.
+            _LOGGER.info("Connection abort, clearing stale BlueZ bond")
+            try:
+                tmp = BleakClient(device)
+                await tmp.unpair()
+                _LOGGER.debug("BlueZ device removed")
+            except Exception:  # noqa: BLE001
+                pass
+            await asyncio.sleep(3)
+            device = bluetooth.async_ble_device_from_address(
+                self.hass, self.address, connectable=True
+            )
+            if device is None:
+                raise UpdateFailed(f"BLE connection failed: {err}") from err
+            try:
+                client = await establish_connection(
+                    BleakClient, device, self.address, max_attempts=3
+                )
+            except (BleakError, TimeoutError) as err2:
+                _LOGGER.debug("Retry after bond clear failed: %s", err2)
+                raise UpdateFailed(f"BLE connection failed: {err2}") from err2
+            _LOGGER.debug(
+                "Connected after bond clear to %s, MTU=%s",
+                self.address,
+                client.mtu_size,
+            )
 
         _LOGGER.debug("Connected to %s, MTU=%s", self.address, client.mtu_size)
 
