@@ -187,6 +187,16 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
 
         if state != "ready":
             _LOGGER.error("Machine is in state '%s', cannot brew (need: ready)", state)
+            await self.hass.services.async_call(
+                "persistent_notification",
+                "create",
+                {
+                    "message": f"The machine is in state '{state}' and cannot brew. "
+                    "It needs to be in 'ready' state.",
+                    "title": "Nespresso: cannot brew",
+                    "notification_id": "nespresso_brew_error",
+                },
+            )
             return
 
         await self.hass.services.async_call(
