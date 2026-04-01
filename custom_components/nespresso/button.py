@@ -137,8 +137,41 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         )
 
     async def async_press(self) -> None:
-        """Send brew command to the machine."""
+        """Send brew command to the machine.
+
+        Waits for the machine to reach a brewable state (ready, heating
+        will resolve on its own). Times out after 120 seconds.
+        """
+        import asyncio
+
         from .select import VERTUO_BREW_TYPE_VALUES, VERTUO_TEMPERATURE_VALUES
+
+        brewable = {"ready", "ready_old_capsule"}
+        waiting = {"heating", "initializing"}
+
+        # Wait for machine to be ready
+        state = self.coordinator.data.machine_state if self.coordinator.data else None
+        if state in waiting:
+            _LOGGER.info("Machine is %s, waiting for ready...", state)
+            for _ in range(24):  # 24 * 5s = 120s max
+                await asyncio.sleep(5)
+                await self.coordinator.async_request_refresh()
+                state = (
+                    self.coordinator.data.machine_state
+                    if self.coordinator.data
+                    else None
+                )
+                if state not in waiting:
+                    break
+            else:
+                _LOGGER.error("Timeout waiting for machine to be ready")
+                return
+
+        if state not in brewable:
+            _LOGGER.error(
+                "Machine is in state '%s', cannot brew (need: %s)", state, brewable
+            )
+            return
 
         brew_type = VERTUO_BREW_TYPE_VALUES.get(self.coordinator.brew_type, 1)
         temp = VERTUO_TEMPERATURE_VALUES.get(self.coordinator.brew_temperature, 0)
