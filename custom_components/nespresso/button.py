@@ -146,11 +146,21 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
 
         from .select import VERTUO_BREW_TYPE_VALUES, VERTUO_TEMPERATURE_VALUES
 
-        brewable = {"ready", "ready_old_capsule"}
-        waiting = {"heating", "initializing"}
+        waiting = {"heating", "initializing", "ready_old_capsule"}
 
         # Wait for machine to be ready
         state = self.coordinator.data.machine_state if self.coordinator.data else None
+        if state == "ready_old_capsule":
+            await self.hass.services.async_call(
+                "persistent_notification",
+                "create",
+                {
+                    "message": "Please eject the used capsule and insert a fresh one. "
+                    "Brewing will start automatically when the machine is ready.",
+                    "title": "Nespresso: replace capsule",
+                    "notification_id": "nespresso_capsule",
+                },
+            )
         if state in waiting:
             _LOGGER.info("Machine is %s, waiting for ready...", state)
             for _ in range(24):  # 24 * 5s = 120s max
@@ -167,11 +177,15 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
                 _LOGGER.error("Timeout waiting for machine to be ready")
                 return
 
-        if state not in brewable:
-            _LOGGER.error(
-                "Machine is in state '%s', cannot brew (need: %s)", state, brewable
-            )
+        if state != "ready":
+            _LOGGER.error("Machine is in state '%s', cannot brew (need: ready)", state)
             return
+
+        await self.hass.services.async_call(
+            "persistent_notification",
+            "dismiss",
+            {"notification_id": "nespresso_capsule"},
+        )
 
         brew_type = VERTUO_BREW_TYPE_VALUES.get(self.coordinator.brew_type, 1)
         temp = VERTUO_TEMPERATURE_VALUES.get(self.coordinator.brew_temperature, 0)
