@@ -252,9 +252,29 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             if device is None:
                 raise BleakError("Machine not found")
 
-            client = await establish_connection(
-                BleakClient, device, self.address, max_attempts=2
-            )
+            try:
+                client = await establish_connection(
+                    BleakClient, device, self.address, max_attempts=2
+                )
+            except (BleakError, TimeoutError) as err:
+                if "connection abort" not in str(err).lower():
+                    raise
+                _LOGGER.info("Write connection abort, clearing stale bond")
+                try:
+                    tmp = BleakClient(device)
+                    await tmp.unpair()
+                except Exception:  # noqa: BLE001
+                    pass
+                await asyncio.sleep(3)
+                device = bluetooth.async_ble_device_from_address(
+                    self.hass, self.address, connectable=True
+                )
+                if device is None:
+                    raise
+                client = await establish_connection(
+                    BleakClient, device, self.address, max_attempts=2
+                )
+
             try:
                 if self.auth_key:
                     from .ble.protocol import _authenticate
