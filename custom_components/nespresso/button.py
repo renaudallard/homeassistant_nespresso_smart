@@ -163,7 +163,7 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
             )
         if state in waiting:
             _LOGGER.info("Machine is %s, waiting for ready...", state)
-            for _ in range(24):  # 24 * 5s = 120s max
+            while state in waiting:
                 await asyncio.sleep(5)
                 await self.coordinator.async_request_refresh()
                 state = (
@@ -171,11 +171,6 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
                     if self.coordinator.data
                     else None
                 )
-                if state not in waiting:
-                    break
-            else:
-                _LOGGER.error("Timeout waiting for machine to be ready")
-                return
 
         if state != "ready":
             _LOGGER.error("Machine is in state '%s', cannot brew (need: ready)", state)
