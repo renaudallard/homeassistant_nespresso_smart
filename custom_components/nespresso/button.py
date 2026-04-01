@@ -150,6 +150,19 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
 
         # Wait for machine to be ready
         state = self.coordinator.data.machine_state if self.coordinator.data else None
+        if state == "power_save":
+            await self.hass.services.async_call(
+                "persistent_notification",
+                "create",
+                {
+                    "message": "The machine is in power save mode. "
+                    "Press the button on the machine to wake it up.",
+                    "title": "Nespresso: machine asleep",
+                    "notification_id": "nespresso_power_save",
+                },
+            )
+            _LOGGER.error("Machine is in power save, cannot brew over BLE")
+            return
         if state == "ready_old_capsule":
             await self.hass.services.async_call(
                 "persistent_notification",
