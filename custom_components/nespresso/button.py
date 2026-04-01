@@ -115,6 +115,7 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
     _attr_has_entity_name = True
     _attr_name = "Brew"
     _attr_icon = "mdi:coffee"
+    _brew_pending = False
 
     def __init__(
         self,
@@ -139,9 +140,21 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
     async def async_press(self) -> None:
         """Send brew command to the machine.
 
-        Waits for the machine to reach a brewable state (ready, heating
-        will resolve on its own). Times out after 120 seconds.
+        Only one brew at a time. If pressed multiple times while waiting,
+        subsequent presses are ignored.
         """
+        if self._brew_pending:
+            _LOGGER.debug("Brew already pending, ignoring duplicate press")
+            return
+        self._brew_pending = True
+
+        try:
+            await self._do_brew()
+        finally:
+            self._brew_pending = False
+
+    async def _do_brew(self) -> None:
+        """Internal brew logic."""
         import asyncio
 
         from .select import VERTUO_BREW_TYPE_VALUES, VERTUO_TEMPERATURE_VALUES
