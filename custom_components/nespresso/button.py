@@ -147,22 +147,42 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         from .select import VERTUO_BREW_TYPE_VALUES, VERTUO_TEMPERATURE_VALUES
 
         waiting = {"heating", "initializing", "ready_old_capsule"}
+        waking = {"power_save", "standby"}
 
         # Wait for machine to be ready
         state = self.coordinator.data.machine_state if self.coordinator.data else None
-        if state == "power_save":
+        if state in waking:
             await self.hass.services.async_call(
                 "persistent_notification",
                 "create",
                 {
                     "message": "The machine is in power save mode. "
-                    "Press the button on the machine to wake it up.",
+                    "Press the button on the machine to wake it up. "
+                    "Brewing will start automatically when the machine is ready.",
                     "title": "Nespresso: machine asleep",
                     "notification_id": "nespresso_power_save",
                 },
             )
-            _LOGGER.error("Machine is in power save, cannot brew over BLE")
-            return
+            _LOGGER.info("Machine is %s, waiting up to 5 min for wake...", state)
+            import time
+
+            deadline = time.monotonic() + 300
+            while state in waking and time.monotonic() < deadline:
+                await asyncio.sleep(5)
+                await self.coordinator.async_request_refresh()
+                state = (
+                    self.coordinator.data.machine_state
+                    if self.coordinator.data
+                    else None
+                )
+            await self.hass.services.async_call(
+                "persistent_notification",
+                "dismiss",
+                {"notification_id": "nespresso_power_save"},
+            )
+            if state in waking:
+                _LOGGER.error("Timeout waiting for machine to wake up")
+                return
         if state == "ready_old_capsule":
             await self.hass.services.async_call(
                 "persistent_notification",
