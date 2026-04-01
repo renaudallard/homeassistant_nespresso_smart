@@ -39,6 +39,7 @@ from .const import (
     DOMAIN,
     MACHINE_FAMILY_NAMES,
     VERTUO_CHAR_COMMAND_REQ,
+    VERTUO_CHAR_COMMAND_RSP,
     VMINI_CHAR_FOTA_COMMAND,
     MachineFamily,
 )
@@ -259,8 +260,13 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         )
 
         try:
-            await self.coordinator.async_write_char(VERTUO_CHAR_COMMAND_REQ, bytes(buf))
-            _LOGGER.info("Brew command sent to %s", self._address)
+            rsp = await self.coordinator.async_send_command(
+                VERTUO_CHAR_COMMAND_REQ, VERTUO_CHAR_COMMAND_RSP, bytes(buf)
+            )
+            if rsp:
+                _LOGGER.info("Brew response from %s: %s", self._address, rsp.hex())
+            else:
+                _LOGGER.warning("No brew response from %s", self._address)
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to send brew command: %s", err)

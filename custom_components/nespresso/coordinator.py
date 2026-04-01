@@ -286,6 +286,78 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             finally:
                 await client.disconnect()
 
+    async def async_send_command(
+        self, cmd_uuid: str, rsp_uuid: str, data: bytes, retries: int = 3
+    ) -> bytes | None:
+        """Send a command and wait for the response notification.
+
+        Matches the bulldog flow: subscribe to response notifications,
+        write command, wait for response, unsubscribe.
+        """
+        async with self._ble_lock:
+            device = bluetooth.async_ble_device_from_address(
+                self.hass, self.address, connectable=True
+            )
+            if device is None:
+                raise BleakError("Machine not found")
+
+            try:
+                client = await establish_connection(
+                    BleakClient, device, self.address, max_attempts=2
+                )
+            except (BleakError, TimeoutError) as err:
+                if "connection abort" not in str(err).lower():
+                    raise
+                _LOGGER.info("Command connection abort, clearing stale bond")
+                try:
+                    tmp = BleakClient(device)
+                    await tmp.unpair()
+                except Exception:  # noqa: BLE001
+                    pass
+                await asyncio.sleep(3)
+                device = bluetooth.async_ble_device_from_address(
+                    self.hass, self.address, connectable=True
+                )
+                if device is None:
+                    raise
+                client = await establish_connection(
+                    BleakClient, device, self.address, max_attempts=2
+                )
+
+            try:
+                if self.auth_key:
+                    from .ble.protocol import _authenticate
+
+                    await _authenticate(client, self.auth_key, self.family)
+
+                response: bytearray | None = None
+
+                def on_notify(_sender: object, rsp_data: bytearray) -> None:
+                    nonlocal response
+                    response = rsp_data
+                    _LOGGER.debug("Command response: %s", rsp_data.hex())
+
+                await client.start_notify(rsp_uuid, on_notify)
+
+                for attempt in range(retries):
+                    response = None
+                    await client.write_gatt_char(cmd_uuid, data, response=True)
+                    _LOGGER.debug(
+                        "Command write attempt %d: %s", attempt + 1, data.hex()
+                    )
+                    for _ in range(5):
+                        if response is not None:
+                            break
+                        await asyncio.sleep(1)
+                    if response is not None:
+                        break
+                    await asyncio.sleep(1)
+
+                await client.stop_notify(rsp_uuid)
+                return bytes(response) if response is not None else None
+            finally:
+                await client.disconnect()
+
     async def _async_update_data(self) -> NespressoMachineData:
         """Connect, read all characteristics, parse, disconnect."""
         async with self._ble_lock:
