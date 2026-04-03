@@ -371,13 +371,30 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 await client.stop_notify(rsp_uuid)
                 return bytes(response) if response is not None else None
             finally:
-                # Release temporary connection kept for brew
-                if not self.persistent and self._client is client:
-                    self._client = None
-                    self._keep_connection = False
+                if own_client:
                     await client.disconnect()
-                elif own_client:
-                    await client.disconnect()
+
+    async def async_release_kept_connection(self) -> None:
+        """Release the temporary connection kept for brew."""
+        if not self.persistent and self._client is not None:
+            try:
+                await self._client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
+            self._client = None
+        self._keep_connection = False
+
+    async def async_bst_send(self, cmd_uuid: str, rsp_uuid: str, data: bytes) -> bool:
+        """Send data via BST protocol on the kept connection."""
+        async with self._ble_lock:
+            client = self._client
+            if client is None or not client.is_connected:
+                _LOGGER.error("No persistent connection for BST send")
+                return False
+
+            from .ble.bst import bst_send
+
+            return await bst_send(client, cmd_uuid, rsp_uuid, data)
 
     async def _async_update_data(self) -> NespressoMachineData:
         """Connect, read all characteristics, parse, disconnect."""

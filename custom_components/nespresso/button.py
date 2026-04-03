@@ -153,6 +153,7 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
             await self._do_brew()
         finally:
             self._brew_pending = False
+            await self.coordinator.async_release_kept_connection()
 
     async def _do_brew(self) -> None:
         """Internal brew logic."""
@@ -246,7 +247,7 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         brew_type = VERTUO_BREW_TYPE_VALUES.get(self.coordinator.brew_type, 1)
         temp = VERTUO_TEMPERATURE_VALUES.get(self.coordinator.brew_temperature, 0)
 
-        # Brew command: 10 bytes (matches bulldog BLE captures)
+        # Try simple CCommandReq first (works on Vertuo Next)
         buf = bytearray(10)
         buf[0] = 3  # cmdID: machine command
         buf[1] = 5  # subCmdID: start brew
@@ -269,8 +270,25 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
             )
             if rsp:
                 _LOGGER.info("Brew response from %s: %s", self._address, rsp.hex())
+                await self.coordinator.async_request_refresh()
+                return
+
+            # No response to simple command. Try BST recipe protocol.
+            _LOGGER.info(
+                "No response to simple brew, trying BST recipe on %s", self._address
+            )
+            from .ble.bst import encode_recipe_data
+
+            recipe_data = encode_recipe_data(
+                "3/0/1000/0/500/0/0/2/94/85/155/498/0/50/0/0/0"
+            )
+            ok = await self.coordinator.async_bst_send(
+                VERTUO_CHAR_COMMAND_REQ, VERTUO_CHAR_COMMAND_RSP, recipe_data
+            )
+            if ok:
+                _LOGGER.info("BST recipe sent to %s", self._address)
             else:
-                _LOGGER.warning("No brew response from %s", self._address)
+                _LOGGER.warning("BST recipe failed on %s", self._address)
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to send brew command: %s", err)
