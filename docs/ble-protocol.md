@@ -579,6 +579,39 @@ Source: `com.sdataway.vertuonext.machine.machine.actions.model.VertuoNextRecipeO
 ### Command Response
 
 Responses are received via notification on `CHAR_COMMAND_RSP` (`06AA3A52`).
+The machine requires an active notification subscription on `CHAR_COMMAND_RSP`
+before it processes commands written to `CHAR_COMMAND_REQ`.
+
+### BST (Byte Sequence Transfer) Recipe Sending
+
+Source: `com.sdataway.ble2.BSTProtocol`
+
+The APK sends recipes via BST, a multi-packet protocol over `CHAR_COMMAND_REQ` /
+`CHAR_COMMAND_RSP`. This is used for the `SendRecipe` action instead of a simple
+CCommandReq write.
+
+**BST Constants:**
+- Packet size: 20 bytes
+- Payload per packet: 18 bytes (send/receive)
+- CMD_INIT=0x01, CMD_NEXT=0x02, CMD_GET=0x04, CMD_DONE=0x05
+- RSP_INIT=0x11, RSP_NEXT=0x12, RSP_NONE=0x13
+
+**BST Send Flow:**
+1. Write CMD_INIT (byte[0]=0x01, byte[19]=timestamp%255) to COMMAND_REQ
+2. Wait for RSP_INIT (0x11) notification with max batch sizes
+3. Write CMD_NEXT (byte[0]=0x02) to COMMAND_REQ
+4. Wait for RSP_NEXT (0x12) notification with maxSN
+5. Write data packets: byte[0]=SN index, byte[1]=flags, bytes[2-19]=payload
+6. Write CMD_DONE (byte[0]=0x05, byte[19]=timestamp%255)
+
+**Data packet flags:**
+- 0x00: normal data
+- 0x01 (FLAG_END_SN): last packet in sequence
+- 0x04 (FLAG_PADDING): packet has padding bytes (value = pad count)
+
+**Connection requirement:** Both simple brew commands and BST must be sent on
+the same BLE connection that performed authentication and status reads. A
+separate connection is ignored by the machine.
 
 ---
 

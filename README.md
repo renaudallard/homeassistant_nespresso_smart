@@ -150,6 +150,10 @@ If there is a used capsule in the machine, a notification asks you to replace it
 
 Multiple presses of the Brew button are debounced. Only one brew command is sent.
 
+The brew command is sent on the same BLE connection used for status polling (required by the machine). If the simple command gets no response, the integration falls back to the BST (Byte Sequence Transfer) recipe protocol used by the Nespresso app.
+
+**Note:** BLE brewing is experimental. It was reverse-engineered from BLE captures on Vertuo Next models and may not work on all machines (e.g., Vertuo Pop).
+
 ### Events and Triggers
 
 Event entity fires on machine state changes (Barista and Vertuo Next).
@@ -185,7 +189,7 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 
 ## Limitations
 
-- **Vertuo brewing**: Predefined brew types are supported (ristretto, espresso, lungo, hot water, americano). Custom recipes with exact ml volumes are not yet supported.
+- **Vertuo brewing**: Experimental. The brew command was captured from Vertuo Next models and may not work on all machines. Custom recipes with exact ml volumes are not yet supported. The Nespresso app sends brew commands through the cloud (WiFi/MQTT), not BLE, so the BLE brew protocol had to be reverse-engineered separately.
 - **Maintenance commands**: Descaling, rinsing, emptying command IDs are not in the decompiled code. Needs real hardware testing.
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
