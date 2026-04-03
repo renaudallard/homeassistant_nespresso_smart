@@ -95,6 +95,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.auth_key: str | None = None
         self.brew_type: str = "espresso"
         self.brew_temperature: str = "medium"
+        self._keep_connection = False
         self._ble_lock = asyncio.Lock()
         self._client: BleakClient | None = None
         self._status_uuid = self._get_status_uuid()
@@ -370,7 +371,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 await client.stop_notify(rsp_uuid)
                 return bytes(response) if response is not None else None
             finally:
-                if own_client:
+                # Release temporary connection kept for brew
+                if not self.persistent and self._client is client:
+                    self._client = None
+                    self._keep_connection = False
+                    await client.disconnect()
+                elif own_client:
                     await client.disconnect()
 
     async def _async_update_data(self) -> NespressoMachineData:
@@ -475,12 +481,15 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             protocol = get_protocol(self.family)
             raw = await protocol.async_read_all(client, self.auth_key)
 
-            # Subscribe to notifications in persistent mode
+            # Keep connection alive for persistent mode or pending brew
             if self.persistent and self._status_uuid:
                 await client.start_notify(
                     self._status_uuid, self._on_status_notification
                 )
                 self._client = client
+            elif self._keep_connection:
+                self._client = client
+                _LOGGER.debug("Keeping connection for pending brew")
             else:
                 await client.disconnect()
         except (BleakError, TimeoutError) as err:
