@@ -291,54 +291,59 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     ) -> bytes | None:
         """Send a command and wait for the response notification.
 
-        Matches the bulldog flow: subscribe to response notifications,
-        write command, wait for response, unsubscribe.
+        Reuses the persistent connection if available (same session as
+        the poll that authenticated and read status). Falls back to a
+        new connection otherwise.
         """
         async with self._ble_lock:
-            # Give BlueZ time to clean up the previous connection
-            await asyncio.sleep(2)
-
-            device = bluetooth.async_ble_device_from_address(
-                self.hass, self.address, connectable=True
-            )
-            if device is None:
-                raise BleakError("Machine not found")
-
-            try:
-                client = await establish_connection(
-                    BleakClient, device, self.address, max_attempts=2
-                )
-            except (BleakError, TimeoutError) as err:
-                err_str = str(err).lower()
-                if "already in progress" in err_str:
-                    _LOGGER.debug("BLE busy, retrying after delay")
-                    await asyncio.sleep(3)
-                    client = await establish_connection(
-                        BleakClient, device, self.address, max_attempts=2
-                    )
-                elif "connection abort" in err_str:
-                    _LOGGER.info("Command connection abort, clearing stale bond")
-                    try:
-                        tmp = BleakClient(device)
-                        await tmp.unpair()
-                    except Exception:  # noqa: BLE001
-                        pass
-                    await asyncio.sleep(3)
+            own_client = False
+            client = self._client
+            if client is not None and client.is_connected:
+                _LOGGER.debug("Reusing persistent connection for command")
+            else:
+                own_client = True
+                await asyncio.sleep(2)
                 device = bluetooth.async_ble_device_from_address(
                     self.hass, self.address, connectable=True
                 )
                 if device is None:
-                    raise
-                client = await establish_connection(
-                    BleakClient, device, self.address, max_attempts=2
-                )
-
-            try:
+                    raise BleakError("Machine not found")
+                try:
+                    client = await establish_connection(
+                        BleakClient, device, self.address, max_attempts=2
+                    )
+                except (BleakError, TimeoutError) as err:
+                    err_str = str(err).lower()
+                    if "already in progress" in err_str:
+                        _LOGGER.debug("BLE busy, retrying after delay")
+                        await asyncio.sleep(3)
+                        client = await establish_connection(
+                            BleakClient, device, self.address, max_attempts=2
+                        )
+                    elif "connection abort" in err_str:
+                        _LOGGER.info("Command connection abort, clearing stale bond")
+                        try:
+                            tmp = BleakClient(device)
+                            await tmp.unpair()
+                        except Exception:  # noqa: BLE001
+                            pass
+                        await asyncio.sleep(3)
+                        device = bluetooth.async_ble_device_from_address(
+                            self.hass, self.address, connectable=True
+                        )
+                        if device is None:
+                            raise
+                        client = await establish_connection(
+                            BleakClient, device, self.address, max_attempts=2
+                        )
+                    else:
+                        raise
                 if self.auth_key:
                     from .ble.protocol import _authenticate
 
                     await _authenticate(client, self.auth_key, self.family)
 
+            try:
                 response: bytearray | None = None
 
                 def on_notify(_sender: object, rsp_data: bytearray) -> None:
@@ -365,7 +370,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 await client.stop_notify(rsp_uuid)
                 return bytes(response) if response is not None else None
             finally:
-                await client.disconnect()
+                if own_client:
+                    await client.disconnect()
 
     async def _async_update_data(self) -> NespressoMachineData:
         """Connect, read all characteristics, parse, disconnect."""
