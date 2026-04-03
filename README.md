@@ -130,10 +130,25 @@ This method is not available on iOS.
 | Language | Yes | No | No | Set machine display language |
 | Brew type | No | Yes | No | Select brew type (ristretto, espresso, lungo, hot water, americano) |
 | Brew temperature | No | Yes | No | Select brew temperature (low, medium, high) |
-| Brew | No | Yes | No | Start brewing with selected type and temperature |
+| Brew | No | Yes | No | Start brewing (see brewing flow below) |
 | Water hardness | No | Yes | No | Set water hardness level (0-6 slider) |
 | Auto power off | No | Yes | No | Set auto power off time (minutes) |
 | Check firmware update | No | No | Yes | Trigger firmware update check |
+
+### Brewing
+
+The machine cannot be woken up over BLE. To brew from Home Assistant:
+
+1. Select a **brew type** (ristretto, espresso, lungo, hot water, americano) and **temperature** (low, medium, high)
+2. Press **Brew** in HA
+3. If the machine is asleep, a notification appears asking you to press the physical button on the machine
+4. Press the button on the machine to wake it up
+5. Insert a capsule and close the head
+6. The integration automatically waits for heating to finish and brews when the machine is ready
+
+If there is a used capsule in the machine, a notification asks you to replace it. Brewing starts automatically once a fresh capsule is inserted and the head is closed.
+
+Multiple presses of the Brew button are debounced. Only one brew command is sent.
 
 ### Events and Triggers
 
