@@ -295,6 +295,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         write command, wait for response, unsubscribe.
         """
         async with self._ble_lock:
+            # Give BlueZ time to clean up the previous connection
+            await asyncio.sleep(2)
+
             device = bluetooth.async_ble_device_from_address(
                 self.hass, self.address, connectable=True
             )
@@ -306,15 +309,21 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     BleakClient, device, self.address, max_attempts=2
                 )
             except (BleakError, TimeoutError) as err:
-                if "connection abort" not in str(err).lower():
-                    raise
-                _LOGGER.info("Command connection abort, clearing stale bond")
-                try:
-                    tmp = BleakClient(device)
-                    await tmp.unpair()
-                except Exception:  # noqa: BLE001
-                    pass
-                await asyncio.sleep(3)
+                err_str = str(err).lower()
+                if "already in progress" in err_str:
+                    _LOGGER.debug("BLE busy, retrying after delay")
+                    await asyncio.sleep(3)
+                    client = await establish_connection(
+                        BleakClient, device, self.address, max_attempts=2
+                    )
+                elif "connection abort" in err_str:
+                    _LOGGER.info("Command connection abort, clearing stale bond")
+                    try:
+                        tmp = BleakClient(device)
+                        await tmp.unpair()
+                    except Exception:  # noqa: BLE001
+                        pass
+                    await asyncio.sleep(3)
                 device = bluetooth.async_ble_device_from_address(
                     self.hass, self.address, connectable=True
                 )
