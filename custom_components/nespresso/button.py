@@ -116,7 +116,6 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
     _attr_has_entity_name = True
     _attr_name = "Brew"
     _attr_icon = "mdi:coffee"
-    _brew_pending = False
 
     def __init__(
         self,
@@ -124,6 +123,7 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         entry: ConfigEntry,
     ) -> None:
         super().__init__(coordinator)
+        self._brew_pending = False
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_vertuo_brew"
         family = MachineFamily(entry.data["family"])

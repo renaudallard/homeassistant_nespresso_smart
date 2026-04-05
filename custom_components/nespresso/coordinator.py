@@ -376,13 +376,15 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     async def async_release_kept_connection(self) -> None:
         """Release the temporary connection kept for brew."""
-        if not self.persistent and self._client is not None:
-            try:
-                await self._client.disconnect()
-            except Exception:  # noqa: BLE001
-                pass
-            self._client = None
         self._keep_connection = False
+        if not self.persistent:
+            client = self._client
+            self._client = None  # Clear first to prevent re-entry
+            if client is not None:
+                try:
+                    await client.disconnect()
+                except Exception:  # noqa: BLE001
+                    pass
 
     async def async_bst_send(self, cmd_uuid: str, rsp_uuid: str, data: bytes) -> bool:
         """Send data via BST protocol on the kept connection."""
