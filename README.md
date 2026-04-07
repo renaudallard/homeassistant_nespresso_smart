@@ -152,7 +152,9 @@ Multiple presses of the Brew button are debounced. Only one brew command is sent
 
 The brew command is sent on the same BLE connection used for status polling (required by the machine). If the simple command gets no response, the integration falls back to the BST (Byte Sequence Transfer) recipe protocol used by the Nespresso app.
 
-**Note:** BLE brewing is experimental. It was reverse-engineered from BLE captures on Vertuo Next models and may not work on all machines (e.g., Vertuo Pop).
+**Note:** BLE brewing is experimental. It was reverse-engineered from BLE captures on Vertuo Next models and may not work on all machines.
+
+**Vertuo Pop:** Remote brewing over BLE is not supported by this machine. The Nespresso app itself does not offer a brew button for the Vertuo Pop, and the machine does not respond to any known BLE brew command. Only status monitoring and settings like water hardness work over BLE.
 
 ### Events and Triggers
 
@@ -189,7 +191,7 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 
 ## Limitations
 
-- **Vertuo brewing**: Experimental. The brew command was captured from Vertuo Next models and may not work on all machines. Custom recipes with exact ml volumes are not yet supported. The Nespresso app sends brew commands through the cloud (WiFi/MQTT), not BLE, so the BLE brew protocol had to be reverse-engineered separately.
+- **Vertuo brewing**: Experimental. The brew command was captured from Vertuo Next models and may not work on all machines. The Vertuo Pop does not support BLE brewing at all (the Nespresso app itself does not offer a brew button for it). Custom recipes with exact ml volumes are not yet supported.
 - **Maintenance commands**: Descaling, rinsing, emptying command IDs are not in the decompiled code. Needs real hardware testing.
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
