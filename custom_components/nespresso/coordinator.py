@@ -198,7 +198,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     "brewing_unit_closed",
                     "milk_frother_running",
                     "cup_length_prog",
-                    "bootloader_active",
                 ):
                     current[key] = bool(status.get(key, False))
 
