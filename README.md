@@ -28,6 +28,10 @@ Built by reverse-engineering the Nespresso Smart Android app (v1.2.5).
 
 ### HACS (recommended)
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renaudallard&repository=homeassistant_nespresso_smart&category=integration)
+
+Click the button above to open the repository directly in HACS, or add it manually:
+
 1. Open HACS in your Home Assistant instance
 2. Go to **Integrations**
 3. Click the three dots in the top right corner and select **Custom repositories**
