@@ -100,8 +100,9 @@ def parse_barista_status(data: bytes) -> dict[str, object]:
     }
 
 
-# Bluetooth SIG company identifier used by Nespresso in the advertisement.
-NESPRESSO_COMPANY_ID = 0x2502
+# Bluetooth SIG company identifier for Nestle Nespresso S.A. The octets are
+# little endian on the wire, so a capture showing 25 02 decodes to 0x0225.
+NESPRESSO_COMPANY_ID = 0x0225
 
 
 def parse_venus_advertisement(data: bytes | None) -> dict[str, object] | None:

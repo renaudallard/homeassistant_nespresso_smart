@@ -243,6 +243,8 @@ The integration connects to the machine via BLE at a configurable interval (defa
 
 Machine family is detected automatically from the advertised BLE service UUID during discovery. When the machine becomes available after being off or out of range, a BLE advertisement callback triggers an immediate refresh.
 
+On the Vertuo Next family the advertisement itself carries the machine status bytes, so state and alarm flags follow the machine within about a second instead of waiting for the next poll. Values that only a connection can read, such as error codes and the capsule counter, still come from the poll.
+
 Authentication is application-level only (CMID write with response), matching the official Nespresso Android app. No BLE-level pairing is needed. The auth key is generated once and persisted in the config entry so the same key is reused across restarts. If the machine was previously paired with the Nespresso app, a factory reset is required before the integration can onboard.
 
 ## Reverse Engineering Documentation

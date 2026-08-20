@@ -52,6 +52,7 @@ sys.modules.setdefault("bleak", MagicMock())
 sys.modules.setdefault("bleak_retry_connector", MagicMock())
 
 from custom_components.nespresso.ble.parsing import (
+    NESPRESSO_COMPANY_ID,
     parse_barista_machine_info,
     parse_barista_status,
     parse_error_information,
@@ -445,6 +446,17 @@ class TestErrorInformation:
 
 
 class TestVenusAdvertisement:
+    def test_company_id_is_the_sig_assigned_value(self) -> None:
+        """0x0225 is Nestle Nespresso S.A. in the Bluetooth SIG registry.
+
+        Home Assistant keys manufacturer_data by the decoded identifier, and
+        the octets are little endian on the wire, so a capture showing 25 02
+        decodes to 0x0225. Reading it the other way round gives 0x2502, which
+        is assigned to nobody and never matches.
+        """
+        assert NESPRESSO_COMPANY_ID == 0x0225
+        assert NESPRESSO_COMPANY_ID == int.from_bytes(b"\x25\x02", "little")
+
     def test_power_save_head_open(self) -> None:
         result = parse_venus_advertisement(bytes.fromhex("400900000000"))
         assert result["machine_state"] == "power_save"
