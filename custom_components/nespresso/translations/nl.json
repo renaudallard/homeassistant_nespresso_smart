@@ -65,7 +65,9 @@
         "title": "Nespresso-opties",
         "data": {
           "scan_interval": "Verversingsinterval (seconden)",
-          "persistent_connection": "Persistente verbinding (realtime updates, blokkeert Nespresso-app)"
+          "persistent_connection": "Persistente verbinding (realtime updates, blokkeert Nespresso-app)",
+          "descaling_capsules": "Ontkalkingsinterval (capsules)",
+          "descaling_days": "Ontkalkingsinterval (dagen)"
         }
       }
     }

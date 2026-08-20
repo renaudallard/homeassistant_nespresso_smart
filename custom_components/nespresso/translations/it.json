@@ -65,7 +65,9 @@
         "title": "Opzioni Nespresso",
         "data": {
           "scan_interval": "Intervallo di aggiornamento (secondi)",
-          "persistent_connection": "Connessione persistente (aggiornamenti in tempo reale, blocca l'app Nespresso)"
+          "persistent_connection": "Connessione persistente (aggiornamenti in tempo reale, blocca l'app Nespresso)",
+          "descaling_capsules": "Intervallo di decalcificazione (capsule)",
+          "descaling_days": "Intervallo di decalcificazione (giorni)"
         }
       }
     }

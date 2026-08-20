@@ -65,7 +65,9 @@
         "title": "Nespresso Options",
         "data": {
           "scan_interval": "Poll interval (seconds)",
-          "persistent_connection": "Persistent connection (real-time updates, blocks Nespresso app)"
+          "persistent_connection": "Persistent connection (real-time updates, blocks Nespresso app)",
+          "descaling_capsules": "Descaling interval (capsules)",
+          "descaling_days": "Descaling interval (days)"
         }
       }
     }
