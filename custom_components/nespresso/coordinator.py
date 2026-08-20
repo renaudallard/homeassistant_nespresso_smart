@@ -78,6 +78,11 @@ _VERSION = json.loads((Path(__file__).parent / "manifest.json").read_text()).get
 )
 
 
+def counter_store(hass: HomeAssistant, address: str) -> Store:
+    """Return the store holding the brew counters for one machine."""
+    return Store(hass, COUNTER_STORAGE_VERSION, f"{DOMAIN}.counters.{address}")
+
+
 class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     """Coordinator that connects to a Nespresso machine via BLE and reads status."""
 
@@ -114,9 +119,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.last_descaling: float | None = None
         self.descaling_capsules = 0
         self.descaling_days = 0
-        self._counter_store: Store = Store(
-            hass, COUNTER_STORAGE_VERSION, f"{DOMAIN}.counters.{address}"
-        )
+        self._counter_store = counter_store(hass, address)
         self._client: BleakClient | None = None
         self._status_uuid = self._get_status_uuid()
         self._device_id: str | None = None

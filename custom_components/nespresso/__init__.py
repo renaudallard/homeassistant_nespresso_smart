@@ -47,7 +47,7 @@ from .const import (
     MACHINE_FAMILY_NAMES,
     MachineFamily,
 )
-from .coordinator import NespressoCoordinator
+from .coordinator import NespressoCoordinator, counter_store
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,6 +173,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload integration when options change."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Delete the stored brew counters when the machine is removed."""
+    await counter_store(hass, entry.data["address"]).async_remove()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
