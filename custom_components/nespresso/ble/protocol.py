@@ -135,8 +135,11 @@ async def _authenticate(
     """Authenticate with the Nespresso machine.
 
     Matches the APK flow: write CMID with response, verify by reading
-    a protected characteristic. No BLE-level pairing (the APK does not
-    call createBond; Android handles link encryption transparently).
+    a protected characteristic. This is not BLE pairing, since the APK does
+    not call createBond, and it is separate from link encryption: Android
+    negotiates that on its own, while BlueZ cannot because nothing in Home
+    Assistant registers a pairing agent. That is why the reads below can time
+    out on a machine that has no bond.
     """
     address = client.address
 
