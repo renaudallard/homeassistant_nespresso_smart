@@ -217,6 +217,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 ):
                     current[key] = bool(status.get(key, False))
 
+            self._async_track_brew(self.data.machine_state, current["machine_state"])
             self.async_set_updated_data(NespressoMachineData(**current))
         except (ValueError, IndexError) as err:
             _LOGGER.debug("Failed to parse notification: %s", err)
