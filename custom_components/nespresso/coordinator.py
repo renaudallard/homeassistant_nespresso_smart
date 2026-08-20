@@ -464,8 +464,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         BREWING is distinct from CAPSULE_READING, so an attempt with no capsule
         never reaches this state and is correctly not counted.
+
+        A previous state of None means there is no baseline yet, which happens
+        on the first refresh after a restart or a reload. Counting there would
+        count a brew that is already running a second time.
         """
-        if current != "brewing" or previous == "brewing":
+        if previous is None or current != "brewing" or previous == "brewing":
             return
         self.brew_total += 1
         self.brews_since_descaling += 1
