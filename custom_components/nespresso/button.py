@@ -47,6 +47,32 @@ from .coordinator import NespressoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+# Vertuo platform codes with no BLE brew support. The Nespresso app itself
+# offers no brew button for these models and the machine ignores every known
+# brew command, so exposing a button that silently does nothing is worse than
+# not exposing one. The code appears both in the serial number
+# ("23222CV2f2001582072") and in the BLE name ("CV2_5443B29C51B2").
+NO_BREW_PLATFORM_CODES = ("CV2",)
+
+
+def _supports_brewing(coordinator: NespressoCoordinator, entry: ConfigEntry) -> bool:
+    """Return False for Vertuo models known to reject BLE brew commands."""
+    data = coordinator.data
+    candidates = (
+        entry.data.get("name") or "",
+        (data.serial_number if data else None) or "",
+        (data.iot_market_name if data else None) or "",
+    )
+    for text in candidates:
+        upper = text.upper()
+        for code in NO_BREW_PLATFORM_CODES:
+            if code in upper:
+                _LOGGER.debug(
+                    "Brew button skipped: %r matches non-brewing model %s", text, code
+                )
+                return False
+    return True
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -61,9 +87,42 @@ async def async_setup_entry(
     entities: list[ButtonEntity] = []
     if family == MachineFamily.VMINI:
         entities.append(NespressoFotaCheckButton(coordinator, entry))
-    if family == MachineFamily.VERTUO_NEXT:
+    if family == MachineFamily.VERTUO_NEXT and _supports_brewing(coordinator, entry):
         entities.append(NespressoVertuoBrewButton(coordinator, entry))
+    # Only Vertuo Next: the Barista exposes a real capsule counter on 06aa3a15,
+    # so a second derived counter there would just be confusing.
+    if family == MachineFamily.VERTUO_NEXT:
+        entities.append(NespressoResetDescalingButton(coordinator, entry))
     async_add_entities(entities)
+
+
+class NespressoResetDescalingButton(
+    CoordinatorEntity[NespressoCoordinator], ButtonEntity
+):
+    """Reset the descaling counter after actually descaling the machine."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Reset descaling counter"
+    _attr_icon = "mdi:restart"
+
+    def __init__(self, coordinator: NespressoCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator)
+        self._address = entry.data["address"]
+        self._attr_unique_id = f"{self._address}_reset_descaling"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._address)},
+            name=entry.data.get("name", "Nespresso"),
+            manufacturer="Nespresso",
+        )
+
+    @property
+    def available(self) -> bool:
+        """Local counter, so it works even when the machine is unreachable."""
+        return True
+
+    async def async_press(self) -> None:
+        """Zero the brew count and restart the descaling clock."""
+        self.coordinator.async_reset_descaling()
 
 
 class NespressoFotaCheckButton(CoordinatorEntity[NespressoCoordinator], ButtonEntity):
@@ -163,7 +222,7 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
 
         # Tell the coordinator to keep the next poll connection alive
         # so we can send the brew on the same authenticated session
-        self.coordinator._keep_connection = True  # noqa: SLF001
+        self.coordinator._keep_connection = True
 
         waiting = {"heating", "initializing", "ready_old_capsule"}
         waking = {"power_save", "standby"}

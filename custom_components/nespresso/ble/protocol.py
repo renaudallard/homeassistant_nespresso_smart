@@ -41,10 +41,10 @@ from ..const import (
     BARISTA_CHAR_AUTH,
     BARISTA_CHAR_INFO,
     BARISTA_CHAR_MACHINE_PARAMS,
-    BARISTA_CHAR_PROFILE_VERSION,
-    BARISTA_CHAR_RECIPE_INFO,
     BARISTA_CHAR_ONBOARD_STATUS,
     BARISTA_CHAR_PAIR,
+    BARISTA_CHAR_PROFILE_VERSION,
+    BARISTA_CHAR_RECIPE_INFO,
     BARISTA_CHAR_SERIAL,
     BARISTA_CHAR_STATUS,
     VERTUO_CHAR_AUTH,
@@ -61,9 +61,9 @@ from ..const import (
     VERTUO_CHAR_SERIAL,
     VERTUO_CHAR_STATUS,
     VERTUO_CHAR_USER_SETTINGS,
-    VMINI_CHAR_MACHINE_TOKEN,
     VMINI_CHAR_FOTA_STATUS,
     VMINI_CHAR_FW_REV,
+    VMINI_CHAR_MACHINE_TOKEN,
     VMINI_CHAR_MANUFACTURER,
     VMINI_CHAR_MODEL,
     VMINI_CHAR_PAIRING,
@@ -87,6 +87,28 @@ def _decode_ble_string(data: bytes) -> str:
 def generate_auth_key() -> str:
     """Generate a random 16-hex-char auth key for machine onboarding."""
     return uuid.uuid4().hex[:16]
+
+
+# Every BLE operation needs an explicit timeout. Neither bleak nor BlueZ
+# enforces one: when BlueZ tries to raise link security and the machine does
+# not answer, the await hangs forever. Without this, a config entry stayed
+# 315 seconds in "initializing" and could not be deleted while it held the
+# coordinator lock.
+BLE_OP_TIMEOUT = 10.0
+
+
+async def _read(client: BleakClient, char: str) -> bytearray:
+    """Read a characteristic, failing fast instead of hanging."""
+    return await asyncio.wait_for(client.read_gatt_char(char), BLE_OP_TIMEOUT)
+
+
+async def _write(
+    client: BleakClient, char: str, data: bytes, *, response: bool = True
+) -> None:
+    """Write a characteristic, failing fast instead of hanging."""
+    await asyncio.wait_for(
+        client.write_gatt_char(char, data, response=response), BLE_OP_TIMEOUT
+    )
 
 
 # "pair" key maps to CHAR_TX_LEVEL_CHANGE_REQUEST in the APK.
@@ -128,9 +150,11 @@ async def _authenticate(
 
     auth_bytes = binascii.unhexlify(auth_key)
 
-    # Check onboard status
+    # Check onboard status: True / False / None when unknown
+    onboard_data: bytearray | None = None
+    is_onboarded: bool | None = None
     try:
-        onboard_data = await client.read_gatt_char(uuids["onboard"])
+        onboard_data = await _read(client, uuids["onboard"])
         is_onboarded = onboard_data != bytearray(b"\x00")
         _LOGGER.debug(
             "Onboard status for %s: %s (raw=%s)",
@@ -138,17 +162,32 @@ async def _authenticate(
             is_onboarded,
             onboard_data.hex(),
         )
+    except TimeoutError:
+        # Reads need an encrypted link; writes do not. A timeout here while
+        # writes still succeed is the signature of a missing BlueZ bond,
+        # which no other symptom makes obvious, so spell out the fix.
+        _LOGGER.warning(
+            "Reading onboard status from %s timed out. The BlueZ link is most likely not encrypted. Pair the machine once from a terminal on the Home Assistant host: bluetoothctl / agent NoInputNoOutput / default-agent / scan on / pair %s. Note that the default 'agent on' does NOT work: it requests MITM protection with a passkey, which a coffee machine cannot provide.",
+            address,
+            address,
+        )
+        is_onboarded = None
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("Could not read onboard status: %s", err)
-        is_onboarded = False
+        # UNKNOWN, not "not onboarded". This read needs an encrypted link
+        # and times out even on a machine that is already onboarded.
+        is_onboarded = None
 
-    # Onboard if needed
-    if not is_onboarded:
+    # Onboard only when we know for sure it has not happened. When the state
+    # is unknown, just write the CMID and let the verify decide. Otherwise an
+    # already-onboarded machine gets a second onboarding attempt, which it
+    # rejects with GATT 0x0E UNLIKELY_ERROR and drops the connection.
+    if is_onboarded is False:
         await _onboard(client, uuids, auth_bytes, address, family)
 
     # Write CMID with response (matches APK and bulldog)
     try:
-        await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
+        await _write(client, uuids["auth"], auth_bytes, response=True)
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("CMID write failed for %s: %s", address, err)
         return False
@@ -157,28 +196,28 @@ async def _authenticate(
     verify_uuid = uuids.get("verify") or uuids.get("onboard")
     if verify_uuid:
         try:
-            await client.read_gatt_char(verify_uuid)
+            await _read(client, verify_uuid)
         except Exception as err:  # noqa: BLE001
             _LOGGER.debug("Auth verify read failed for %s: %s", address, err)
-            if not is_onboarded:
+            if is_onboarded is False:
                 return False
             # Machine was already onboarded (likely by the Nespresso app).
             # Force re-onboard to register our CMID, then retry auth.
             _LOGGER.info(
                 "Force re-onboard for %s (was onboarded=0x%s)",
                 address,
-                onboard_data.hex(),
+                onboard_data.hex() if onboard_data is not None else "unknown",
             )
             await _onboard(client, uuids, auth_bytes, address, family)
             try:
-                await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
+                await _write(client, uuids["auth"], auth_bytes, response=True)
             except Exception as err2:  # noqa: BLE001
                 _LOGGER.debug(
                     "CMID write after re-onboard failed for %s: %s", address, err2
                 )
                 return False
             try:
-                await client.read_gatt_char(verify_uuid)
+                await _read(client, verify_uuid)
             except Exception as err2:  # noqa: BLE001
                 _LOGGER.debug(
                     "Auth still failed after re-onboard for %s: %s", address, err2
@@ -203,13 +242,13 @@ async def _onboard(
     _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
 
     try:
-        await client.write_gatt_char(uuids["pair"], bytearray([1]), response=False)
+        await _write(client, uuids["pair"], bytearray([1]), response=False)
         _LOGGER.debug("TX level write sent")
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("TX level write failed (non-fatal): %s", err)
 
     try:
-        await client.write_gatt_char(uuids["auth"], auth_bytes, response=True)
+        await _write(client, uuids["auth"], auth_bytes, response=True)
         _LOGGER.debug("Onboarding CMID write sent")
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Onboarding CMID write failed for %s: %s", address, err)
@@ -219,7 +258,7 @@ async def _onboard(
 
     # Verify onboarding succeeded
     try:
-        onboard_data = await client.read_gatt_char(uuids["onboard"])
+        onboard_data = await _read(client, uuids["onboard"])
         is_final = onboard_data != bytearray(b"\x00")
         _LOGGER.debug(
             "Onboard verify for %s: %s (raw=%s)", address, is_final, onboard_data.hex()
@@ -240,7 +279,7 @@ async def _authenticate_vmini(client: BleakClient, auth_key: str) -> bool:
             address,
             token[:8].hex(),
         )
-        await client.write_gatt_char(VMINI_CHAR_MACHINE_TOKEN, token, response=True)
+        await _write(client, VMINI_CHAR_MACHINE_TOKEN, token, response=True)
         _LOGGER.debug("VMini machine token written successfully")
         return True
     except Exception as err:  # noqa: BLE001
@@ -262,7 +301,7 @@ async def _dump_all_characteristics(client: BleakClient) -> dict[str, str]:
                 dump[char.uuid] = f"<not readable, props={char.properties}>"
                 continue
             try:
-                value = await client.read_gatt_char(char.uuid)
+                value = await _read(client, char.uuid)
                 raw_hex = bytes(value).hex()
                 try:
                     text = bytes(value).decode("utf-8", errors="replace")
@@ -296,7 +335,7 @@ async def _read_char(
 ) -> bytearray:
     """Read a GATT characteristic. Auth is done upfront by the coordinator."""
     try:
-        value = await client.read_gatt_char(char_uuid)
+        value = await _read(client, char_uuid)
         _LOGGER.debug("Read %s [%s]: %s", name, char_uuid, value.hex())
         return value
     except Exception as err:
@@ -333,7 +372,7 @@ class BaristaProtocol(AbstractNespressoProtocol):
         # Recipe information (optional)
         recipe_info = None
         try:
-            recipe_info = await client.read_gatt_char(BARISTA_CHAR_RECIPE_INFO)
+            recipe_info = await _read(client, BARISTA_CHAR_RECIPE_INFO)
             _LOGGER.debug("Recipe info raw: %s", recipe_info.hex())
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Recipe info not available")
@@ -374,9 +413,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         )
         # Select current active error (index 0) then read error info
         try:
-            await client.write_gatt_char(
-                VERTUO_CHAR_ERROR_SELECTION, bytes([0]), response=True
-            )
+            await _write(client, VERTUO_CHAR_ERROR_SELECTION, bytes([0]), response=True)
             _LOGGER.debug("Error selection set to index 0 (current active)")
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Error selection write not available")
@@ -387,10 +424,8 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         # Also read error at index 1 (error present in list) for diagnostics
         error_list_entry = None
         try:
-            await client.write_gatt_char(
-                VERTUO_CHAR_ERROR_SELECTION, bytes([1]), response=True
-            )
-            error_list_entry = await client.read_gatt_char(VERTUO_CHAR_ERROR_INFO)
+            await _write(client, VERTUO_CHAR_ERROR_SELECTION, bytes([1]), response=True)
+            error_list_entry = await _read(client, VERTUO_CHAR_ERROR_INFO)
             _LOGGER.debug("Error list entry raw: %s", error_list_entry.hex())
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Error list entry not available")
@@ -398,7 +433,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         # Capsule counter (optional, may not be available on all models)
         caps_counter = None
         try:
-            caps_counter = await client.read_gatt_char(VERTUO_CHAR_CAPS_COUNTER)
+            caps_counter = await _read(client, VERTUO_CHAR_CAPS_COUNTER)
             _LOGGER.debug("Capsule counter raw: %s", caps_counter.hex())
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Capsule counter not available")
@@ -406,14 +441,14 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         # IoT market name (optional)
         iot_market = None
         try:
-            iot_market = await client.read_gatt_char(VERTUO_CHAR_IOT_MARKET)
+            iot_market = await _read(client, VERTUO_CHAR_IOT_MARKET)
             _LOGGER.debug("IoT market name: %s", _decode_ble_string(bytes(iot_market)))
         except Exception:  # noqa: BLE001
             _LOGGER.debug("IoT market name not available")
 
         # Read command response for any unsolicited data (debugging)
         try:
-            cmd_rsp = await client.read_gatt_char(VERTUO_CHAR_COMMAND_RSP)
+            cmd_rsp = await _read(client, VERTUO_CHAR_COMMAND_RSP)
             _LOGGER.debug("VertuoNext command response: %s", cmd_rsp.hex())
         except Exception:  # noqa: BLE001
             _LOGGER.debug("VertuoNext command response not readable")
@@ -458,15 +493,15 @@ class VMiniProtocol(AbstractNespressoProtocol):
         shadow = None
         fota_status = None
         try:
-            fota_status = await client.read_gatt_char(VMINI_CHAR_FOTA_STATUS)
+            fota_status = await _read(client, VMINI_CHAR_FOTA_STATUS)
         except Exception:  # noqa: BLE001
             _LOGGER.debug("VMini FOTA status not available")
         try:
-            wifi_mac = await client.read_gatt_char(VMINI_CHAR_WIFI_MAC)
+            wifi_mac = await _read(client, VMINI_CHAR_WIFI_MAC)
         except Exception:  # noqa: BLE001
             _LOGGER.debug("VMini WiFi MAC not available")
         try:
-            wifi_current = await client.read_gatt_char(VMINI_CHAR_WIFI_CURRENT)
+            wifi_current = await _read(client, VMINI_CHAR_WIFI_CURRENT)
             _LOGGER.debug(
                 "VMini WiFi current setting raw: %s (len=%d, text=%r)",
                 wifi_current.hex(),
@@ -476,7 +511,7 @@ class VMiniProtocol(AbstractNespressoProtocol):
         except Exception:  # noqa: BLE001
             _LOGGER.debug("VMini WiFi current setting not available")
         try:
-            shadow = await client.read_gatt_char(VMINI_CHAR_SHADOW_HEADER)
+            shadow = await _read(client, VMINI_CHAR_SHADOW_HEADER)
         except Exception:  # noqa: BLE001
             _LOGGER.debug("VMini shadow header not available")
         _LOGGER.debug(

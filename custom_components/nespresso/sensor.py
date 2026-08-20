@@ -32,6 +32,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -211,6 +212,91 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
 )
 
 
+@dataclass(frozen=True)
+class NespressoCounterDescription(SensorEntityDescription):
+    """Description for a counter that lives on the coordinator, not the model."""
+
+    families: frozenset[MachineFamily] = frozenset(MachineFamily)
+    value_fn: Callable[[NespressoCoordinator], int | None] = lambda _: None
+
+
+COUNTER_DESCRIPTIONS: tuple[NespressoCounterDescription, ...] = (
+    NespressoCounterDescription(
+        key="brew_total",
+        name="Total brews",
+        icon="mdi:coffee",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda c: c.brew_total,
+    ),
+    NespressoCounterDescription(
+        key="brews_since_descaling",
+        name="Brews since descaling",
+        icon="mdi:coffee-outline",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda c: c.brews_since_descaling,
+    ),
+    NespressoCounterDescription(
+        key="brews_until_descaling",
+        name="Brews until descaling",
+        icon="mdi:coffee-off-outline",
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda c: c.brews_until_descaling,
+    ),
+    NespressoCounterDescription(
+        key="days_until_descaling",
+        name="Days until descaling",
+        icon="mdi:calendar-clock",
+        native_unit_of_measurement="d",
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda c: c.days_until_descaling,
+    ),
+)
+
+
+class NespressoCounterSensor(CoordinatorEntity[NespressoCoordinator], SensorEntity):
+    """Counter derived from state transitions rather than machine data.
+
+    Kept separate from NespressoSensor because these values live on the
+    coordinator and stay valid even when the machine cannot be read.
+    """
+
+    _attr_has_entity_name = True
+    entity_description: NespressoCounterDescription
+
+    def __init__(
+        self,
+        coordinator: NespressoCoordinator,
+        entry: ConfigEntry,
+        description: NespressoCounterDescription,
+    ) -> None:
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._address = entry.data["address"]
+        self._attr_unique_id = f"{self._address}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._address)},
+            name=entry.data.get("name", "Nespresso"),
+            manufacturer="Nespresso",
+        )
+
+    @property
+    def available(self) -> bool:
+        """Counters are our own data, so they outlive a lost connection."""
+        return True
+
+    @property
+    def native_value(self) -> int | None:
+        return self.entity_description.value_fn(self.coordinator)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object] | None:
+        if self.entity_description.key != "brews_since_descaling":
+            return None
+        return {"days_since_descaling": self.coordinator.days_since_descaling}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -230,6 +316,14 @@ async def async_setup_entry(
     # Real-time brewing duration sensor
     if family in (MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT):
         entities.append(NespressoBrewingDuration(coordinator, entry))
+
+    # Brew counters. The Vertuo Pop has no capsule counter characteristic, so
+    # these are counted from state transitions instead.
+    entities.extend(
+        NespressoCounterSensor(coordinator, entry, desc)
+        for desc in COUNTER_DESCRIPTIONS
+        if family in desc.families
+    )
 
     async_add_entities(entities)
 

@@ -100,6 +100,29 @@ def parse_barista_status(data: bytes) -> dict[str, object]:
     }
 
 
+# Bluetooth SIG company identifier used by Nespresso in the advertisement.
+NESPRESSO_COMPANY_ID = 0x2502
+
+
+def parse_venus_advertisement(data: bytes | None) -> dict[str, object] | None:
+    """Parse the Venus BLE advertisement payload.
+
+    The advertisement carries the *same* three MachineStatus bytes as
+    CHAR_MACHINE_STATUS (06aa3a12), so the connected parser applies verbatim.
+
+    Verified on a Vertuo Pop against live connected readings: states
+    POWER_SAVE(9), HEATUP(1), READY(2), STANDBY(12), CAPSULE_READING(17) and
+    BREWING(4) all matched, and byte0 bits 5-6 tracked CMID_TYPE exactly
+    (0 = NONE after a factory reset, 2 = FINAL once onboarded).
+
+    Returns None for anything that is not a usable payload, so callers can
+    ignore advertisements from other machine families without special-casing.
+    """
+    if data is None or len(data) < 3:
+        return None
+    return parse_vertuonext_status(data[:3])
+
+
 def parse_vertuonext_status(data: bytes) -> dict[str, object]:
     """Parse Vertuo Next machine status bytes.
 

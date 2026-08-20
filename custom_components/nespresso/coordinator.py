@@ -28,14 +28,16 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from dataclasses import asdict
+import time
+from dataclasses import asdict, replace
 from datetime import timedelta
 from pathlib import Path
 
 from bleak import BleakClient, BleakError
 from bleak_retry_connector import establish_connection
 from homeassistant.components import bluetooth
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -43,13 +45,14 @@ from homeassistant.helpers.update_coordinator import (
 
 from .ble.parsing import (
     parse_barista_machine_info,
+    parse_barista_machine_params,
     parse_barista_status,
     parse_caps_counter,
-    parse_barista_machine_params,
     parse_error_information,
-    parse_profile_version,
     parse_general_user_settings,
+    parse_profile_version,
     parse_serial_number,
+    parse_venus_advertisement,
     parse_vertuonext_machine_info,
     parse_vertuonext_status,
     parse_vmini_fota_status,
@@ -58,6 +61,8 @@ from .ble.protocol import generate_auth_key, get_protocol
 from .ble.recipe import parse_recipe_info
 from .const import (
     BARISTA_CHAR_STATUS,
+    COUNTER_SAVE_DELAY,
+    COUNTER_STORAGE_VERSION,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     VERTUO_CHAR_STATUS,
@@ -97,6 +102,17 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.brew_temperature: str = "medium"
         self._keep_connection = False
         self._ble_lock = asyncio.Lock()
+
+        # Brew counters. Persisted separately from the config entry so a
+        # reload does not reset them.
+        self.brew_total = 0
+        self.brews_since_descaling = 0
+        self.last_descaling: float | None = None
+        self.descaling_capsules = 0
+        self.descaling_days = 0
+        self._counter_store: Store = Store(
+            hass, COUNTER_STORAGE_VERSION, f"{DOMAIN}.counters.{address}"
+        )
         self._client: BleakClient | None = None
         self._status_uuid = self._get_status_uuid()
         self._device_id: str | None = None
@@ -160,8 +176,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         if client is not None:
             try:
                 await client.disconnect()
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("Error disconnecting BLE client: %s", err)
 
     def _on_status_notification(self, _sender: object, data: bytearray) -> None:
         """Handle BLE GATT notification for status changes.
@@ -263,8 +279,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 try:
                     tmp = BleakClient(device)
                     await tmp.unpair()
-                except Exception:  # noqa: BLE001
-                    pass
+                except Exception as err:  # noqa: BLE001
+                    _LOGGER.debug("Failed to clear stale bond: %s", err)
                 await asyncio.sleep(3)
                 device = bluetooth.async_ble_device_from_address(
                     self.hass, self.address, connectable=True
@@ -325,8 +341,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                         try:
                             tmp = BleakClient(device)
                             await tmp.unpair()
-                        except Exception:  # noqa: BLE001
-                            pass
+                        except Exception as err:  # noqa: BLE001
+                            _LOGGER.debug("Failed to clear stale bond: %s", err)
                         await asyncio.sleep(3)
                         device = bluetooth.async_ble_device_from_address(
                             self.hass, self.address, connectable=True
@@ -382,8 +398,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             if client is not None:
                 try:
                     await client.disconnect()
-                except Exception:  # noqa: BLE001
-                    pass
+                except Exception as err:  # noqa: BLE001
+                    _LOGGER.debug("Error disconnecting BLE client: %s", err)
 
     async def async_bst_send(self, cmd_uuid: str, rsp_uuid: str, data: bytes) -> bool:
         """Send data via BST protocol on the kept connection."""
@@ -396,6 +412,139 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             from .ble.bst import bst_send
 
             return await bst_send(client, cmd_uuid, rsp_uuid, data)
+
+    async def async_load_counters(
+        self, descaling_capsules: int, descaling_days: int
+    ) -> None:
+        """Restore brew counters from disk. Call once before the first refresh."""
+        self.descaling_capsules = descaling_capsules
+        self.descaling_days = descaling_days
+        if stored := await self._counter_store.async_load():
+            self.brew_total = stored.get("brew_total", 0)
+            self.brews_since_descaling = stored.get("brews_since_descaling", 0)
+            self.last_descaling = stored.get("last_descaling")
+        if self.last_descaling is None:
+            # No reference point yet, so start the clock now. Otherwise the
+            # time half of the schedule could never trigger.
+            self.last_descaling = time.time()
+            self._async_save_counters()
+
+    @property
+    def days_since_descaling(self) -> int | None:
+        """Whole days since the descaling counter was last reset."""
+        if self.last_descaling is None:
+            return None
+        return max(0, int((time.time() - self.last_descaling) / 86400))
+
+    @property
+    def brews_until_descaling(self) -> int:
+        """Brews remaining before the capsule half of the schedule is due."""
+        return max(0, self.descaling_capsules - self.brews_since_descaling)
+
+    @property
+    def days_until_descaling(self) -> int | None:
+        """Days remaining before the time half of the schedule is due."""
+        days = self.days_since_descaling
+        if days is None:
+            return None
+        return max(0, self.descaling_days - days)
+
+    @callback
+    def async_reset_descaling(self) -> None:
+        """Clear the descaling counter and restart its clock."""
+        self.brews_since_descaling = 0
+        self.last_descaling = time.time()
+        self._async_save_counters()
+        self.async_update_listeners()
+
+    @callback
+    def _async_track_brew(self, previous: str | None, current: str) -> None:
+        """Count one brew per entry into the BREWING state.
+
+        BREWING is distinct from CAPSULE_READING, so an attempt with no capsule
+        never reaches this state and is correctly not counted.
+        """
+        if current != "brewing" or previous == "brewing":
+            return
+        self.brew_total += 1
+        self.brews_since_descaling += 1
+        _LOGGER.debug(
+            "Brew counted for %s: total=%s since_descaling=%s",
+            self.address,
+            self.brew_total,
+            self.brews_since_descaling,
+        )
+        self._async_save_counters()
+
+    @callback
+    def _async_save_counters(self) -> None:
+        """Write counters with a delay so bursts do not thrash the disk."""
+        self._counter_store.async_delay_save(
+            lambda: {
+                "brew_total": self.brew_total,
+                "brews_since_descaling": self.brews_since_descaling,
+                "last_descaling": self.last_descaling,
+            },
+            COUNTER_SAVE_DELAY,
+        )
+
+    @callback
+    def async_apply_advertisement(self, raw: bytes | None) -> bool:
+        """Apply the passive advertisement as a fast path between polls.
+
+        The Venus advertisement carries the same MachineStatus bytes as the
+        connected characteristic, so state, flags and the brewing unit position
+        are available without connecting at all - and roughly twice a second
+        instead of once per scan interval.
+
+        Deliberately conservative: this only refines data we already have. It
+        never creates the first dataset, so a machine whose connection fails
+        still surfaces as unavailable instead of silently reporting partial
+        data. Other machine families are ignored entirely.
+
+        Returns True when the machine state itself changed, so the caller can
+        pull fresh connected data immediately rather than waiting for the next
+        poll.
+        """
+        if self.family is not MachineFamily.VERTUO_NEXT:
+            return False
+        current = self.data
+        if current is None:
+            return False
+        parsed = parse_venus_advertisement(raw)
+        if parsed is None:
+            return False
+
+        fields = {
+            key: parsed[key]
+            for key in (
+                "machine_state",
+                "error_present",
+                "water_tank_empty",
+                "cleaning_needed",
+                "descaling_needed",
+                "capsule_container_full",
+                "brewing_unit_closed",
+                "milk_frother_running",
+                "led_signaling",
+                "cup_length_prog",
+            )
+            if key in parsed
+        }
+        if all(getattr(current, key) == value for key, value in fields.items()):
+            return False
+
+        new_state = fields.get("machine_state", current.machine_state)
+        state_changed = current.machine_state != new_state
+        self._async_track_brew(current.machine_state, new_state)
+        _LOGGER.debug(
+            "Passive update for %s: state=%s (was %s)",
+            self.address,
+            fields.get("machine_state"),
+            current.machine_state,
+        )
+        self.async_set_updated_data(replace(current, **fields))
+        return state_changed
 
     async def _async_update_data(self) -> NespressoMachineData:
         """Connect, read all characteristics, parse, disconnect."""
@@ -446,8 +595,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 tmp = BleakClient(device)
                 await tmp.unpair()
                 _LOGGER.debug("BlueZ device removed")
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("Failed to remove BlueZ device: %s", err)
             await asyncio.sleep(3)
             device = bluetooth.async_ble_device_from_address(
                 self.hass, self.address, connectable=True
@@ -487,8 +636,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 _LOGGER.info("Auth failed, reconnecting for retry")
                 try:
                     await client.disconnect()
-                except Exception:  # noqa: BLE001
-                    pass
+                except Exception as err:  # noqa: BLE001
+                    _LOGGER.debug("Error disconnecting before retry: %s", err)
                 client = await establish_connection(
                     BleakClient, device, self.address, max_attempts=3
                 )
@@ -519,6 +668,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         try:
             result = self._parse(raw)
+            self._async_track_brew(
+                self.data.machine_state if self.data else None, result.machine_state
+            )
             _LOGGER.debug(
                 "Parsed %s: state=%s error=%s fw=%s hw=%s serial=%s",
                 self.family.value,

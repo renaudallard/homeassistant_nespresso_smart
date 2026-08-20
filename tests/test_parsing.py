@@ -28,10 +28,10 @@ Smart APK v1.2.5. Each test documents the exact byte layout and expected
 parsing result.
 """
 
-import pytest
-
 import sys
 from unittest.mock import MagicMock
+
+import pytest
 
 # Stub homeassistant before any nespresso imports
 sys.modules.setdefault("homeassistant", MagicMock())
@@ -46,22 +46,23 @@ sys.modules.setdefault("homeassistant.helpers", MagicMock())
 sys.modules.setdefault("homeassistant.helpers.device_registry", MagicMock())
 sys.modules.setdefault("homeassistant.helpers.entity_platform", MagicMock())
 sys.modules.setdefault("homeassistant.helpers.update_coordinator", MagicMock())
+sys.modules.setdefault("homeassistant.helpers.storage", MagicMock())
 sys.modules.setdefault("homeassistant.data_entry_flow", MagicMock())
 sys.modules.setdefault("bleak", MagicMock())
 sys.modules.setdefault("bleak_retry_connector", MagicMock())
 
-from custom_components.nespresso.ble.parsing import (  # noqa: E402
+from custom_components.nespresso.ble.parsing import (
     parse_barista_machine_info,
     parse_barista_status,
     parse_error_information,
     parse_general_user_settings,
     parse_serial_number,
+    parse_venus_advertisement,
     parse_version_v2,
     parse_version_v3,
     parse_vertuonext_machine_info,
     parse_vertuonext_status,
 )
-
 
 # ---------------------------------------------------------------------------
 # Version parsing (matches Utils.getVersionV2 / getVersionV3)
@@ -430,3 +431,72 @@ class TestErrorInformation:
     def test_too_short_raises(self) -> None:
         with pytest.raises(ValueError, match="3 bytes"):
             parse_error_information(b"\x00\x00")
+
+
+# ---------------------------------------------------------------------------
+# Venus BLE advertisement
+#
+# Unlike the rest of this file, these vectors are not from the APK: they were
+# captured live from a Vertuo Pop (CV2) while the connected integration was
+# reporting state over GATT. Every state matched the connected reading, which
+# is what establishes that the advertisement carries the same MachineStatus
+# bytes as CHAR_MACHINE_STATUS.
+# ---------------------------------------------------------------------------
+
+
+class TestVenusAdvertisement:
+    def test_power_save_head_open(self) -> None:
+        result = parse_venus_advertisement(bytes.fromhex("400900000000"))
+        assert result["machine_state"] == "power_save"
+        assert result["brewing_unit_closed"] is False
+
+    def test_ready_head_closed(self) -> None:
+        result = parse_venus_advertisement(bytes.fromhex("408200000000"))
+        assert result["machine_state"] == "ready"
+        assert result["brewing_unit_closed"] is True
+
+    def test_heatup(self) -> None:
+        result = parse_venus_advertisement(bytes.fromhex("408100000000"))
+        assert result["machine_state"] == "heating"
+
+    def test_standby(self) -> None:
+        result = parse_venus_advertisement(bytes.fromhex("400c00000000"))
+        assert result["machine_state"] == "standby"
+
+    def test_capsule_reading_uses_high_nibble(self) -> None:
+        """state 17 needs byte2 bits 4-7, not a flag in byte2."""
+        result = parse_venus_advertisement(bytes.fromhex("408110000000"))
+        assert result["machine_state"] == "capsule_reading"
+        assert result["brewing_unit_closed"] is True
+
+    def test_brewing(self) -> None:
+        """Observed live: CAPSULE_READING -> BREWING -> READY."""
+        result = parse_venus_advertisement(bytes.fromhex("408400000000"))
+        assert result["machine_state"] == "brewing"
+
+    def test_no_alarm_flags_when_idle(self) -> None:
+        result = parse_venus_advertisement(bytes.fromhex("400900000000"))
+        assert result["water_tank_empty"] is False
+        assert result["descaling_needed"] is False
+        assert result["cleaning_needed"] is False
+        assert result["capsule_container_full"] is False
+        assert result["error_present"] is False
+
+    def test_alarm_flags_decode_from_byte0(self) -> None:
+        """byte0 bit0 water, bit1 cleaning, bit2 descaling, bit4 error."""
+        result = parse_venus_advertisement(bytes.fromhex("571200000000"))
+        assert result["water_tank_empty"] is True
+        assert result["cleaning_needed"] is True
+        assert result["descaling_needed"] is True
+        assert result["error_present"] is True
+
+    def test_capsule_container_full_is_byte1_bit6(self) -> None:
+        result = parse_venus_advertisement(bytes.fromhex("404200000000"))
+        assert result["capsule_container_full"] is True
+        assert result["machine_state"] == "ready"
+
+    def test_returns_none_for_short_payload(self) -> None:
+        assert parse_venus_advertisement(b"@	") is None
+
+    def test_returns_none_for_missing_payload(self) -> None:
+        assert parse_venus_advertisement(None) is None

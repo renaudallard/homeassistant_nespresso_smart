@@ -89,6 +89,63 @@ This method is not available on iOS.
 - Bluetooth adapter accessible to Home Assistant
 - Nespresso machine powered on and within BLE range
 
+## Pairing (required for Vertuo Next family)
+
+GATT **reads** on these machines require an encrypted BLE link; **writes** do
+not. Home Assistant does not register a BlueZ pairing agent, so without a
+one-time manual pairing every read times out, the config entry stays stuck in
+"initializing", and nothing indicates why.
+
+Run this once, from a terminal on the Home Assistant host:
+
+```
+bluetoothctl
+agent NoInputNoOutput
+default-agent
+scan on
+```
+
+Wait for the machine to appear, then:
+
+```
+trust AA:BB:CC:DD:EE:FF
+pair AA:BB:CC:DD:EE:FF
+scan off
+exit
+```
+
+Expected result: `Pairing successful`.
+
+**Use `agent NoInputNoOutput`, not `agent on`.** The default agent is
+`KeyboardDisplay`, which requests MITM protection with a passkey. A coffee
+machine has neither a display nor a keypad, so it rejects the pairing with
+`org.bluez.Error.ConnectionAttemptFailed`.
+
+### If the machine was already paired with the Nespresso app
+
+Once a machine holds an auth token its `CMID_TYPE` is `FINAL`, and it rejects
+any new token with GATT `0x0E UNLIKELY_ERROR`. Factory reset the Bluetooth
+pairing first:
+
+**Vertuo:** close the head, press the button 3 times within 2 seconds. The
+light blinks orange to confirm.
+
+The Nespresso app will need to re-pair afterwards, and doing so takes the token
+back from Home Assistant. On these machines it is one or the other.
+
+### Ordering that avoids trouble
+
+1. Factory reset the machine (only if it was paired with the app)
+2. Pair from `bluetoothctl` as above
+3. Add the integration, leaving the auth token field **empty** so it generates
+   and stores its own
+4. Keep the phone's Bluetooth off until setup finishes, or the app may claim
+   the machine first
+
+If a previous attempt left a stale bond, `bluetoothctl remove AA:BB:CC:DD:EE:FF`
+clears both the bond and the cached GATT database. A stale GATT cache shows up
+as `Service Discovery has not been performed yet`.
+
 ## Entities
 
 ### Sensors

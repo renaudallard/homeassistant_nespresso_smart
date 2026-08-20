@@ -98,6 +98,19 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
         value_fn=lambda d: d.capsule_container_full,
     ),
     NespressoBinarySensorDescription(
+        # Status byte1 bit7 is brewingUnitClosed; OPENING expects on = open,
+        # so the value is inverted here rather than in the parser.
+        key="brewing_unit_open",
+        translation_key="brewing_unit_open",
+        name="Brewing unit",
+        device_class=BinarySensorDeviceClass.OPENING,
+        icon="mdi:coffee-maker",
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda d: (
+            None if d.brewing_unit_closed is None else not d.brewing_unit_closed
+        ),
+    ),
+    NespressoBinarySensorDescription(
         key="induction_heating",
         translation_key="induction_heating",
         name="Induction heater",

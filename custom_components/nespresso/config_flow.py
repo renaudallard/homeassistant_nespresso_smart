@@ -38,6 +38,10 @@ from homeassistant.config_entries import (
 )
 
 from .const import (
+    CONF_DESCALING_CAPSULES,
+    CONF_DESCALING_DAYS,
+    DEFAULT_DESCALING_CAPSULES,
+    DEFAULT_DESCALING_DAYS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MACHINE_FAMILY_NAMES,
@@ -80,6 +84,18 @@ class NespressoOptionsFlow(OptionsFlow):
                         CONF_PERSISTENT_CONNECTION,
                         default=current_persistent,
                     ): bool,
+                    vol.Required(
+                        CONF_DESCALING_CAPSULES,
+                        default=self.config_entry.options.get(
+                            CONF_DESCALING_CAPSULES, DEFAULT_DESCALING_CAPSULES
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10000)),
+                    vol.Required(
+                        CONF_DESCALING_DAYS,
+                        default=self.config_entry.options.get(
+                            CONF_DESCALING_DAYS, DEFAULT_DESCALING_DAYS
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=3650)),
                 }
             ),
         )

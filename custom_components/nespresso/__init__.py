@@ -34,9 +34,19 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
-from .config_flow import CONF_PERSISTENT_CONNECTION, CONF_SCAN_INTERVAL
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MACHINE_FAMILY_NAMES, MachineFamily
+from .ble.parsing import NESPRESSO_COMPANY_ID
 from .ble.protocol import generate_auth_key
+from .config_flow import CONF_PERSISTENT_CONNECTION, CONF_SCAN_INTERVAL
+from .const import (
+    CONF_DESCALING_CAPSULES,
+    CONF_DESCALING_DAYS,
+    DEFAULT_DESCALING_CAPSULES,
+    DEFAULT_DESCALING_DAYS,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MACHINE_FAMILY_NAMES,
+    MachineFamily,
+)
 from .coordinator import NespressoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,6 +92,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         _LOGGER.debug("Generated and persisted auth key: %s****", auth_key[:4])
 
+    await coordinator.async_load_counters(
+        entry.options.get(CONF_DESCALING_CAPSULES, DEFAULT_DESCALING_CAPSULES),
+        entry.options.get(CONF_DESCALING_DAYS, DEFAULT_DESCALING_DAYS),
+    )
+
     await coordinator.async_config_entry_first_refresh()
 
     # Register device and set device_id for trigger events
@@ -116,6 +131,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _async_on_ble_event,
             bluetooth.BluetoothCallbackMatcher(address=address, connectable=True),
             bluetooth.BluetoothScanningMode.ACTIVE,
+        )
+    )
+
+    # Passive fast path. The Venus advertisement carries the same MachineStatus
+    # bytes as the connected characteristic, roughly twice a second, so state
+    # and flags update almost instantly instead of once per scan interval.
+    # Registered separately from the availability callback above so the
+    # existing behaviour is untouched, and with connectable=False so
+    # advertisements seen by non-connectable scanners (ESPHome proxies) count
+    # too.
+    @callback
+    def _async_on_advertisement(
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: BluetoothChange,
+    ) -> None:
+        raw = service_info.manufacturer_data.get(NESPRESSO_COMPANY_ID)
+        if not coordinator.async_apply_advertisement(raw):
+            return
+        # The state moved, so pull what the advertisement cannot carry -
+        # counters, error codes, settings. async_request_refresh is debounced
+        # by DataUpdateCoordinator, so a burst of transitions still results in
+        # a single connection.
+        hass.async_create_task(coordinator.async_request_refresh())
+
+    entry.async_on_unload(
+        bluetooth.async_register_callback(
+            hass,
+            _async_on_advertisement,
+            bluetooth.BluetoothCallbackMatcher(address=address, connectable=False),
+            bluetooth.BluetoothScanningMode.PASSIVE,
         )
     )
 

@@ -29,6 +29,25 @@ from typing import Final
 DOMAIN: Final = "nespresso"
 DEFAULT_SCAN_INTERVAL: Final = 60  # seconds
 
+# Brew counting and descaling schedule.
+#
+# The Vertuo Pop has no capsule counter characteristic (06aa3a15 is Original
+# line only), so brews are counted here by watching the machine state enter
+# BREWING. That state is distinct from CAPSULE_READING, so a failed read with
+# no capsule is not counted.
+#
+# Nespresso quotes "300 capsules or 3 months, whichever comes first" for the
+# Vertuo range. Both limits are configurable because hard water needs more
+# frequent descaling.
+CONF_DESCALING_CAPSULES = "descaling_capsules"
+DEFAULT_DESCALING_CAPSULES = 300
+
+CONF_DESCALING_DAYS = "descaling_days"
+DEFAULT_DESCALING_DAYS = 90
+
+COUNTER_STORAGE_VERSION = 1
+COUNTER_SAVE_DELAY = 15
+
 
 class MachineFamily(StrEnum):
     """Nespresso machine hardware families."""
