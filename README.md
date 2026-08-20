@@ -52,7 +52,7 @@ During setup, you can optionally provide an **auth token** (16 hex characters). 
 
 ### Machine already paired with the Nespresso app
 
-Each machine stores one auth token (CMID). If the Nespresso app already onboarded it, the integration needs the same token or the machine needs to be factory reset. Two options:
+Each machine stores one auth token (CMID). Once it holds one its `CMID_TYPE` is `FINAL` and it rejects any new token with GATT `0x0E UNLIKELY_ERROR`, so the integration needs either the same token or a factory reset. Two options:
 
 **Option A: Factory reset the machine (simplest)**
 
@@ -89,14 +89,24 @@ This method is not available on iOS.
 - Bluetooth adapter accessible to Home Assistant
 - Nespresso machine powered on and within BLE range
 
-## Pairing (required for Vertuo Next family)
+## Pairing (needed when reads time out)
 
-GATT **reads** on these machines require an encrypted BLE link; **writes** do
-not. Home Assistant does not register a BlueZ pairing agent, so without a
-one-time manual pairing every read times out, the config entry stays stuck in
-"initializing", and nothing indicates why.
+Most machines need none of this. On some, GATT **reads** only answer over an
+encrypted BLE link while **writes** answer either way. Nothing in Home
+Assistant registers a BlueZ pairing agent, so there is nothing to answer an
+encryption request and the read simply hangs: the config entry stays stuck in
+"initializing" and nothing says why. The Nespresso Android app never hits this,
+because Android negotiates link encryption on its own.
 
-Run this once, from a terminal on the Home Assistant host:
+The symptom in the log is:
+
+```
+Reading onboard status from AA:BB:CC:DD:EE:FF timed out.
+The BlueZ link is most likely not encrypted.
+```
+
+If you see it, pair the machine once from a terminal on the Home Assistant
+host:
 
 ```
 bluetoothctl
@@ -121,21 +131,16 @@ Expected result: `Pairing successful`.
 machine has neither a display nor a keypad, so it rejects the pairing with
 `org.bluez.Error.ConnectionAttemptFailed`.
 
-### If the machine was already paired with the Nespresso app
-
-Once a machine holds an auth token its `CMID_TYPE` is `FINAL`, and it rejects
-any new token with GATT `0x0E UNLIKELY_ERROR`. Factory reset the Bluetooth
-pairing first:
-
-**Vertuo:** close the head, press the button 3 times within 2 seconds. The
-light blinks orange to confirm.
-
-The Nespresso app will need to re-pair afterwards, and doing so takes the token
-back from Home Assistant. On these machines it is one or the other.
+**The integration can remove this bond again.** On a `connection abort` it
+calls `unpair()`, which issues `RemoveDevice` and clears both the bond and the
+cached GATT database. That is deliberate, because a stale bond from a
+factory-reset machine blocks reconnection, but it means a machine you paired by
+hand can need pairing again later. If reads start timing out after previously
+working, run the steps above again.
 
 ### Ordering that avoids trouble
 
-1. Factory reset the machine (only if it was paired with the app)
+1. Factory reset the machine, only if it was paired with the app (see [Machine already paired with the Nespresso app](#machine-already-paired-with-the-nespresso-app))
 2. Pair from `bluetoothctl` as above
 3. Add the integration, leaving the auth token field **empty** so it generates
    and stores its own
@@ -245,7 +250,7 @@ Machine family is detected automatically from the advertised BLE service UUID du
 
 On the Vertuo Next family the advertisement itself carries the machine status bytes, so state and alarm flags follow the machine within about a second instead of waiting for the next poll. Values that only a connection can read, such as error codes and the capsule counter, still come from the poll.
 
-Authentication is application-level only (CMID write with response), matching the official Nespresso Android app. No BLE-level pairing is needed. The auth key is generated once and persisted in the config entry so the same key is reused across restarts. If the machine was previously paired with the Nespresso app, a factory reset is required before the integration can onboard.
+Authentication is application-level only (CMID write with response), matching the official Nespresso Android app, which does not call `createBond` either. That is separate from link-layer encryption: some characteristics only answer over an encrypted link, and Android negotiates that transparently while BlueZ cannot, because nothing in Home Assistant registers a pairing agent. If reads time out, see [Pairing](#pairing-needed-when-reads-time-out). The auth key is generated once and persisted in the config entry so the same key is reused across restarts. If the machine was previously paired with the Nespresso app, a factory reset is required before the integration can onboard.
 
 ## Reverse Engineering Documentation
 
