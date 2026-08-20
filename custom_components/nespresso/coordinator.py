@@ -32,6 +32,7 @@ import time
 from dataclasses import asdict, replace
 from datetime import timedelta
 from pathlib import Path
+from typing import Any
 
 from bleak import BleakClient, BleakError
 from bleak_retry_connector import establish_connection
@@ -79,6 +80,9 @@ _VERSION = json.loads((Path(__file__).parent / "manifest.json").read_text()).get
 
 class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     """Coordinator that connects to a Nespresso machine via BLE and reads status."""
+
+    # Stays None until the first successful refresh, so every read guards it.
+    data: NespressoMachineData | None
 
     def __init__(
         self,
@@ -520,7 +524,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         if parsed is None:
             return False
 
-        fields = {
+        fields: dict[str, Any] = {
             key: parsed[key]
             for key in (
                 "machine_state",
@@ -548,7 +552,13 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             fields.get("machine_state"),
             current.machine_state,
         )
-        self.async_set_updated_data(replace(current, **fields))
+        # Not async_set_updated_data: that would set last_update_success, so a
+        # machine that still advertises but no longer accepts connections would
+        # keep its entities available with stale connected data and would stop
+        # triggering the recovery refresh. It would also cancel the pending
+        # debounced refresh and restart the poll timer on every advertisement.
+        self.data = replace(current, **fields)
+        self.async_update_listeners()
         return state_changed
 
     async def _async_update_data(self) -> NespressoMachineData:
