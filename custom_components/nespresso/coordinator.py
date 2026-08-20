@@ -279,8 +279,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 try:
                     tmp = BleakClient(device)
                     await tmp.unpair()
-                except Exception as err:  # noqa: BLE001
-                    _LOGGER.debug("Failed to clear stale bond: %s", err)
+                except Exception as unpair_err:  # noqa: BLE001
+                    _LOGGER.debug("Failed to clear stale bond: %s", unpair_err)
                 await asyncio.sleep(3)
                 device = bluetooth.async_ble_device_from_address(
                     self.hass, self.address, connectable=True
@@ -341,8 +341,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                         try:
                             tmp = BleakClient(device)
                             await tmp.unpair()
-                        except Exception as err:  # noqa: BLE001
-                            _LOGGER.debug("Failed to clear stale bond: %s", err)
+                        except Exception as unpair_err:  # noqa: BLE001
+                            _LOGGER.debug("Failed to clear stale bond: %s", unpair_err)
                         await asyncio.sleep(3)
                         device = bluetooth.async_ble_device_from_address(
                             self.hass, self.address, connectable=True
@@ -595,8 +595,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 tmp = BleakClient(device)
                 await tmp.unpair()
                 _LOGGER.debug("BlueZ device removed")
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("Failed to remove BlueZ device: %s", err)
+            except Exception as unpair_err:  # noqa: BLE001
+                _LOGGER.debug("Failed to remove BlueZ device: %s", unpair_err)
             await asyncio.sleep(3)
             device = bluetooth.async_ble_device_from_address(
                 self.hass, self.address, connectable=True
