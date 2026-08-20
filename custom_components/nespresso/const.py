@@ -31,10 +31,11 @@ DEFAULT_SCAN_INTERVAL: Final = 60  # seconds
 
 # Brew counting and descaling schedule.
 #
-# The Vertuo Pop has no capsule counter characteristic (06aa3a15 is Original
-# line only), so brews are counted here by watching the machine state enter
-# BREWING. That state is distinct from CAPSULE_READING, so a failed read with
-# no capsule is not counted.
+# 06aa3a15 is the Vertuo capsule counter and it is optional: the protocol
+# reads it when the machine answers, and the Vertuo Pop does not. Brews are
+# counted here instead by watching the machine state enter BREWING. That state
+# is distinct from CAPSULE_READING, so a failed read with no capsule is not
+# counted.
 #
 # Nespresso quotes "300 capsules or 3 months, whichever comes first" for the
 # Vertuo range. Both limits are configurable because hard water needs more
