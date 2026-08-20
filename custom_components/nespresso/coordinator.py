@@ -29,7 +29,7 @@ import asyncio
 import json
 import logging
 import time
-from dataclasses import asdict, replace
+from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -75,6 +75,22 @@ _LOGGER = logging.getLogger(__name__)
 
 _VERSION = json.loads((Path(__file__).parent / "manifest.json").read_text()).get(
     "version", "unknown"
+)
+
+
+# Fields a status parse can refresh on an existing dataset. The notification
+# and the advertisement both carry the same MachineStatus bytes, so both merge
+# exactly this set.
+_COMMON_STATUS_FIELDS: tuple[str, ...] = ("machine_state", "error_present")
+_VERTUO_STATUS_FIELDS: tuple[str, ...] = (
+    "water_tank_empty",
+    "cleaning_needed",
+    "descaling_needed",
+    "capsule_container_full",
+    "brewing_unit_closed",
+    "milk_frother_running",
+    "led_signaling",
+    "cup_length_prog",
 )
 
 
@@ -195,9 +211,17 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         _LOGGER.debug("BLE notification received: %s (len=%d)", data.hex(), len(data))
         self.hass.loop.call_soon_threadsafe(self._handle_status_update, bytes(data))
 
+    def _status_fields(self, status: dict[str, object]) -> dict[str, Any]:
+        """Pick the fields of a status parse that apply to this family."""
+        keys = _COMMON_STATUS_FIELDS
+        if self.family is MachineFamily.VERTUO_NEXT:
+            keys += _VERTUO_STATUS_FIELDS
+        return {key: status[key] for key in keys if key in status}
+
     def _handle_status_update(self, data: bytes) -> None:
         """Process status notification data on the event loop."""
-        if self.data is None:
+        current = self.data
+        if current is None:
             return
         try:
             if self.family == MachineFamily.BARISTA:
@@ -207,25 +231,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             else:
                 return
 
-            current = asdict(self.data)
-            current["machine_state"] = str(status["machine_state"])
-            current["error_present"] = bool(status["error_present"])
-
-            if self.family == MachineFamily.VERTUO_NEXT:
-                for key in (
-                    "water_tank_empty",
-                    "cleaning_needed",
-                    "descaling_needed",
-                    "led_signaling",
-                    "capsule_container_full",
-                    "brewing_unit_closed",
-                    "milk_frother_running",
-                    "cup_length_prog",
-                ):
-                    current[key] = bool(status.get(key, False))
-
-            self._async_track_brew(self.data.machine_state, current["machine_state"])
-            self.async_set_updated_data(NespressoMachineData(**current))
+            fields = self._status_fields(status)
+            new_state = fields.get("machine_state", current.machine_state)
+            self._async_track_brew(current.machine_state, new_state)
+            self.async_set_updated_data(replace(current, **fields))
         except (ValueError, IndexError) as err:
             _LOGGER.debug("Failed to parse notification: %s", err)
 
@@ -527,22 +536,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         if parsed is None:
             return False
 
-        fields: dict[str, Any] = {
-            key: parsed[key]
-            for key in (
-                "machine_state",
-                "error_present",
-                "water_tank_empty",
-                "cleaning_needed",
-                "descaling_needed",
-                "capsule_container_full",
-                "brewing_unit_closed",
-                "milk_frother_running",
-                "led_signaling",
-                "cup_length_prog",
-            )
-            if key in parsed
-        }
+        fields = self._status_fields(parsed)
         if all(getattr(current, key) == value for key, value in fields.items()):
             return False
 
