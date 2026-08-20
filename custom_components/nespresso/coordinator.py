@@ -144,13 +144,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """Set the HA device ID for event firing."""
         self._device_id = device_id
 
-    def _fire_state_triggers(self, new_data: NespressoMachineData) -> None:
+    def _fire_state_triggers(self, old_state: str | None, new_state: str) -> None:
         """Fire bus events for device triggers on state changes."""
-        if self._device_id is None or self.data is None:
-            return
-        old_state = self.data.machine_state
-        new_state = new_data.machine_state
-        if old_state == new_state:
+        if self._device_id is None or old_state is None or old_state == new_state:
             return
 
         triggers = []
@@ -233,7 +229,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
             fields = self._status_fields(status)
             new_state = fields.get("machine_state", current.machine_state)
-            self._async_track_brew(current.machine_state, new_state)
+            self._async_state_transition(current.machine_state, new_state)
             self.async_set_updated_data(replace(current, **fields))
         except (ValueError, IndexError) as err:
             _LOGGER.debug("Failed to parse notification: %s", err)
@@ -475,6 +471,17 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.async_update_listeners()
 
     @callback
+    def _async_state_transition(self, previous: str | None, current: str) -> None:
+        """Handle a machine state transition seen on any update path.
+
+        The poll, the notification and the advertisement all move
+        machine_state, so all three come through here. Whichever sees the
+        transition first updates the data, and the others then see no change.
+        """
+        self._async_track_brew(previous, current)
+        self._fire_state_triggers(previous, current)
+
+    @callback
     def _async_track_brew(self, previous: str | None, current: str) -> None:
         """Count one brew per entry into the BREWING state.
 
@@ -542,7 +549,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         new_state = fields.get("machine_state", current.machine_state)
         state_changed = current.machine_state != new_state
-        self._async_track_brew(current.machine_state, new_state)
+        self._async_state_transition(current.machine_state, new_state)
         _LOGGER.debug(
             "Passive update for %s: state=%s (was %s)",
             self.address,
@@ -680,7 +687,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         try:
             result = self._parse(raw)
-            self._async_track_brew(
+            self._async_state_transition(
                 self.data.machine_state if self.data else None, result.machine_state
             )
             _LOGGER.debug(
@@ -692,7 +699,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 result.hardware_version,
                 result.serial_number,
             )
-            self._fire_state_triggers(result)
             return result
         except (IndexError, ValueError, KeyError) as err:
             _LOGGER.debug("Parse failed: %s (raw=%r)", err, raw)
