@@ -166,6 +166,10 @@ as `Service Discovery has not been performed yet`.
 | IoT market | No | Yes | No | IoT market name (diagnostic) |
 | Recipe slots | Yes | No | No | Maximum recipe slots (diagnostic) |
 | Brewing duration | Yes | Yes | No | Time elapsed since brewing started (seconds) |
+| Total brews | No | Yes | No | Brews counted since the integration was installed |
+| Brews since descaling | No | Yes | No | Brews counted since the descaling counter was last reset, with days since the reset as an attribute |
+| Brews until descaling | No | Yes | No | Brews left before the capsule limit is reached |
+| Days until descaling | No | Yes | No | Days left before the time limit is reached |
 | Device shadow | No | No | Yes | Device shadow JSON data (diagnostic) |
 | FOTA status | No | No | Yes | Firmware update status (diagnostic) |
 | FOTA progress | No | No | Yes | Firmware update progress (diagnostic) |
@@ -180,6 +184,7 @@ as `Service Discovery has not been performed yet`.
 | Descaling needed | No | Yes | No | Machine needs descaling |
 | Cleaning needed | No | Yes | No | Machine needs cleaning |
 | Capsule container full | No | Yes | No | Used capsule container is full |
+| Brewing unit | No | Yes | No | Brewing unit head is open |
 | Milk frother | No | Yes | No | Milk frother is running |
 | LED signaling | No | Yes | No | LED signaling is active |
 
@@ -194,6 +199,7 @@ as `Service Discovery has not been performed yet`.
 | Brew | No | Yes | No | Start brewing (see brewing flow below) |
 | Water hardness | No | Yes | No | Set water hardness level (0-6 slider) |
 | Auto power off | No | Yes | No | Set auto power off time (minutes) |
+| Reset descaling counter | No | Yes | No | Clear the descaling counter after descaling the machine |
 | Check firmware update | No | No | Yes | Trigger firmware update check |
 
 ### Brewing
@@ -249,10 +255,14 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 
 - **Poll interval** (10-600 seconds, default 60): how often to read machine status
 - **Persistent connection** (off by default): keeps the BLE connection open for real-time GATT notifications. Gives instant status updates but blocks the Nespresso mobile app.
+- **Descaling interval (capsules)** (1-10000, default 300): how many brews before descaling is due. Vertuo Next family only.
+- **Descaling interval (days)** (1-3650, default 90): how many days before descaling is due. Vertuo Next family only.
+
+Nespresso quotes 300 capsules or 3 months for the Vertuo range, whichever comes first. Both limits are configurable because hard water needs more frequent descaling. Brews are counted from machine state transitions, so they are only counted while Home Assistant is running.
 
 ## Limitations
 
-- **Vertuo brewing**: Experimental. The brew command was captured from Vertuo Next models and may not work on all machines. The Vertuo Pop does not support BLE brewing at all (the Nespresso app itself does not offer a brew button for it). Custom recipes with exact ml volumes are not yet supported.
+- **Vertuo brewing**: Experimental. The brew command was captured from Vertuo Next models and may not work on all machines. The Vertuo Pop does not support BLE brewing at all (the Nespresso app itself does not offer a brew button for it), so no brew button is created for it. Custom recipes with exact ml volumes are not yet supported.
 - **Maintenance commands**: Descaling, rinsing, emptying command IDs are not in the decompiled code. Needs real hardware testing.
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
