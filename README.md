@@ -52,7 +52,7 @@ During setup, you can optionally provide an **auth token** (16 hex characters). 
 
 ### Machine already paired with the Nespresso app
 
-Each machine stores one auth token (CMID). Once it holds one its `CMID_TYPE` is `FINAL` and it rejects any new token with GATT `0x0E UNLIKELY_ERROR`, so the integration needs either the same token or a factory reset. Two options:
+Each machine stores one auth token (CMID), and only accepts one while its `CMID_TYPE` is `NONE`. Once it holds a token the type is `FINAL`: it then acknowledges a new one, quietly keeps the one it has, and refuses every protected read with ATT `0x02`, seen as GATT error 2 through a proxy and `NotPermitted` on a local adapter. The integration needs either the same token or a factory reset. Two options:
 
 **Option A: Factory reset the machine (simplest)**
 

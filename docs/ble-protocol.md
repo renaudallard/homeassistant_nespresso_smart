@@ -681,15 +681,14 @@ config entry, and reused across restarts.
 3. **Connect**: `establish_connection()` with 3 retry attempts
 4. **Authenticate**: `_authenticate()` checks onboard status, onboards if needed, writes CMID with response
 5. **Verify**: Read a protected characteristic to confirm auth succeeded
-6. **Force re-onboard** (if verify fails on already-onboarded machine): TX level + CMID write + verify
-7. **Retry** (on failure): Disconnect, reconnect, re-authenticate once (steps 4-6 again)
-8. **Read all characteristics**: status, info, serial, profile, params, settings, errors
-9. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
-10. **Disconnect** (or keep alive in persistent mode)
-11. **Parse**: Convert raw bytes to `NespressoMachineData`
-12. **Fire triggers**: Compare old/new state, fire bus events
+6. **Retry** (on failure): Disconnect, reconnect, re-authenticate once (steps 4-5 again)
+7. **Read all characteristics**: status, info, serial, profile, params, settings, errors
+8. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
+9. **Disconnect** (or keep alive in persistent mode)
+10. **Parse**: Convert raw bytes to `NespressoMachineData`
+11. **Fire triggers**: Compare old/new state, fire bus events
 
-Any operation in steps 4 to 8 that comes back with ATT error 5, insufficient
+Any operation in steps 4 to 7 that comes back with ATT error 5, insufficient
 authentication, or 15, insufficient encryption, triggers one pairing request on
 whichever transport is in use and is then retried once. A machine sends 5 while
 it holds no key for the peer and 15 once it does, and the same request serves
