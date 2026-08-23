@@ -342,6 +342,11 @@ async def _onboard(
     """Onboard a new machine: write TX level + CMID, verify.
 
     Matches the APK flow: TX level, CMID, wait 2s, verify CMID_TYPE.
+
+    The caller must only reach here with CMID_TYPE at 0x00, which is the only
+    state in which a machine stores a token. That guarantee is what lets the
+    verify below read a non-zero value as proof that our write took, rather
+    than as proof that somebody else's token is still there.
     """
     _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
 
@@ -363,14 +368,17 @@ async def _onboard(
     # Verify onboarding succeeded
     try:
         onboard_data = await _read(client, uuids["onboard"])
-        is_final = onboard_data != bytearray(b"\x00")
-        _LOGGER.debug(
-            "Onboard verify for %s: %s (raw=%s)", address, is_final, onboard_data.hex()
-        )
-        return is_final
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("Onboard verify read failed for %s: %s", address, err)
         return False
+
+    if onboard_data == bytearray(b"\x00"):
+        _LOGGER.warning("Onboarding %s did not take, CMID_TYPE is still 0x00", address)
+        return False
+    _LOGGER.info(
+        "Onboarded %s, CMID_TYPE went 0x00 to 0x%s", address, onboard_data.hex()
+    )
+    return True
 
 
 async def _authenticate_vmini(client: BleakClient, auth_key: str) -> bool:
