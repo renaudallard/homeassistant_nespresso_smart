@@ -146,12 +146,26 @@ def _att_error(err: BaseException) -> int | None:
 def _is_read_not_permitted(err: BaseException) -> bool:
     """True when the machine refused a read because our auth token is wrong.
 
-    The refusal arrives as a numeric ATT code through a Bluetooth proxy and as
-    org.bluez.Error.NotPermitted through a local adapter, so both are checked.
+    One condition, three shapes. Through a Bluetooth proxy the numeric ATT code
+    survives on the cause chain. On a local adapter bleak raises a typed error
+    carrying the same code. Older bleak leaves the raw BlueZ error behind.
+
+    Never match on the BlueZ error name. BlueZ answers org.bluez.Error.NotPermitted
+    for ATT 2 and also for ATT 5, 12 and 15, which mean the link is not encrypted
+    and are somebody else's problem entirely: only the detail string separates
+    them, "Read not permitted" against "Not paired". Matching the name told users
+    to factory reset a machine that merely needed pairing.
+
+    _att_error is deliberately left alone. It sees none of these, so _elevate
+    never fires on a local adapter, which is correct: BlueZ raises link security
+    by itself and has no pairing agent to answer if we asked.
     """
     if _att_error(err) == ATT_READ_NOT_PERMITTED:
         return True
-    return str(getattr(err, "dbus_error", "")).endswith("NotPermitted")
+    code = getattr(err, "code", None)
+    if isinstance(code, int):
+        return code == ATT_READ_NOT_PERMITTED
+    return getattr(err, "dbus_error_details", None) == "Read not permitted"
 
 
 async def _elevate(client: BleakClient, err: BleakError) -> bool:
@@ -292,10 +306,11 @@ async def _authenticate(
         # will not answer over, even when it is already onboarded.
         is_onboarded = None
 
-    # Onboard only when we know for sure it has not happened. When the state
-    # is unknown, just write the CMID and let the verify decide. Otherwise an
-    # already-onboarded machine gets a second onboarding attempt, which it
-    # rejects with GATT 0x0E UNLIKELY_ERROR and drops the connection.
+    # Onboard only when we know for sure it has not happened. A machine that
+    # already holds a token keeps it whatever we write, so a second attempt
+    # achieves nothing, and some have answered GATT 0x0E UNLIKELY_ERROR and
+    # dropped the connection. When the state is unknown, just write the CMID
+    # and let the verify decide.
     if is_onboarded is False:
         await _onboard(client, uuids, auth_bytes, address, family)
 
