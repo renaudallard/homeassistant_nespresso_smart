@@ -661,9 +661,12 @@ entirely application-level via CMID.
 
 ### HA Integration Connection Flow
 
-The integration matches the APK flow. No BLE-level pairing is needed (GATT
-characteristic flags show no encryption requirements). The auth key is generated
-once, persisted in the config entry, and reused across restarts.
+The integration matches the APK flow, so no BLE-level pairing is needed for
+authentication itself. Link encryption is a separate matter: some machines
+refuse every operation until the link is encrypted, and characteristic flags
+cannot tell you in advance, because they describe what an attribute supports
+rather than what it requires. The auth key is generated once, persisted in the
+config entry, and reused across restarts.
 
 1. **Acquire BLE lock**: Prevent concurrent connections (machine supports one client)
 2. **Disconnect stale client**: Clean up any persistent connection
@@ -677,6 +680,13 @@ once, persisted in the config entry, and reused across restarts.
 10. **Disconnect** (or keep alive in persistent mode)
 11. **Parse**: Convert raw bytes to `NespressoMachineData`
 12. **Fire triggers**: Compare old/new state, fire bus events
+
+Any operation in steps 4 to 8 that comes back with ATT error 5, insufficient
+authentication, triggers one pairing request on whichever transport is in use
+and is then retried once. Through an ESPHome Bluetooth proxy that is what
+encrypts the link, and the bond ends up in the proxy's flash. Through a local
+adapter BlueZ has already raised the security itself before the integration
+sees anything, so the request never happens there.
 
 ### Write Operation Flow
 

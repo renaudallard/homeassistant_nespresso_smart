@@ -623,7 +623,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         _LOGGER.debug("Connected to %s, MTU=%s", self.address, client.mtu_size)
 
-        # Dump GATT characteristic flags for diagnostics (security requirements)
+        # Dump GATT characteristic properties for diagnostics. These say what
+        # an attribute supports, not what it demands: ATT permissions are not
+        # discoverable, so nothing here reveals whether a read needs an
+        # encrypted link.
         if client.services:
             for service in client.services:
                 for char in service.characteristics:
