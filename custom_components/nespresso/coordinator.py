@@ -288,12 +288,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             except (BleakError, TimeoutError) as err:
                 if "connection abort" not in str(err).lower():
                     raise
-                _LOGGER.info("Write connection abort, clearing stale bond")
-                try:
-                    tmp = BleakClient(device)
-                    await tmp.unpair()
-                except Exception as unpair_err:  # noqa: BLE001
-                    _LOGGER.debug("Failed to clear stale bond: %s", unpair_err)
+                _LOGGER.info("Write connection abort, retrying after a delay")
                 await asyncio.sleep(3)
                 device = bluetooth.async_ble_device_from_address(
                     self.hass, self.address, connectable=True
@@ -350,12 +345,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                             BleakClient, device, self.address, max_attempts=2
                         )
                     elif "connection abort" in err_str:
-                        _LOGGER.info("Command connection abort, clearing stale bond")
-                        try:
-                            tmp = BleakClient(device)
-                            await tmp.unpair()
-                        except Exception as unpair_err:  # noqa: BLE001
-                            _LOGGER.debug("Failed to clear stale bond: %s", unpair_err)
+                        _LOGGER.info("Command connection abort, retrying after a delay")
                         await asyncio.sleep(3)
                         device = bluetooth.async_ble_device_from_address(
                             self.hass, self.address, connectable=True
@@ -607,15 +597,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             if "connection abort" not in str(err).lower():
                 _LOGGER.debug("Connection failed: %s", err)
                 raise UpdateFailed(f"BLE connection failed: {err}") from err
-            # Stale BlueZ bond from a factory-reset machine.
-            # Remove device via D-Bus (no connection needed) and retry.
-            _LOGGER.info("Connection abort, clearing stale BlueZ bond")
-            try:
-                tmp = BleakClient(device)
-                await tmp.unpair()
-                _LOGGER.debug("BlueZ device removed")
-            except Exception as unpair_err:  # noqa: BLE001
-                _LOGGER.debug("Failed to remove BlueZ device: %s", unpair_err)
+            # Usually a stale bond from a factory-reset machine. Removing one
+            # takes a connected client, which is the very thing that just
+            # failed, so all that is left is to wait and try again. A bond that
+            # really is stale has to be cleared by hand, see the README.
+            _LOGGER.info("Connection abort, retrying after a delay")
             await asyncio.sleep(3)
             device = bluetooth.async_ble_device_from_address(
                 self.hass, self.address, connectable=True
@@ -627,10 +613,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     BleakClient, device, self.address, max_attempts=3
                 )
             except (BleakError, TimeoutError) as err2:
-                _LOGGER.debug("Retry after bond clear failed: %s", err2)
+                _LOGGER.debug("Retry after connection abort failed: %s", err2)
                 raise UpdateFailed(f"BLE connection failed: {err2}") from err2
             _LOGGER.debug(
-                "Connected after bond clear to %s, MTU=%s",
+                "Connected after abort retry to %s, MTU=%s",
                 self.address,
                 client.mtu_size,
             )

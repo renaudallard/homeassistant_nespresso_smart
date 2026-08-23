@@ -172,12 +172,10 @@ Expected result: `Pairing successful`.
 machine has neither a display nor a keypad, so it rejects the pairing with
 `org.bluez.Error.ConnectionAttemptFailed`.
 
-**The integration can remove this bond again.** On a `connection abort` it
-calls `unpair()`, which issues `RemoveDevice` and clears both the bond and the
-cached GATT database. That is deliberate, because a stale bond from a
-factory-reset machine blocks reconnection, but it means a machine you paired by
-hand can need pairing again later. If reads start timing out after previously
-working, run the steps above again.
+**The bond is yours to manage.** The integration never removes it. A stale bond
+left over from a factory-reset machine blocks reconnection and shows up as
+`Software caused connection abort`, and clearing it is a manual step, see
+[Troubleshooting](#software-caused-connection-abort).
 
 ### Ordering that avoids trouble
 
