@@ -34,7 +34,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
-from .ble.parsing import NESPRESSO_COMPANY_ID
+from .ble.parsing import nespresso_manufacturer_data
 from .ble.protocol import generate_auth_key
 from .config_flow import CONF_PERSISTENT_CONNECTION, CONF_SCAN_INTERVAL
 from .const import (
@@ -146,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
-        raw = service_info.manufacturer_data.get(NESPRESSO_COMPANY_ID)
+        raw = nespresso_manufacturer_data(service_info.manufacturer_data)
         if not coordinator.async_apply_advertisement(raw):
             return
         # The state moved, so pull what the advertisement cannot carry -

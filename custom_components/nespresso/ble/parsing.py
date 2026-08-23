@@ -30,6 +30,8 @@ from the Nespresso Smart APK v1.2.5.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from ..const import BARISTA_STATE_NAMES, VERTUO_STATE_NAMES
 
 
@@ -100,9 +102,29 @@ def parse_barista_status(data: bytes) -> dict[str, object]:
     }
 
 
-# Bluetooth SIG company identifier for Nestle Nespresso S.A. The octets are
-# little endian on the wire, so a capture showing 25 02 decodes to 0x0225.
-NESPRESSO_COMPANY_ID = 0x0225
+# Company identifiers to accept in an advertisement, most likely first.
+#
+# The Bluetooth SIG assigns 0x0225 to Nestle Nespresso S.A., and that is NOT
+# what these machines send. Every capture from real hardware reaches Home
+# Assistant as manufacturer_data keyed 0x2502, because the firmware emits the
+# two octets the wrong way round. The key is whatever the decoder read off the
+# wire, not what the registry says it should have been, so 0x2502 is the one
+# that matches. The registered value is kept as a second candidate in case the
+# firmware is ever corrected.
+#
+# This has been got wrong twice by reasoning from the registry. Check a capture.
+NESPRESSO_COMPANY_IDS = (0x2502, 0x0225)
+
+
+def nespresso_manufacturer_data(
+    manufacturer_data: Mapping[int, bytes],
+) -> bytes | None:
+    """Return the Nespresso payload from an advertisement, or None."""
+    for company_id in NESPRESSO_COMPANY_IDS:
+        data = manufacturer_data.get(company_id)
+        if data is not None:
+            return data
+    return None
 
 
 def parse_venus_advertisement(data: bytes | None) -> dict[str, object] | None:

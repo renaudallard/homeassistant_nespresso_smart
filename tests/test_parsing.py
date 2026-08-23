@@ -52,7 +52,8 @@ sys.modules.setdefault("bleak", MagicMock())
 sys.modules.setdefault("bleak_retry_connector", MagicMock())
 
 from custom_components.nespresso.ble.parsing import (
-    NESPRESSO_COMPANY_ID,
+    NESPRESSO_COMPANY_IDS,
+    nespresso_manufacturer_data,
     parse_barista_machine_info,
     parse_barista_status,
     parse_error_information,
@@ -446,16 +447,32 @@ class TestErrorInformation:
 
 
 class TestVenusAdvertisement:
-    def test_company_id_is_the_sig_assigned_value(self) -> None:
-        """0x0225 is Nestle Nespresso S.A. in the Bluetooth SIG registry.
+    def test_company_id_matches_real_captures(self) -> None:
+        """Real machines advertise under 0x2502, not the registered 0x0225.
 
-        Home Assistant keys manufacturer_data by the decoded identifier, and
-        the octets are little endian on the wire, so a capture showing 25 02
-        decodes to 0x0225. Reading it the other way round gives 0x2502, which
-        is assigned to nobody and never matches.
+        Every advertisement captured from hardware and pasted into issue #1
+        reaches Home Assistant as manufacturer_data={9474: ...}, and 9474 is
+        0x2502. The Bluetooth SIG assigns 0x0225 to Nestle Nespresso S.A., but
+        the firmware emits the octets the wrong way round, and the dict key is
+        whatever was decoded off the wire. Match the capture, not the registry.
         """
-        assert NESPRESSO_COMPANY_ID == 0x0225
-        assert NESPRESSO_COMPANY_ID == int.from_bytes(b"\x25\x02", "little")
+        assert NESPRESSO_COMPANY_IDS[0] == 0x2502
+        assert NESPRESSO_COMPANY_IDS[0] == 9474
+        assert 0x0225 in NESPRESSO_COMPANY_IDS
+
+    def test_payload_is_found_under_the_captured_company_id(self) -> None:
+        """A capture straight out of issue #1 must be picked up."""
+        captured = {9474: bytes.fromhex("408900000000")}
+        assert nespresso_manufacturer_data(captured) == bytes.fromhex("408900000000")
+
+    def test_payload_is_found_under_the_registered_company_id(self) -> None:
+        assert nespresso_manufacturer_data(
+            {0x0225: bytes.fromhex("408900000000")}
+        ) == bytes.fromhex("408900000000")
+
+    def test_other_manufacturers_are_ignored(self) -> None:
+        assert nespresso_manufacturer_data({0x004C: b"\x01\x02"}) is None
+        assert nespresso_manufacturer_data({}) is None
 
     def test_power_save_head_open(self) -> None:
         result = parse_venus_advertisement(bytes.fromhex("400900000000"))
