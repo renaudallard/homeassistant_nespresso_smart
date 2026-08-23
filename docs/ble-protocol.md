@@ -682,8 +682,11 @@ config entry, and reused across restarts.
 12. **Fire triggers**: Compare old/new state, fire bus events
 
 Any operation in steps 4 to 8 that comes back with ATT error 5, insufficient
-authentication, triggers one pairing request on whichever transport is in use
-and is then retried once. Through an ESPHome Bluetooth proxy that is what
+authentication, or 15, insufficient encryption, triggers one pairing request on
+whichever transport is in use and is then retried once. A machine sends 5 while
+it holds no key for the peer and 15 once it does, and the same request serves
+both, since the proxy runs a full exchange when there is no key and starts
+encryption from the stored one when there is. Through an ESPHome Bluetooth proxy that is what
 encrypts the link, and the bond ends up in the proxy's flash. Through a local
 adapter BlueZ has already raised the security itself before the integration
 sees anything, so the request never happens there.

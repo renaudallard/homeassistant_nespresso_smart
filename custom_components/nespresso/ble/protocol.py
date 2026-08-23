@@ -105,8 +105,13 @@ BLE_OP_TIMEOUT = 10.0
 # stall a whole poll while the coordinator lock is held.
 BLE_PAIR_TIMEOUT = 10.0
 
-# ATT error a machine returns when it will not answer over a plain link.
-ATT_INSUFFICIENT_AUTHENTICATION = 5
+# ATT errors a machine returns when it will not answer over a plain link. It
+# sends 5, insufficient authentication, while it holds no key for us, and 15,
+# insufficient encryption, once it has one and only wants the link turned on.
+# A single pairing request covers both, because the proxy runs the full
+# exchange when there is no key and starts encryption from the stored one when
+# there is. BlueZ makes the same equivalence in its own escalation path.
+ATT_NEEDS_ENCRYPTION = frozenset({5, 15})
 
 # Clients whose link we already asked to encrypt. A machine that keeps
 # refusing afterwards must not trigger a pairing request per characteristic.
@@ -135,7 +140,7 @@ def _att_error(err: BaseException) -> int | None:
 
 
 async def _elevate(client: BleakClient, err: BleakError) -> bool:
-    """Encrypt the link when the machine demands authentication.
+    """Encrypt the link when the machine refuses to answer without it.
 
     Returns True when the caller should retry the operation. BlueZ raises link
     security on its own and retries the operation transparently, so this only
@@ -143,7 +148,7 @@ async def _elevate(client: BleakClient, err: BleakError) -> bool:
     error and waits for the host to ask. The bond is then negotiated and
     stored by the proxy itself, not by the Home Assistant host.
     """
-    if _att_error(err) != ATT_INSUFFICIENT_AUTHENTICATION:
+    if _att_error(err) not in ATT_NEEDS_ENCRYPTION:
         return False
     if client in _ELEVATED:
         _LOGGER.debug("%s still refuses to answer after pairing", client.address)

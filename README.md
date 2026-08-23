@@ -99,13 +99,18 @@ does that unprompted, and the two fail differently.
 
 ### Through an ESPHome Bluetooth proxy
 
-The machine answers with GATT error 5, `Insufficient authentication`, and the
-log fills with lines like:
+The machine answers with GATT error 5, `Insufficient authentication`, or 15,
+`Insufficient encryption`, and the log fills with lines like:
 
 ```
 Error reading char/descriptor for handle 0x32, status=5
 Auth failed on second attempt
 ```
+
+The two codes are the same problem at different stages. A machine that holds no
+key for the proxy sends 5. Once the two have paired it sends 15 instead, meaning
+it knows the proxy and only wants the link turned on. Both are answered by the
+same request.
 
 The integration handles this on its own: it asks the proxy to pair, then
 retries the operation. The bond is negotiated and stored by the proxy, not by
