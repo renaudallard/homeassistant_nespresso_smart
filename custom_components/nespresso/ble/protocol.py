@@ -33,9 +33,13 @@ import asyncio
 import binascii
 import logging
 import uuid
+import weakref
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
+from functools import partial
+from typing import TypeVar
 
-from bleak import BleakClient
+from bleak import BleakClient, BleakError
 
 from ..const import (
     BARISTA_CHAR_AUTH,
@@ -96,18 +100,101 @@ def generate_auth_key() -> str:
 # coordinator lock.
 BLE_OP_TIMEOUT = 10.0
 
+# A pairing request needs its own budget. The ESPHome API waits 30 seconds for
+# the proxy to answer, so a machine that never finishes the exchange would
+# stall a whole poll while the coordinator lock is held.
+BLE_PAIR_TIMEOUT = 10.0
+
+# ATT error a machine returns when it will not answer over a plain link.
+ATT_INSUFFICIENT_AUTHENTICATION = 5
+
+# Clients whose link we already asked to encrypt. A machine that keeps
+# refusing afterwards must not trigger a pairing request per characteristic.
+_ELEVATED: weakref.WeakSet[BleakClient] = weakref.WeakSet()
+
+_T = TypeVar("_T")
+
+
+def _att_error(err: BaseException) -> int | None:
+    """Return the ATT error code carried by err, or None.
+
+    bleak-esphome turns the proxy error into a plain BleakError, so the
+    numeric status only survives on the cause chain, one level down for a
+    direct operation and two when it comes back through establish_connection.
+    Read by duck typing on purpose: aioesphomeapi is only installed alongside
+    the ESPHome integration, and no bleak exception carries an "error"
+    attribute, so this cannot match on a local adapter.
+    """
+    cause: BaseException | None = err
+    while cause is not None:
+        code = getattr(getattr(cause, "error", None), "error", None)
+        if isinstance(code, int):
+            return code
+        cause = cause.__cause__
+    return None
+
+
+async def _elevate(client: BleakClient, err: BleakError) -> bool:
+    """Encrypt the link when the machine demands authentication.
+
+    Returns True when the caller should retry the operation. BlueZ raises link
+    security on its own and retries the operation transparently, so this only
+    ever runs on a connection through a Bluetooth proxy, which forwards the
+    error and waits for the host to ask. The bond is then negotiated and
+    stored by the proxy itself, not by the Home Assistant host.
+    """
+    if _att_error(err) != ATT_INSUFFICIENT_AUTHENTICATION:
+        return False
+    if client in _ELEVATED:
+        _LOGGER.debug("%s still refuses to answer after pairing", client.address)
+        return False
+    _ELEVATED.add(client)
+    try:
+        await asyncio.wait_for(client.pair(), BLE_PAIR_TIMEOUT)
+    except NotImplementedError:
+        _LOGGER.warning(
+            "The Bluetooth proxy serving %s cannot pair. Set 'active: true' under "
+            "bluetooth_proxy in the proxy configuration, update its ESPHome "
+            "firmware, then reload the integration.",
+            client.address,
+        )
+        return False
+    except (BleakError, TimeoutError) as pair_err:
+        # The request may still have created a bond on the proxy, which the
+        # next connection reuses. Nothing to undo here. A timeout carries no
+        # message of its own, so fall back to the exception name.
+        _LOGGER.warning(
+            "Pairing %s through the Bluetooth proxy failed: %s. If this repeats, "
+            "the machine is asking for a passkey, which a proxy cannot provide.",
+            client.address,
+            str(pair_err) or type(pair_err).__name__,
+        )
+        return False
+    _LOGGER.info("Encrypted the link to %s", client.address)
+    return True
+
+
+async def _gatt_op(client: BleakClient, op: Callable[[], Awaitable[_T]]) -> _T:
+    """Run one GATT operation, encrypting the link first if the machine asks."""
+    try:
+        return await asyncio.wait_for(op(), BLE_OP_TIMEOUT)
+    except BleakError as err:
+        if not await _elevate(client, err):
+            raise
+    return await asyncio.wait_for(op(), BLE_OP_TIMEOUT)
+
 
 async def _read(client: BleakClient, char: str) -> bytearray:
     """Read a characteristic, failing fast instead of hanging."""
-    return await asyncio.wait_for(client.read_gatt_char(char), BLE_OP_TIMEOUT)
+    return await _gatt_op(client, partial(client.read_gatt_char, char))
 
 
 async def _write(
     client: BleakClient, char: str, data: bytes, *, response: bool = True
 ) -> None:
     """Write a characteristic, failing fast instead of hanging."""
-    await asyncio.wait_for(
-        client.write_gatt_char(char, data, response=response), BLE_OP_TIMEOUT
+    await _gatt_op(
+        client, partial(client.write_gatt_char, char, data, response=response)
     )
 
 
@@ -137,9 +224,12 @@ async def _authenticate(
     Matches the APK flow: write CMID with response, verify by reading
     a protected characteristic. This is not BLE pairing, since the APK does
     not call createBond, and it is separate from link encryption: Android
-    negotiates that on its own, while BlueZ cannot because nothing in Home
-    Assistant registers a pairing agent. That is why the reads below can time
-    out on a machine that has no bond.
+    negotiates that on its own. Neither transport Home Assistant uses does it
+    unprompted, which is why the operations below can fail on a machine that
+    has no bond. Through a Bluetooth proxy they come back as an ATT error and
+    _gatt_op asks the proxy to pair. Through a local adapter BlueZ raises the
+    security itself and then waits for a pairing agent nobody registers, so
+    the operation hangs instead.
     """
     address = client.address
 
@@ -166,19 +256,20 @@ async def _authenticate(
             onboard_data.hex(),
         )
     except TimeoutError:
-        # Reads need an encrypted link; writes do not. A timeout here while
-        # writes still succeed is the signature of a missing BlueZ bond,
-        # which no other symptom makes obvious, so spell out the fix.
+        # A hang here is the signature of an unencrypted link on a local
+        # adapter, which no other symptom makes obvious, so spell out the fix.
+        # A proxy never hangs on this, it answers with an ATT error that
+        # _gatt_op has already handled by the time we get here.
         _LOGGER.warning(
-            "Reading onboard status from %s timed out. The BlueZ link is most likely not encrypted. Pair the machine once from a terminal on the Home Assistant host: bluetoothctl / agent NoInputNoOutput / default-agent / scan on / pair %s. Note that the default 'agent on' does NOT work: it requests MITM protection with a passkey, which a coffee machine cannot provide.",
+            "Reading onboard status from %s timed out, so the link is not encrypted. Pair the machine once from a terminal on the Home Assistant host: bluetoothctl / agent NoInputNoOutput / default-agent / scan on / pair %s. Note that the default 'agent on' does NOT work: it requests MITM protection with a passkey, which a coffee machine cannot provide. Through an ESPHome Bluetooth proxy this is not the right remedy, the proxy pairs by itself and only needs 'active: true' under bluetooth_proxy.",
             address,
             address,
         )
         is_onboarded = None
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("Could not read onboard status: %s", err)
-        # UNKNOWN, not "not onboarded". This read needs an encrypted link
-        # and times out even on a machine that is already onboarded.
+        # UNKNOWN, not "not onboarded". This read fails on a link the machine
+        # will not answer over, even when it is already onboarded.
         is_onboarded = None
 
     # Onboard only when we know for sure it has not happened. When the state

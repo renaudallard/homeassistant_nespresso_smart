@@ -86,23 +86,64 @@ This method is not available on iOS.
 ### Requirements
 
 - Home Assistant 2026.03 or newer
-- Bluetooth adapter accessible to Home Assistant
+- A Bluetooth adapter attached to Home Assistant, or an ESPHome Bluetooth
+  proxy with `active: true`
 - Nespresso machine powered on and within BLE range
 
-## Pairing (needed when reads time out)
+## Link encryption
 
-Most machines need none of this. On some, GATT **reads** only answer over an
-encrypted BLE link while **writes** answer either way. Nothing in Home
-Assistant registers a BlueZ pairing agent, so there is nothing to answer an
-encryption request and the read simply hangs: the config entry stays stuck in
-"initializing" and nothing says why. The Nespresso Android app never hits this,
-because Android negotiates link encryption on its own.
+Most machines need none of this. On some, GATT operations only answer over an
+encrypted BLE link. The Nespresso Android app never hits it, because Android
+negotiates link encryption on its own. Neither transport Home Assistant uses
+does that unprompted, and the two fail differently.
 
+### Through an ESPHome Bluetooth proxy
+
+The machine answers with GATT error 5, `Insufficient authentication`, and the
+log fills with lines like:
+
+```
+Error reading char/descriptor for handle 0x32, status=5
+Auth failed on second attempt
+```
+
+The integration handles this on its own: it asks the proxy to pair, then
+retries the operation. The bond is negotiated and stored by the proxy, not by
+the Home Assistant host, so a host with no Bluetooth adapter of its own is
+fine, and `bluetoothctl` on the host has no effect on a proxied connection.
+
+Two things are needed on the proxy:
+
+- `active: true` under `bluetooth_proxy`. This is the same setting active
+  connections need, so a proxy that reaches the machine at all already has it
+- ESPHome 2023.6.0 or newer, which is when the proxy started telling Home
+  Assistant that it can pair
+
+If pairing is unavailable, the log says so:
+
+```
+The Bluetooth proxy serving AA:BB:CC:DD:EE:FF cannot pair.
+```
+
+The bond lives in that one proxy's flash. It survives reboots and OTA updates,
+a factory reset of the proxy erases it, and a second proxy pairs on its own the
+first time it is used. Only passkey-free pairing can complete over a proxy,
+which is what these machines use.
+
+If the machine was factory reset while the proxy still holds its old key, the
+proxy keeps reusing that key and the link never gets encrypted again. Factory
+reset or reflash the proxy to clear it.
+
+### Through a local Bluetooth adapter
+
+BlueZ raises the link security itself and then waits for a pairing agent that
+nothing in Home Assistant registers, so the operation hangs instead of
+failing: the config entry stays stuck in "initializing" and nothing says why.
 The symptom in the log is:
 
 ```
-Reading onboard status from AA:BB:CC:DD:EE:FF timed out.
-The BlueZ link is most likely not encrypted.
+Reading onboard status from AA:BB:CC:DD:EE:FF timed out, so the link is not
+encrypted.
 ```
 
 If you see it, pair the machine once from a terminal on the Home Assistant
@@ -141,7 +182,8 @@ working, run the steps above again.
 ### Ordering that avoids trouble
 
 1. Factory reset the machine, only if it was paired with the app (see [Machine already paired with the Nespresso app](#machine-already-paired-with-the-nespresso-app))
-2. Pair from `bluetoothctl` as above
+2. On a host with its own Bluetooth adapter, pair from `bluetoothctl` as
+   above. Through a proxy there is nothing to do by hand
 3. Add the integration, leaving the auth token field **empty** so it generates
    and stores its own
 4. Keep the phone's Bluetooth off until setup finishes, or the app may claim
@@ -250,7 +292,7 @@ Machine family is detected automatically from the advertised BLE service UUID du
 
 On the Vertuo Next family the advertisement itself carries the machine status bytes, so state and alarm flags follow the machine within about a second instead of waiting for the next poll. Values that only a connection can read, such as error codes and the capsule counter, still come from the poll.
 
-Authentication is application-level only (CMID write with response), matching the official Nespresso Android app, which does not call `createBond` either. That is separate from link-layer encryption: some characteristics only answer over an encrypted link, and Android negotiates that transparently while BlueZ cannot, because nothing in Home Assistant registers a pairing agent. If reads time out, see [Pairing](#pairing-needed-when-reads-time-out). The auth key is generated once and persisted in the config entry so the same key is reused across restarts. If the machine was previously paired with the Nespresso app, a factory reset is required before the integration can onboard.
+Authentication is application-level only (CMID write with response), matching the official Nespresso Android app, which does not call `createBond` either. That is separate from link-layer encryption: some characteristics only answer over an encrypted link, and Android negotiates that transparently while neither BlueZ nor a Bluetooth proxy does it unprompted. See [Link encryption](#link-encryption). The auth key is generated once and persisted in the config entry so the same key is reused across restarts. If the machine was previously paired with the Nespresso app, a factory reset is required before the integration can onboard.
 
 ## Reverse Engineering Documentation
 
