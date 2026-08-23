@@ -113,6 +113,10 @@ BLE_PAIR_TIMEOUT = 10.0
 # there is. BlueZ makes the same equivalence in its own escalation path.
 ATT_NEEDS_ENCRYPTION = frozenset({5, 15})
 
+# ATT error a machine returns when the auth token we wrote is not the one it
+# stores. The code is the same whether the token is wrong or absent.
+ATT_READ_NOT_PERMITTED = 2
+
 # Clients whose link we already asked to encrypt. A machine that keeps
 # refusing afterwards must not trigger a pairing request per characteristic.
 _ELEVATED: weakref.WeakSet[BleakClient] = weakref.WeakSet()
@@ -137,6 +141,17 @@ def _att_error(err: BaseException) -> int | None:
             return code
         cause = cause.__cause__
     return None
+
+
+def _is_read_not_permitted(err: BaseException) -> bool:
+    """True when the machine refused a read because our auth token is wrong.
+
+    The refusal arrives as a numeric ATT code through a Bluetooth proxy and as
+    org.bluez.Error.NotPermitted through a local adapter, so both are checked.
+    """
+    if _att_error(err) == ATT_READ_NOT_PERMITTED:
+        return True
+    return str(getattr(err, "dbus_error", "")).endswith("NotPermitted")
 
 
 async def _elevate(client: BleakClient, err: BleakError) -> bool:
@@ -297,31 +312,21 @@ async def _authenticate(
         try:
             await _read(client, verify_uuid)
         except Exception as err:  # noqa: BLE001
-            _LOGGER.debug("Auth verify read failed for %s: %s", address, err)
-            if is_onboarded is False:
-                return False
-            # Machine was already onboarded (likely by the Nespresso app).
-            # Force re-onboard to register our CMID, then retry auth.
-            _LOGGER.info(
-                "Force re-onboard for %s (was onboarded=0x%s)",
-                address,
-                onboard_data.hex() if onboard_data is not None else "unknown",
-            )
-            await _onboard(client, uuids, auth_bytes, address, family)
-            try:
-                await _write(client, uuids["auth"], auth_bytes, response=True)
-            except Exception as err2:  # noqa: BLE001
-                _LOGGER.debug(
-                    "CMID write after re-onboard failed for %s: %s", address, err2
+            if _is_read_not_permitted(err) and is_onboarded is not False:
+                # There is no way back from here over BLE. A machine only
+                # stores a token while CMID_TYPE is 0x00, so it acknowledges
+                # the write above and keeps the one it has, then refuses every
+                # protected read. Re-onboarding it was tried until v0.3.3 and
+                # never once worked, on any machine. The Nespresso app has no
+                # command for it either and tells the user to factory reset.
+                _LOGGER.warning(
+                    "%s is onboarded with a different auth token (CMID_TYPE=0x%s) and refuses to answer. Factory reset the machine to clear the stored token, then add the integration again leaving the auth token field empty. Note that the token this integration generates lives in the config entry, so deleting the entry loses it and costs another factory reset.",
+                    address,
+                    onboard_data.hex() if onboard_data is not None else "unknown",
                 )
-                return False
-            try:
-                await _read(client, verify_uuid)
-            except Exception as err2:  # noqa: BLE001
-                _LOGGER.debug(
-                    "Auth still failed after re-onboard for %s: %s", address, err2
-                )
-                return False
+            else:
+                _LOGGER.debug("Auth verify read failed for %s: %s", address, err)
+            return False
 
     _LOGGER.debug("Auth succeeded for %s", address)
     return True

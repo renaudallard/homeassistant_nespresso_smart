@@ -337,9 +337,20 @@ Then restart HA. This is needed after a factory reset of the machine.
 
 The machine is temporarily unreachable via BLE. Ensure it is powered on, within range, and not connected to the Nespresso app. Entities recover automatically on the next successful poll.
 
-### Auth fails with "NotPermitted"
+### "is onboarded with a different auth token"
 
-The machine was onboarded by the Nespresso app with a different auth token. Factory reset the machine (see setup instructions above).
+Also seen as `NotPermitted` on a local adapter, or GATT error 2 through a proxy.
+
+The machine stores one auth token and only accepts a new one while it holds none
+at all. Something else onboarded it first, usually the Nespresso app, and it will
+now refuse every read. Nothing can be done over Bluetooth: factory reset the
+machine (see [Machine already paired with the Nespresso app](#machine-already-paired-with-the-nespresso-app)),
+then add the integration again leaving the auth token field empty.
+
+The token the integration generates is stored in the config entry, so deleting
+the entry throws it away and costs another factory reset. If you have the token,
+put it in the auth token field when adding the machine back and no reset is
+needed.
 
 ## Support
 

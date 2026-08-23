@@ -448,12 +448,20 @@ writes a 36-byte MachineToken to `CHAR_MACHINE_TOKEN` (`96600102-526E-4676-A11A-
 
 The token is the auth key encoded as UTF-8 and zero-padded to 36 bytes.
 
-### Force Re-onboard (HA Integration)
+### A machine only takes a token once
 
-If a machine was previously onboarded by the Nespresso app (`CMID_TYPE=FINAL`),
-the integration tries the normal CMID write first. If the verify read fails
-(NotPermitted), it forces the onboarding flow (TX level + CMID write + verify)
-to register its own CMID. This requires a factory reset of the machine first.
+A machine stores a CMID while `CMID_TYPE` is `0` (NONE) and never again. Write a
+different key to a machine already at `FINAL` and it acknowledges the write, keeps
+the key it has, and then refuses every protected read with ATT `0x02`, which
+reaches a local adapter as `org.bluez.Error.NotPermitted`. This is confirmed on a
+Vertuo Pop in issue #1: the same read of `06AA3A12` was refused for two days while
+the machine held a foreign key, and returned data on the first attempt once the key
+was cleared and the integration onboarded its own.
+
+Nothing over BLE replaces a stored token. The official app has no such command
+either and sends the user to a factory reset, which is also what the integration
+now advises. Earlier versions tried to force a re-onboard on a `FINAL` machine.
+It never worked on any machine and was removed.
 
 ---
 
