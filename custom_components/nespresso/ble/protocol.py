@@ -168,6 +168,20 @@ ONBOARD_RETRY_DELAY = 2.0
 # refusing afterwards must not trigger a pairing request per characteristic.
 _ELEVATED: weakref.WeakSet[BleakClient] = weakref.WeakSet()
 
+# Addresses that have refused an operation over a plain link at least once.
+#
+# A proxy clears its paired flag on every connection and only encrypts when the
+# host asks, so the link has to be raised again each time. Waiting for the
+# machine to refuse a read first works, and costs a warning from the ESPHome
+# integration on every poll for the rest of the machine's life. Asking up front
+# on a machine already known to want it is the same pairing request, one failed
+# read earlier.
+#
+# Lost on restart by design, so the first poll after one goes back to learning
+# it the noisy way. Persisting it would mean writing to the config entry from
+# the BLE layer for the sake of one log line.
+_NEEDS_ENCRYPTION: set[str] = set()
+
 _T = TypeVar("_T")
 
 
@@ -215,6 +229,20 @@ def _is_read_not_permitted(err: BaseException) -> bool:
     return getattr(err, "dbus_error_details", None) == "Read not permitted"
 
 
+async def _prepare_link(client: BleakClient) -> None:
+    """Encrypt the link before the first read, on a machine known to want it.
+
+    Only ever fires for an address that has already answered ATT 5 or 15, which
+    keeps it away from a local adapter: BlueZ raises security by itself and
+    never surfaces those codes, so nothing here can start waiting on a pairing
+    agent that nobody registers.
+    """
+    if client.address not in _NEEDS_ENCRYPTION or client in _ELEVATED:
+        return
+    _LOGGER.debug("Encrypting the link to %s up front", client.address)
+    await _pair(client)
+
+
 async def _elevate(client: BleakClient, err: BleakError) -> bool:
     """Encrypt the link when the machine refuses to answer without it.
 
@@ -226,9 +254,15 @@ async def _elevate(client: BleakClient, err: BleakError) -> bool:
     """
     if _att_error(err) not in ATT_NEEDS_ENCRYPTION:
         return False
+    _NEEDS_ENCRYPTION.add(client.address)
     if client in _ELEVATED:
         _LOGGER.debug("%s still refuses to answer after pairing", client.address)
         return False
+    return await _pair(client)
+
+
+async def _pair(client: BleakClient) -> bool:
+    """Ask the transport to encrypt the link. True when it did."""
     _ELEVATED.add(client)
     try:
         await asyncio.wait_for(client.pair(), BLE_PAIR_TIMEOUT)
@@ -316,6 +350,7 @@ async def _authenticate(
     the operation hangs instead.
     """
     address = client.address
+    await _prepare_link(client)
 
     if family == MachineFamily.VMINI:
         return await _authenticate_vmini(client, auth_key)

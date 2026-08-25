@@ -423,6 +423,18 @@ ten seconds before deciding. Leave the machine powered on and in range and let
 the poll cycle keep retrying. If it never gets past this, open an issue with a
 debug log.
 
+### Proxy logs "status=15" on every poll
+
+A Bluetooth proxy clears its paired flag on each new connection and only
+encrypts the link when asked, so the link has to be raised again every time.
+Learning that from a refused read makes the ESPHome integration log a warning
+once per poll.
+
+The integration remembers which machines have asked for an encrypted link and
+raises it before the first read on the next connection, so the warning stops
+after the first poll. It starts again once after a Home Assistant restart,
+because that memory is not persisted.
+
 ### Reading the pairing state without connecting
 
 The advertisement carries the pairing state in bits 5-6 of its first byte, so it
