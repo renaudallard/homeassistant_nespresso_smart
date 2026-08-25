@@ -101,6 +101,35 @@ VERTUO_CHAR_MACHINE_PARAMS: Final = "06aa3a22-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_USER_SETTINGS: Final = "06aa3a44-f22a-11e3-9daa-0002a5d5c51b"
 
 # ---------------------------------------------------------------------------
+# Pairing key state
+# Source: com.sdataway.vertuonext.sdk.models.CCMIDType.CMIDTypeEnum, which
+# also appears as MachineStatus.PairingKeyState in both the Vertuo and the
+# Barista SDK. The machine reports it in byte 0 of the onboard status
+# characteristic and in bits 5-6 of the first status byte.
+# ---------------------------------------------------------------------------
+
+CMID_TYPE_NONE: Final = 0
+CMID_TYPE_TEMPORARY: Final = 1
+CMID_TYPE_FINAL: Final = 2
+CMID_TYPE_UNDEFINED: Final = 3
+CMID_TYPE_UNKNOWN: Final = 255
+
+CMID_TYPE_NAMES: Final[dict[int, str]] = {
+    CMID_TYPE_NONE: "none",
+    CMID_TYPE_TEMPORARY: "temporary",
+    CMID_TYPE_FINAL: "final",
+    CMID_TYPE_UNDEFINED: "undefined",
+    CMID_TYPE_UNKNOWN: "unknown",
+}
+
+# The two states in which the machine holds no usable token. The app puts them
+# in the same bucket: after writing a token it reads this value back once a
+# second until it leaves the pair, and gives up only after several attempts.
+# So a machine sitting on UNDEFINED has not accepted a token, which is a very
+# different thing from holding somebody else's.
+CMID_TYPE_UNPAIRED: Final = frozenset({CMID_TYPE_NONE, CMID_TYPE_UNDEFINED})
+
+# ---------------------------------------------------------------------------
 # VMini (Vertuo Mini) BLE UUIDs
 # Source: com.sdataway.vmini.sdk.GATTattributes.DeviceGATTAttributes
 # ---------------------------------------------------------------------------

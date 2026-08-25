@@ -52,7 +52,16 @@ During setup, you can optionally provide an **auth token** (16 hex characters). 
 
 ### Machine already paired with the Nespresso app
 
-Each machine stores one auth token (CMID), and only accepts one while its `CMID_TYPE` is `NONE`. Once it holds a token the type is `FINAL`: it then acknowledges a new one, quietly keeps the one it has, and refuses every protected read with ATT `0x02`, seen as GATT error 2 through a proxy and `NotPermitted` on a local adapter. The integration needs either the same token or a factory reset. Two options:
+Each machine stores one auth token (CMID), and only accepts one while it holds none. `CMID_TYPE` says which of the four states it is in:
+
+| Value | Name | Meaning |
+| --- | --- | --- |
+| `0x00` | `NONE` | No token stored, ready to accept one |
+| `0x01` | `TEMPORARY` | A token is stored |
+| `0x02` | `FINAL` | A token is stored |
+| `0x03` | `UNDEFINED` | A write was made and the machine did not accept it |
+
+`NONE` and `UNDEFINED` both mean the machine holds no usable token, and the integration keeps trying against either. Once the type is `TEMPORARY` or `FINAL` the machine acknowledges a new token, quietly keeps the one it has, and refuses every protected read with ATT `0x02`, seen as GATT error 2 through a proxy and `NotPermitted` on a local adapter. The integration then needs either the same token or a factory reset. Two options:
 
 **Option A: Factory reset the machine (simplest)**
 
@@ -351,6 +360,19 @@ The token the integration generates is stored in the config entry, so deleting
 the entry throws it away and costs another factory reset. If you have the token,
 put it in the auth token field when adding the machine back and no reset is
 needed.
+
+### "never accepted an auth token"
+
+A different problem with the same ATT `0x02` symptom, and the remedy is the
+opposite one. The machine took the write but did not commit the token, and
+reports `CMID_TYPE=0x03 UNDEFINED`. It holds nobody's token, so a factory reset
+changes nothing.
+
+The machine settles on its answer a few seconds after the write, so the
+integration writes the token and then reads the state back once a second for
+ten seconds before deciding. Leave the machine powered on and in range and let
+the poll cycle keep retrying. If it never gets past this, open an issue with a
+debug log.
 
 ## Support
 

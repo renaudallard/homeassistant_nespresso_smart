@@ -409,11 +409,21 @@ Source: `com.sdataway.vertuonext.sdk.models.CCMIDType.CMIDTypeEnum`
 
 | Value | State | Description |
 |-------|-------|-------------|
-| 0 | NONE | Not onboarded, no auth key registered |
-| 1 | TEMPORARY | Temporary auth key (onboarding in progress) |
-| 2 | FINAL | Permanent auth key established |
-| 3 | UNDEFINED | Undefined state |
+| 0 | NONE | No auth key registered, ready to accept one |
+| 1 | TEMPORARY | Auth key registered |
+| 2 | FINAL | Auth key registered |
+| 3 | UNDEFINED | A key was written and the machine did not accept it |
 | 255 | UNKNOWN | Could not determine state |
+
+`NONE` and `UNDEFINED` are the same condition as far as the app is concerned:
+no usable key. `VertuoNextMachine.j` polls until the value is neither of them
+and treats anything else as paired. A machine sitting on `UNDEFINED` has not
+been claimed by anyone, so a factory reset does nothing for it.
+
+The same enum appears as `MachineStatus.machineBound`, decoded from bits 5-6 of
+the first status byte, in both the Vertuo and the Barista SDK. Those bytes also
+ride in the advertisement, so the pairing state can be read without connecting,
+which is the only way to see it on a machine that refuses every read.
 
 ### Auth Key Format
 
@@ -428,11 +438,20 @@ Source: `com.sdataway.vertuonext.sdk.models.CCMID`
 Note: No BLE-level pairing (`createBond`/`pair()`) is needed. The APK does not
 call `BluetoothDevice.createBond()`. Authentication is purely application-level.
 
-1. **Check Status**: Read `CHAR_CMID_TYPE` - if value is `0` (NONE), machine is not onboarded
-2. **Set TX Level**: Write `0x01` to `CHAR_TX_LEVEL_CHANGE_REQUEST` (set low power for pairing)
+Source: `VertuoNextMachine.j` and `VertuoNextMachine.setPairingKey` in the APK.
+
+1. **Check Status**: Read `CHAR_CMID_TYPE`. `NONE` or `UNDEFINED` means the
+   machine holds no usable key
+2. **Set TX Level**: Write `0x01` (REDUCE_POWER) to
+   `CHAR_TX_LEVEL_CHANGE_REQUEST`. The app skips this only for a machine
+   already at `FINAL`, and abandons the attempt when the write fails
 3. **Write Auth Key**: Write 8-byte random key to `CHAR_CMID`
-4. **Wait**: Sleep 2 seconds for machine to process
-5. **Verify**: Read `CHAR_CMID_TYPE` again - should be `2` (FINAL) if successful
+4. **Poll**: Read `CHAR_CMID_TYPE` straight away and then once a second until it
+   is neither `NONE` nor `UNDEFINED`, for up to 10 seconds. The write is
+   acknowledged well before the machine decides what to do with it
+5. **Retry**: The app repeats steps 2 to 4 up to four times, pausing 2 seconds
+   between attempts. The integration uses two, and lets its own poll cycle
+   supply the rest
 
 ### Subsequent Connection Flow
 
@@ -450,7 +469,8 @@ The token is the auth key encoded as UTF-8 and zero-padded to 36 bytes.
 
 ### A machine only takes a token once
 
-A machine stores a CMID while `CMID_TYPE` is `0` (NONE) and never again. Write a
+A machine stores a CMID while it holds none, which is `CMID_TYPE` `0` (NONE) or
+`3` (UNDEFINED), and never again once one has taken. Write a
 different key to a machine already at `FINAL` and it acknowledges the write, keeps
 the key it has, and then refuses every protected read with ATT `0x02`, which
 reaches a local adapter as `org.bluez.Error.NotPermitted`. This is confirmed on a
@@ -654,12 +674,13 @@ entirely application-level via CMID.
 1. **Scan**: `ScanService` scans for devices advertising the expected service UUIDs
 2. **Connect**: Establish GATT connection to selected device
 3. **Discover Services**: Enumerate all GATT services and characteristics
-4. **Check Onboard**: Read `CHAR_CMID_TYPE` for auth state (0=NONE, 2=FINAL)
-5. **Onboard** (if CMID_TYPE is NONE):
+4. **Check Onboard**: Read `CHAR_CMID_TYPE` for auth state
+5. **Onboard** (if CMID_TYPE is NONE or UNDEFINED):
    a. Write `0x01` (REDUCE_POWER) to `CHAR_TX_LEVEL_CHANGE_REQUEST`
    b. Write 8-byte auth key to `CHAR_CMID`
-   c. Wait 2 seconds
-   d. Read `CHAR_CMID_TYPE` again to verify onboarding succeeded
+   c. Read `CHAR_CMID_TYPE` once a second for up to 10 seconds, until it leaves
+      NONE and UNDEFINED
+   d. Retry from (a) if it never did
 6. **Authenticate**: Write stored 8-byte auth key to `CHAR_CMID`
 7. **Read Status**: Read `CHAR_MACHINE_STATUS` to get current state
 8. **Read Info**: Read `CHAR_MACHINE_INFO` for hardware/firmware versions

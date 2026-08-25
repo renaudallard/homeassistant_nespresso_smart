@@ -51,6 +51,9 @@ from ..const import (
     BARISTA_CHAR_RECIPE_INFO,
     BARISTA_CHAR_SERIAL,
     BARISTA_CHAR_STATUS,
+    CMID_TYPE_FINAL,
+    CMID_TYPE_NAMES,
+    CMID_TYPE_UNPAIRED,
     VERTUO_CHAR_AUTH,
     VERTUO_CHAR_CAPS_COUNTER,
     VERTUO_CHAR_COMMAND_RSP,
@@ -116,6 +119,28 @@ ATT_NEEDS_ENCRYPTION = frozenset({5, 15})
 # ATT error a machine returns when the auth token we wrote is not the one it
 # stores. The code is the same whether the token is wrong or absent.
 ATT_READ_NOT_PERMITTED = 2
+
+# How long to wait for a machine to accept a token, and how often to ask.
+#
+# The machine does not answer the CMID write with its verdict. It settles some
+# time afterwards, and until it does it keeps reporting an unpaired state. The
+# app handles that by reading CMID_TYPE straight after the write and then once
+# a second until the value leaves NONE/UNDEFINED
+# (VertuoNextMachine.j in the APK). The poll is the part that matters: reading
+# the state once after a fixed delay is what left a Creatista stuck, because
+# the read came back UNDEFINED, which is not NONE, so the machine looked
+# onboarded while it held no token at all.
+#
+# The app then repeats that whole sequence up to four times, because a user is
+# waiting on it and it has one connection to get the job done in. Two is enough
+# here: the second covers a write that failed outright, and the poll cycle
+# supplies the rest of the retries a few seconds later, against the same
+# machine state. Four would put the worst case past the default scan interval,
+# and the coordinator tries authentication twice per cycle.
+ONBOARD_POLL_ATTEMPTS = 10
+ONBOARD_POLL_INTERVAL = 1.0
+ONBOARD_ATTEMPTS = 2
+ONBOARD_RETRY_DELAY = 2.0
 
 # Clients whose link we already asked to encrypt. A machine that keeps
 # refusing afterwards must not trigger a pairing request per characteristic.
@@ -277,42 +302,20 @@ async def _authenticate(
 
     auth_bytes = binascii.unhexlify(auth_key)
 
-    # Check onboard status: True / False / None when unknown
-    onboard_data: bytearray | None = None
-    is_onboarded: bool | None = None
-    try:
-        onboard_data = await _read(client, uuids["onboard"])
-        is_onboarded = onboard_data != bytearray(b"\x00")
-        _LOGGER.debug(
-            "Onboard status for %s: %s (raw=%s)",
-            address,
-            is_onboarded,
-            onboard_data.hex(),
-        )
-    except TimeoutError:
-        # A hang here is the signature of an unencrypted link on a local
-        # adapter, which no other symptom makes obvious, so spell out the fix.
-        # A proxy never hangs on this, it answers with an ATT error that
-        # _gatt_op has already handled by the time we get here.
-        _LOGGER.warning(
-            "Reading onboard status from %s timed out, so the link is not encrypted. Pair the machine once from a terminal on the Home Assistant host: bluetoothctl / agent NoInputNoOutput / default-agent / scan on / pair %s. Note that the default 'agent on' does NOT work: it requests MITM protection with a passkey, which a coffee machine cannot provide. Through an ESPHome Bluetooth proxy this is not the right remedy, the proxy pairs by itself and only needs 'active: true' under bluetooth_proxy.",
-            address,
-            address,
-        )
-        is_onboarded = None
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.debug("Could not read onboard status: %s", err)
-        # UNKNOWN, not "not onboarded". This read fails on a link the machine
-        # will not answer over, even when it is already onboarded.
-        is_onboarded = None
+    state = await _read_cmid_type(client, uuids["onboard"], address)
 
-    # Onboard only when we know for sure it has not happened. A machine that
-    # already holds a token keeps it whatever we write, so a second attempt
-    # achieves nothing, and some have answered GATT 0x0E UNLIKELY_ERROR and
-    # dropped the connection. When the state is unknown, just write the CMID
-    # and let the verify decide.
-    if is_onboarded is False:
-        await _onboard(client, uuids, auth_bytes, address, family)
+    # Onboard whenever the machine holds no usable token. NONE and UNDEFINED
+    # both mean exactly that, and the app makes no distinction between them
+    # either. Treating UNDEFINED as onboarded is what latched a Creatista into
+    # a state it could never leave: the state is not NONE, so onboarding was
+    # skipped from then on, and every protected read was refused.
+    #
+    # A machine that already holds a token keeps it whatever we write, so
+    # onboarding one of those achieves nothing, and some answer GATT 0x0E
+    # UNLIKELY_ERROR and drop the connection. When the state cannot be read at
+    # all, just write the CMID and let the verify decide.
+    if state in CMID_TYPE_UNPAIRED:
+        state = await _onboard(client, uuids, auth_bytes, address, family, state)
 
     # Write CMID with response (matches APK and bulldog)
     try:
@@ -327,18 +330,8 @@ async def _authenticate(
         try:
             await _read(client, verify_uuid)
         except Exception as err:  # noqa: BLE001
-            if _is_read_not_permitted(err) and is_onboarded is not False:
-                # There is no way back from here over BLE. A machine only
-                # stores a token while CMID_TYPE is 0x00, so it acknowledges
-                # the write above and keeps the one it has, then refuses every
-                # protected read. Re-onboarding it was tried until v0.3.3 and
-                # never once worked, on any machine. The Nespresso app has no
-                # command for it either and tells the user to factory reset.
-                _LOGGER.warning(
-                    "%s is onboarded with a different auth token (CMID_TYPE=0x%s) and refuses to answer. Factory reset the machine to clear the stored token, then add the integration again leaving the auth token field empty. Note that the token this integration generates lives in the config entry, so deleting the entry loses it and costs another factory reset.",
-                    address,
-                    onboard_data.hex() if onboard_data is not None else "unknown",
-                )
+            if _is_read_not_permitted(err):
+                _explain_refused_read(address, state)
             else:
                 _LOGGER.debug("Auth verify read failed for %s: %s", address, err)
             return False
@@ -347,53 +340,164 @@ async def _authenticate(
     return True
 
 
+def _describe_cmid_type(state: int | None) -> str:
+    """Render a pairing key state for a log line."""
+    if state is None:
+        return "unreadable"
+    name = CMID_TYPE_NAMES.get(state)
+    return f"0x{state:02x} {name.upper()}" if name else f"0x{state:02x}"
+
+
+async def _read_cmid_type(client: BleakClient, char: str, address: str) -> int | None:
+    """Read the machine's pairing key state, or None when it will not say.
+
+    Only byte 0 carries the state, which is all CharacCMIDType.updateValues
+    reads in the APK.
+    """
+    try:
+        data = await _read(client, char)
+    except TimeoutError:
+        # A hang here is the signature of an unencrypted link on a local
+        # adapter, which no other symptom makes obvious, so spell out the fix.
+        # A proxy never hangs on this, it answers with an ATT error that
+        # _gatt_op has already handled by the time we get here.
+        _LOGGER.warning(
+            "Reading onboard status from %s timed out, so the link is not encrypted. Pair the machine once from a terminal on the Home Assistant host: bluetoothctl / agent NoInputNoOutput / default-agent / scan on / pair %s. Note that the default 'agent on' does NOT work: it requests MITM protection with a passkey, which a coffee machine cannot provide. Through an ESPHome Bluetooth proxy this is not the right remedy, the proxy pairs by itself and only needs 'active: true' under bluetooth_proxy.",
+            address,
+            address,
+        )
+        return None
+    except Exception as err:  # noqa: BLE001
+        # UNKNOWN, not "not onboarded". This read fails on a link the machine
+        # will not answer over, even when it is already onboarded.
+        _LOGGER.debug("Could not read onboard status from %s: %s", address, err)
+        return None
+
+    if not data:
+        _LOGGER.debug("Onboard status read from %s came back empty", address)
+        return None
+
+    _LOGGER.debug("Onboard status for %s: %s", address, _describe_cmid_type(data[0]))
+    return data[0]
+
+
+def _explain_refused_read(address: str, state: int | None) -> None:
+    """Say why the machine refused a protected read, given its pairing state."""
+    if state in CMID_TYPE_UNPAIRED:
+        _LOGGER.warning(
+            "%s never accepted an auth token (CMID_TYPE=%s) and so refuses to answer. This is not a machine paired to somebody else, it is a pairing that did not complete, and a factory reset will not change it. Leave the machine powered on and within range of the Bluetooth adapter or proxy and let the integration keep trying. If it never gets past this, please report it with a debug log.",
+            address,
+            _describe_cmid_type(state),
+        )
+        return
+    if state is None:
+        _LOGGER.warning(
+            "%s refuses to answer and would not say whether it holds an auth token. Check that the machine is powered on and in range, then look for the onboard status line in a debug log.",
+            address,
+        )
+        return
+    # There is no way back from here over BLE. A machine only stores a token
+    # while it holds none, so it acknowledges the write above, keeps the one it
+    # has and refuses every protected read. Re-onboarding it was tried until
+    # v0.3.3 and never once worked, on any machine. The Nespresso app has no
+    # command for it either and tells the user to factory reset.
+    _LOGGER.warning(
+        "%s is onboarded with a different auth token (CMID_TYPE=%s) and refuses to answer. Factory reset the machine to clear the stored token, then add the integration again leaving the auth token field empty. Note that the token this integration generates lives in the config entry, so deleting the entry loses it and costs another factory reset.",
+        address,
+        _describe_cmid_type(state),
+    )
+
+
 async def _onboard(
     client: BleakClient,
     uuids: dict[str, str],
     auth_bytes: bytes,
     address: str,
     family: MachineFamily,
-) -> bool:
-    """Onboard a new machine: write TX level + CMID, verify.
+    state: int | None,
+) -> int | None:
+    """Give the machine our auth token and wait until it accepts it.
 
-    Matches the APK flow: TX level, CMID, wait 2s, verify CMID_TYPE.
+    Matches VertuoNextMachine.setPairingKey in the APK: run the write and its
+    poll, and repeat the whole thing on failure. Returns the pairing key state
+    the machine last reported, so the caller can tell a token that took from
+    one that did not.
 
-    The caller must only reach here with CMID_TYPE at 0x00, which is the only
-    state in which a machine stores a token. That guarantee is what lets the
-    verify below read a non-zero value as proof that our write took, rather
-    than as proof that somebody else's token is still there.
+    The caller must only reach here with the machine unpaired, which is the
+    only condition in which it stores a token. That guarantee is what lets a
+    paired state coming back out of here be read as proof that our write took,
+    rather than as proof that somebody else's token is still there.
     """
     _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
 
-    try:
-        await _write(client, uuids["pair"], bytes([1]), response=False)
-        _LOGGER.debug("TX level write sent")
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.debug("TX level write failed (non-fatal): %s", err)
+    for attempt in range(1, ONBOARD_ATTEMPTS + 1):
+        state = await _onboard_once(client, uuids, auth_bytes, address, state)
+        if state is None:
+            _LOGGER.debug("Onboarding %s: machine stopped answering", address)
+            return None
+        if state not in CMID_TYPE_UNPAIRED:
+            _LOGGER.info(
+                "Onboarded %s on attempt %d, CMID_TYPE is %s",
+                address,
+                attempt,
+                _describe_cmid_type(state),
+            )
+            return state
+        _LOGGER.debug(
+            "Onboarding %s attempt %d of %d left CMID_TYPE at %s",
+            address,
+            attempt,
+            ONBOARD_ATTEMPTS,
+            _describe_cmid_type(state),
+        )
+        if attempt < ONBOARD_ATTEMPTS:
+            await asyncio.sleep(ONBOARD_RETRY_DELAY)
+
+    _LOGGER.warning(
+        "Onboarding %s did not take after %d attempts, CMID_TYPE is still %s",
+        address,
+        ONBOARD_ATTEMPTS,
+        _describe_cmid_type(state),
+    )
+    return state
+
+
+async def _onboard_once(
+    client: BleakClient,
+    uuids: dict[str, str],
+    auth_bytes: bytes,
+    address: str,
+    state: int | None,
+) -> int | None:
+    """Write the auth token once and read back what the machine makes of it."""
+    # Only a machine that already holds a final token skips the TX level
+    # request. The APK sends it for every other state, and abandons the attempt
+    # when the write fails rather than writing a token the machine will ignore.
+    if state != CMID_TYPE_FINAL:
+        try:
+            await _write(client, uuids["pair"], bytes([1]), response=False)
+            _LOGGER.debug("TX level write sent")
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("TX level write failed for %s: %s", address, err)
+            return state
 
     try:
         await _write(client, uuids["auth"], auth_bytes, response=True)
         _LOGGER.debug("Onboarding CMID write sent")
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Onboarding CMID write failed for %s: %s", address, err)
-        return False
+        return state
 
-    await asyncio.sleep(2)
-
-    # Verify onboarding succeeded
-    try:
-        onboard_data = await _read(client, uuids["onboard"])
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.debug("Onboard verify read failed for %s: %s", address, err)
-        return False
-
-    if onboard_data == bytearray(b"\x00"):
-        _LOGGER.warning("Onboarding %s did not take, CMID_TYPE is still 0x00", address)
-        return False
-    _LOGGER.info(
-        "Onboarded %s, CMID_TYPE went 0x00 to 0x%s", address, onboard_data.hex()
-    )
-    return True
+    # The write is acknowledged long before the machine decides what to do
+    # with it, so read the state back until it settles on something other than
+    # unpaired, or the budget runs out.
+    state = await _read_cmid_type(client, uuids["onboard"], address)
+    for _ in range(ONBOARD_POLL_ATTEMPTS):
+        if state is None or state not in CMID_TYPE_UNPAIRED:
+            break
+        await asyncio.sleep(ONBOARD_POLL_INTERVAL)
+        state = await _read_cmid_type(client, uuids["onboard"], address)
+    return state
 
 
 async def _authenticate_vmini(client: BleakClient, auth_key: str) -> bool:
