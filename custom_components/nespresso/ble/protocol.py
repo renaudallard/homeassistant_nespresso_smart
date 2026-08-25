@@ -316,6 +316,11 @@ async def _authenticate(
     # all, just write the CMID and let the verify decide.
     if state in CMID_TYPE_UNPAIRED:
         state = await _onboard(client, uuids, auth_bytes, address, family, state)
+        if not client.is_connected:
+            # Everything below would fail with "characteristic not found",
+            # which describes bleak's empty service cache rather than anything
+            # the machine did. _onboard has already said what happened.
+            return False
 
     # Write CMID with response (matches APK and bulldog)
     try:
@@ -432,6 +437,16 @@ async def _onboard(
 
     for attempt in range(1, ONBOARD_ATTEMPTS + 1):
         state = await _onboard_once(client, uuids, auth_bytes, address, state)
+        if not client.is_connected:
+            # A machine that drops the link mid onboarding never saw the token,
+            # so the state cannot have moved and retrying on this connection is
+            # pointless: bleak has no services left and every call would come
+            # back "characteristic not found".
+            _LOGGER.warning(
+                "%s dropped the connection while being onboarded, so the auth token never reached it. The next poll will connect again and try once more.",
+                address,
+            )
+            return state
         if state is None:
             _LOGGER.debug("Onboarding %s: machine stopped answering", address)
             return None
