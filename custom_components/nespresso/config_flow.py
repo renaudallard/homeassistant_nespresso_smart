@@ -54,6 +54,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_PERSISTENT_CONNECTION = "persistent_connection"
 
+# Escape hatch for the TX level request sent during onboarding. It is part of
+# the sequence the official app runs, but it is also the write immediately
+# before a Creatista dropped the link in issue #3, and there is no way to tell
+# from here whether it caused that. Turning it off leaves the CMID write, which
+# is the part that actually carries the token.
+CONF_SEND_TX_LEVEL = "send_tx_level"
+
 
 class NespressoOptionsFlow(OptionsFlow):
     """Handle options for Nespresso integration."""
@@ -71,6 +78,7 @@ class NespressoOptionsFlow(OptionsFlow):
         current_persistent = self.config_entry.options.get(
             CONF_PERSISTENT_CONNECTION, False
         )
+        current_send_tx_level = self.config_entry.options.get(CONF_SEND_TX_LEVEL, True)
 
         return self.async_show_form(
             step_id="init",
@@ -83,6 +91,10 @@ class NespressoOptionsFlow(OptionsFlow):
                     vol.Required(
                         CONF_PERSISTENT_CONNECTION,
                         default=current_persistent,
+                    ): bool,
+                    vol.Required(
+                        CONF_SEND_TX_LEVEL,
+                        default=current_send_tx_level,
                     ): bool,
                     vol.Required(
                         CONF_DESCALING_CAPSULES,

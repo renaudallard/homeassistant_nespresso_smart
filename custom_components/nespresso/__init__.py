@@ -36,7 +36,11 @@ from homeassistant.helpers import device_registry as dr
 
 from .ble.parsing import nespresso_manufacturer_data
 from .ble.protocol import generate_auth_key
-from .config_flow import CONF_PERSISTENT_CONNECTION, CONF_SCAN_INTERVAL
+from .config_flow import (
+    CONF_PERSISTENT_CONNECTION,
+    CONF_SCAN_INTERVAL,
+    CONF_SEND_TX_LEVEL,
+)
 from .const import (
     CONF_DESCALING_CAPSULES,
     CONF_DESCALING_DAYS,
@@ -67,6 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     family = MachineFamily(entry.data["family"])
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     persistent = entry.options.get(CONF_PERSISTENT_CONNECTION, False)
+    send_tx_level = entry.options.get(CONF_SEND_TX_LEVEL, True)
 
     _LOGGER.debug(
         "Setting up Nespresso %s: family=%s interval=%ds persistent=%s",
@@ -76,7 +81,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         persistent,
     )
 
-    coordinator = NespressoCoordinator(hass, address, family, scan_interval, persistent)
+    coordinator = NespressoCoordinator(
+        hass, address, family, scan_interval, persistent, send_tx_level
+    )
 
     # Restore or generate auth key (must persist before first_refresh
     # so the same key survives ConfigEntryNotReady retries)

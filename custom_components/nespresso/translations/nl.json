@@ -66,6 +66,7 @@
         "data": {
           "scan_interval": "Verversingsinterval (seconden)",
           "persistent_connection": "Persistente verbinding (realtime updates, blokkeert Nespresso-app)",
+          "send_tx_level": "TX-niveauverzoek verzenden bij het koppelen",
           "descaling_capsules": "Ontkalkingsinterval (capsules)",
           "descaling_days": "Ontkalkingsinterval (dagen)"
         }

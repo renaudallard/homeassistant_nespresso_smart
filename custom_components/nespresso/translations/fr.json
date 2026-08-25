@@ -66,6 +66,7 @@
         "data": {
           "scan_interval": "Intervalle de mise à jour (secondes)",
           "persistent_connection": "Connexion persistante (mises à jour en temps réel, bloque l'application Nespresso)",
+          "send_tx_level": "Envoyer la requête de niveau TX lors de l'association",
           "descaling_capsules": "Intervalle de détartrage (capsules)",
           "descaling_days": "Intervalle de détartrage (jours)"
         }

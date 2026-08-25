@@ -66,6 +66,7 @@
         "data": {
           "scan_interval": "Interwał odświeżania (sekundy)",
           "persistent_connection": "Trwałe połączenie (aktualizacje w czasie rzeczywistym, blokuje aplikację Nespresso)",
+          "send_tx_level": "Wyślij żądanie poziomu TX podczas parowania",
           "descaling_capsules": "Interwał odkamieniania (kapsułki)",
           "descaling_days": "Interwał odkamieniania (dni)"
         }

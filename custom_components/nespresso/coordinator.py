@@ -112,6 +112,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         family: MachineFamily,
         scan_interval: int = DEFAULT_SCAN_INTERVAL,
         persistent: bool = False,
+        send_tx_level: bool = True,
     ) -> None:
         super().__init__(
             hass,
@@ -122,6 +123,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.address = address
         self.family = family
         self.persistent = persistent
+        # Whether onboarding sends the TX level request. See CONF_SEND_TX_LEVEL.
+        self.send_tx_level = send_tx_level
         self.auth_key: str | None = None
         # Pairing state as last seen in an advertisement. Kept apart from
         # self.data because it is at its most useful before the first
@@ -272,7 +275,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 if self.auth_key:
                     from .ble.protocol import _authenticate
 
-                    await _authenticate(client, self.auth_key, self.family)
+                    await _authenticate(
+                        client, self.auth_key, self.family, self.send_tx_level
+                    )
 
                 current = await client.read_gatt_char(char_uuid)
                 _LOGGER.debug(
@@ -320,7 +325,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 if self.auth_key:
                     from .ble.protocol import _authenticate
 
-                    await _authenticate(client, self.auth_key, self.family)
+                    await _authenticate(
+                        client, self.auth_key, self.family, self.send_tx_level
+                    )
 
                 await client.write_gatt_char(char_uuid, data, response=True)
                 _LOGGER.debug("Write %s: %s", char_uuid, data.hex())
@@ -377,7 +384,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 if self.auth_key:
                     from .ble.protocol import _authenticate
 
-                    await _authenticate(client, self.auth_key, self.family)
+                    await _authenticate(
+                        client, self.auth_key, self.family, self.send_tx_level
+                    )
 
             try:
                 response: bytearray | None = None
@@ -657,7 +666,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
             from .ble.protocol import _authenticate
 
-            auth_ok = await _authenticate(client, self.auth_key, self.family)
+            auth_ok = await _authenticate(
+                client, self.auth_key, self.family, self.send_tx_level
+            )
             if not auth_ok:
                 _LOGGER.info("Auth failed, reconnecting for retry")
                 try:
@@ -667,7 +678,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 client = await establish_connection(
                     BleakClient, device, self.address, max_attempts=3
                 )
-                auth_ok = await _authenticate(client, self.auth_key, self.family)
+                auth_ok = await _authenticate(
+                    client, self.auth_key, self.family, self.send_tx_level
+                )
                 if not auth_ok:
                     _LOGGER.warning("Auth failed on second attempt")
 

@@ -66,6 +66,7 @@
         "data": {
           "scan_interval": "Aktualisierungsintervall (Sekunden)",
           "persistent_connection": "Dauerhafte Verbindung (Echtzeit-Updates, blockiert Nespresso-App)",
+          "send_tx_level": "TX-Level-Anforderung beim Onboarding senden",
           "descaling_capsules": "Entkalkungsintervall (Kapseln)",
           "descaling_days": "Entkalkungsintervall (Tage)"
         }

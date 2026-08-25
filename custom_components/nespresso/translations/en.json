@@ -66,6 +66,7 @@
         "data": {
           "scan_interval": "Poll interval (seconds)",
           "persistent_connection": "Persistent connection (real-time updates, blocks Nespresso app)",
+          "send_tx_level": "Send the TX level request when onboarding",
           "descaling_capsules": "Descaling interval (capsules)",
           "descaling_days": "Descaling interval (days)"
         }

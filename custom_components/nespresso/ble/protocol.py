@@ -276,7 +276,10 @@ _AUTH_UUIDS: dict[str, dict[str, str]] = {
 
 
 async def _authenticate(
-    client: BleakClient, auth_key: str, family: MachineFamily
+    client: BleakClient,
+    auth_key: str,
+    family: MachineFamily,
+    send_tx_level: bool = True,
 ) -> bool:
     """Authenticate with the Nespresso machine.
 
@@ -315,7 +318,9 @@ async def _authenticate(
     # UNLIKELY_ERROR and drop the connection. When the state cannot be read at
     # all, just write the CMID and let the verify decide.
     if state in CMID_TYPE_UNPAIRED:
-        state = await _onboard(client, uuids, auth_bytes, address, family, state)
+        state = await _onboard(
+            client, uuids, auth_bytes, address, family, state, send_tx_level
+        )
         if not client.is_connected:
             # Everything below would fail with "characteristic not found",
             # which describes bleak's empty service cache rather than anything
@@ -420,6 +425,7 @@ async def _onboard(
     address: str,
     family: MachineFamily,
     state: int | None,
+    send_tx_level: bool = True,
 ) -> int | None:
     """Give the machine our auth token and wait until it accepts it.
 
@@ -436,7 +442,9 @@ async def _onboard(
     _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
 
     for attempt in range(1, ONBOARD_ATTEMPTS + 1):
-        state = await _onboard_once(client, uuids, auth_bytes, address, state)
+        state = await _onboard_once(
+            client, uuids, auth_bytes, address, state, send_tx_level
+        )
         if not client.is_connected:
             # A machine that drops the link mid onboarding never saw the token,
             # so the state cannot have moved and retrying on this connection is
@@ -483,6 +491,7 @@ async def _onboard_once(
     auth_bytes: bytes,
     address: str,
     state: int | None,
+    send_tx_level: bool = True,
 ) -> int | None:
     """Write the auth token once and read back what the machine makes of it."""
     # Only a machine that already holds a final token skips the TX level
@@ -500,7 +509,7 @@ async def _onboard_once(
     # Abandoning the attempt here is not the end of it. The caller writes the
     # CMID once more when onboarding gives up, so a machine that refuses this
     # request still gets its token, exactly as it did before.
-    if state != CMID_TYPE_FINAL:
+    if send_tx_level and state != CMID_TYPE_FINAL:
         try:
             await _write(client, uuids["pair"], bytes([1]), response=True)
             _LOGGER.debug("TX level write acknowledged")
