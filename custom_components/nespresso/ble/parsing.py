@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ..const import BARISTA_STATE_NAMES, VERTUO_STATE_NAMES
+from ..const import BARISTA_STATE_NAMES, CMID_TYPE_NAMES, VERTUO_STATE_NAMES
 
 
 def _get_bit(byte_val: int, bit_pos: int) -> bool:
@@ -48,6 +48,19 @@ def _get_2bytes_unsigned_msb(data: bytes, offset: int) -> int:
 def _get_2bytes_unsigned_lsb(data: bytes, offset: int) -> int:
     """Read 2-byte unsigned little-endian. Matches get2BytesUnsignedLSB."""
     return ((data[offset + 1] & 0xFF) << 8) | (data[offset] & 0xFF)
+
+
+def _pairing_key_state(b0: int) -> str:
+    """Decode the pairing key state both families carry in byte 0.
+
+    Matches MachineStatus.machineBound in the Vertuo and the Barista SDK:
+    PairingKeyState.valueOf((byte[0] & 0x60) >> 5). Only two bits, so the
+    UNKNOWN(255) of the connected characteristic cannot appear here.
+
+    This is the one view of the pairing state that survives a machine refusing
+    every read, because it rides in the advertisement.
+    """
+    return CMID_TYPE_NAMES[(b0 & 0x60) >> 5]
 
 
 def parse_version_v2(value: int) -> str:
@@ -93,6 +106,7 @@ def parse_barista_status(data: bytes) -> dict[str, object]:
 
     return {
         "machine_state": BARISTA_STATE_NAMES.get(state_val, "unknown"),
+        "pairing_key_state": _pairing_key_state(b0),
         "bootloader_active": _get_bit(b0, 0),
         "error_present": _get_bit(b0, 3),
         "motor_running": _get_bit(b0, 4),
@@ -136,7 +150,9 @@ def parse_venus_advertisement(data: bytes | None) -> dict[str, object] | None:
     Verified on a Vertuo Pop against live connected readings: states
     POWER_SAVE(9), HEATUP(1), READY(2), STANDBY(12), CAPSULE_READING(17) and
     BREWING(4) all matched, and byte0 bits 5-6 tracked CMID_TYPE exactly
-    (0 = NONE after a factory reset, 2 = FINAL once onboarded).
+    (0 = NONE after a factory reset, 2 = FINAL once onboarded). Those two bits
+    come back as pairing_key_state, which is worth reading on a machine that
+    refuses every connected read, since it is the only state left visible.
 
     Returns None for anything that is not a usable payload, so callers can
     ignore advertisements from other machine families without special-casing.
@@ -154,6 +170,7 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
       byte[0] bit1: cleaningNeeded
       byte[0] bit2: descalingNeeded
       byte[0] bit4: errorPresent
+      byte[0] bits5-6: pairingKeyState = (byte[0] & 0x60) >> 5
       byte[1] bit7: brewingUnitClosed
       byte[1] bit6: capsuleContainerFull
       machineState = (byte[1] & 0x0F) + (byte[2] & 0xF0)
@@ -168,6 +185,7 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
 
     return {
         "machine_state": VERTUO_STATE_NAMES.get(state_val, "unknown"),
+        "pairing_key_state": _pairing_key_state(b0),
         "water_tank_empty": _get_bit(b0, 0),
         "cleaning_needed": _get_bit(b0, 1),
         "descaling_needed": _get_bit(b0, 2),

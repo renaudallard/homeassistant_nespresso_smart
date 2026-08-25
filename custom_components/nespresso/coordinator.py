@@ -123,6 +123,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.family = family
         self.persistent = persistent
         self.auth_key: str | None = None
+        # Pairing state as last seen in an advertisement. Kept apart from
+        # self.data because it is at its most useful before the first
+        # successful poll, when there is no data at all.
+        self.pairing_key_state: str | None = None
         self.brew_type: str = "espresso"
         self.brew_temperature: str = "medium"
         self._keep_connection = False
@@ -206,6 +210,19 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """
         _LOGGER.debug("BLE notification received: %s (len=%d)", data.hex(), len(data))
         self.hass.loop.call_soon_threadsafe(self._handle_status_update, bytes(data))
+
+    def _note_pairing_key_state(self, status: dict[str, object]) -> None:
+        """Record the pairing state an advertisement carries, and log changes.
+
+        A machine that will not accept our auth token refuses every connected
+        read, so this is the only place its pairing state stays visible. The
+        advertisement carries it whether or not the machine talks to us.
+        """
+        state = status.get("pairing_key_state")
+        if not isinstance(state, str) or state == self.pairing_key_state:
+            return
+        self.pairing_key_state = state
+        _LOGGER.debug("Pairing key state for %s is now %s", self.address, state)
 
     def _status_fields(self, status: dict[str, object]) -> dict[str, Any]:
         """Pick the fields of a status parse that apply to this family."""
@@ -526,11 +543,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """
         if self.family is not MachineFamily.VERTUO_NEXT:
             return False
-        current = self.data
-        if current is None:
-            return False
         parsed = parse_venus_advertisement(raw)
         if parsed is None:
+            return False
+        self._note_pairing_key_state(parsed)
+        current = self.data
+        if current is None:
             return False
 
         fields = self._status_fields(parsed)

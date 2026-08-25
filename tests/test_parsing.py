@@ -157,6 +157,17 @@ class TestBaristaStatus:
         result = parse_barista_status(b"\x20\x04")
         assert result["induction_heating"] is True
 
+    def test_pairing_key_state(self) -> None:
+        """Bits 5-6 are machineBound, overlaid on the two flags above them.
+
+        The APK reads the same bits twice, once as PairingKeyState and once as
+        induction heating and last-CMID-valid, so both decodes are kept.
+        """
+        assert parse_barista_status(b"\x00\x04")["pairing_key_state"] == "none"
+        assert parse_barista_status(b"\x20\x04")["pairing_key_state"] == "temporary"
+        assert parse_barista_status(b"\x40\x04")["pairing_key_state"] == "final"
+        assert parse_barista_status(b"\x60\x04")["pairing_key_state"] == "undefined"
+
     def test_setup_complete(self) -> None:
         # byte0: bit7=setup_complete -> 0x80
         result = parse_barista_status(b"\x80\x04")
@@ -250,6 +261,24 @@ class TestVertuoNextStatus:
         # byte0 bit4 -> 0x10
         result = parse_vertuonext_status(b"\x10\x02\x00")
         assert result["error_present"] is True
+
+    def test_pairing_key_state(self) -> None:
+        """Bits 5-6 of byte0 are MachineStatus.machineBound in the APK."""
+        assert parse_vertuonext_status(b"\x00\x02\x00")["pairing_key_state"] == "none"
+        assert (
+            parse_vertuonext_status(b"\x20\x02\x00")["pairing_key_state"] == "temporary"
+        )
+        assert parse_vertuonext_status(b"\x40\x02\x00")["pairing_key_state"] == "final"
+        assert (
+            parse_vertuonext_status(b"\x60\x02\x00")["pairing_key_state"] == "undefined"
+        )
+
+    def test_pairing_key_state_does_not_leak_into_the_flags(self) -> None:
+        """0x60 in byte0 is a pairing state, not descaling or an error."""
+        result = parse_vertuonext_status(b"\x60\x02\x00")
+        assert result["descaling_needed"] is False
+        assert result["error_present"] is False
+        assert result["machine_state"] == "ready"
 
     def test_capsule_container_full(self) -> None:
         # byte1 bit6 -> 0x42 (bit6 set + low nibble 2 for READY)
@@ -497,6 +526,25 @@ class TestVenusAdvertisement:
         result = parse_venus_advertisement(bytes.fromhex("408110000000"))
         assert result["machine_state"] == "capsule_reading"
         assert result["brewing_unit_closed"] is True
+
+    def test_captured_advertisements_report_a_final_pairing_key(self) -> None:
+        """Every issue #1 capture starts 0x40, which is bits 5-6 = FINAL.
+
+        That machine was onboarded, which is what the connected reads showed
+        at the same time.
+        """
+        result = parse_venus_advertisement(bytes.fromhex("408200000000"))
+        assert result["pairing_key_state"] == "final"
+
+    def test_undefined_pairing_key_is_readable_without_connecting(self) -> None:
+        """The state a Creatista sat in after onboarding failed to take.
+
+        A machine reporting this refuses every connected read, so the
+        advertisement is the only place its pairing state stays visible.
+        """
+        result = parse_venus_advertisement(bytes.fromhex("608200000000"))
+        assert result["pairing_key_state"] == "undefined"
+        assert result["machine_state"] == "ready"
 
     def test_brewing(self) -> None:
         """Observed live: CAPSULE_READING -> BREWING -> READY."""

@@ -78,6 +78,7 @@ async def async_get_config_entry_diagnostics(
 
     diag["debug_info"] = {
         "family": coordinator.family.value,
+        "pairing_key_state": coordinator.pairing_key_state,
         "persistent_mode": coordinator.persistent,
         "has_active_client": coordinator._client is not None,
     }

@@ -374,6 +374,13 @@ ten seconds before deciding. Leave the machine powered on and in range and let
 the poll cycle keep retrying. If it never gets past this, open an issue with a
 debug log.
 
+### Reading the pairing state without connecting
+
+The advertisement carries the pairing state in bits 5-6 of its first byte, so it
+stays readable even while the machine refuses every connected read. Turn on
+debug logging and look for `Pairing key state for ... is now`, or download the
+integration's diagnostics and read `debug_info.pairing_key_state`.
+
 ## Support
 
 If you find this integration useful, you can support its development:
