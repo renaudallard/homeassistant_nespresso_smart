@@ -391,6 +391,28 @@ async def _read_cmid_type(client: BleakClient, char: str, address: str) -> int |
     return data[0]
 
 
+def _report_lost_link(address: str, tx_acknowledged: bool) -> None:
+    """Say why the machine went away in the middle of onboarding.
+
+    A link that dies immediately after the TX level request dies for a reason
+    we can name. That request asks the machine to reduce its radio power, and a
+    machine that has just gone quiet is one a distant receiver stops hearing.
+    The official app leans on the same request and tells the user to stay
+    within a metre of the machine while it pairs, which is affordable advice
+    for a phone in your hand and not for a proxy on a shelf.
+    """
+    if tx_acknowledged:
+        _LOGGER.warning(
+            "%s acknowledged the TX level request and then dropped the link, so the auth token never reached it. That request tells the machine to reduce its radio power for the rest of the exchange, and a Bluetooth adapter or proxy that is not close enough stops hearing it the moment it does. Move the proxy next to the machine, within a metre, and reload. It can go back where it was afterwards, since the machine only goes quiet while it is being paired.",
+            address,
+        )
+        return
+    _LOGGER.warning(
+        "%s dropped the connection while being onboarded, so the auth token never reached it. The next poll will connect again and try once more.",
+        address,
+    )
+
+
 def _explain_refused_read(address: str, state: int | None) -> None:
     """Say why the machine refused a protected read, given its pairing state."""
     if state in CMID_TYPE_UNPAIRED:
@@ -442,7 +464,7 @@ async def _onboard(
     _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
 
     for attempt in range(1, ONBOARD_ATTEMPTS + 1):
-        state = await _onboard_once(
+        state, tx_acknowledged = await _onboard_once(
             client, uuids, auth_bytes, address, state, send_tx_level
         )
         if not client.is_connected:
@@ -450,10 +472,7 @@ async def _onboard(
             # so the state cannot have moved and retrying on this connection is
             # pointless: bleak has no services left and every call would come
             # back "characteristic not found".
-            _LOGGER.warning(
-                "%s dropped the connection while being onboarded, so the auth token never reached it. The next poll will connect again and try once more.",
-                address,
-            )
+            _report_lost_link(address, tx_acknowledged)
             return state
         if state is None:
             _LOGGER.debug("Onboarding %s: machine stopped answering", address)
@@ -492,8 +511,13 @@ async def _onboard_once(
     address: str,
     state: int | None,
     send_tx_level: bool = True,
-) -> int | None:
-    """Write the auth token once and read back what the machine makes of it."""
+) -> tuple[int | None, bool]:
+    """Write the auth token once and read back what the machine makes of it.
+
+    Also reports whether the TX level request was acknowledged, because a link
+    that dies right after one died for a knowable reason.
+    """
+    tx_acknowledged = False
     # Only a machine that already holds a final token skips the TX level
     # request. The APK sends it for every other state, and abandons the attempt
     # when the write fails rather than writing a token the machine will ignore.
@@ -512,17 +536,18 @@ async def _onboard_once(
     if send_tx_level and state != CMID_TYPE_FINAL:
         try:
             await _write(client, uuids["pair"], bytes([1]), response=True)
+            tx_acknowledged = True
             _LOGGER.debug("TX level write acknowledged")
         except Exception as err:  # noqa: BLE001
             _LOGGER.debug("TX level write failed for %s: %s", address, err)
-            return state
+            return state, False
 
     try:
         await _write(client, uuids["auth"], auth_bytes, response=True)
         _LOGGER.debug("Onboarding CMID write sent")
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Onboarding CMID write failed for %s: %s", address, err)
-        return state
+        return state, tx_acknowledged
 
     # The write is acknowledged long before the machine decides what to do
     # with it, so read the state back until it settles on something other than
@@ -533,7 +558,7 @@ async def _onboard_once(
             break
         await asyncio.sleep(ONBOARD_POLL_INTERVAL)
         state = await _read_cmid_type(client, uuids["onboard"], address)
-    return state
+    return state, tx_acknowledged
 
 
 async def _authenticate_vmini(client: BleakClient, auth_key: str) -> bool:
