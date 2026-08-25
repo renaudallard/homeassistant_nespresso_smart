@@ -473,10 +473,22 @@ async def _onboard_once(
     # Only a machine that already holds a final token skips the TX level
     # request. The APK sends it for every other state, and abandons the attempt
     # when the write fails rather than writing a token the machine will ignore.
+    #
+    # With a response, because that is the only kind of write these
+    # characteristics accept: they carry the write property and not
+    # write-without-response, and AbstractCharacteristicHelper.writeToMachine
+    # in the APK never sets a write type and then blocks on the write callback,
+    # so every write the app makes is a request. Sending a command instead was
+    # a spec violation that no error could report, since a command is answered
+    # by nothing at all.
+    #
+    # Abandoning the attempt here is not the end of it. The caller writes the
+    # CMID once more when onboarding gives up, so a machine that refuses this
+    # request still gets its token, exactly as it did before.
     if state != CMID_TYPE_FINAL:
         try:
-            await _write(client, uuids["pair"], bytes([1]), response=False)
-            _LOGGER.debug("TX level write sent")
+            await _write(client, uuids["pair"], bytes([1]), response=True)
+            _LOGGER.debug("TX level write acknowledged")
         except Exception as err:  # noqa: BLE001
             _LOGGER.debug("TX level write failed for %s: %s", address, err)
             return state

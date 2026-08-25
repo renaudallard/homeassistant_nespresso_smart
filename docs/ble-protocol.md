@@ -443,7 +443,11 @@ Source: `VertuoNextMachine.j` and `VertuoNextMachine.setPairingKey` in the APK.
 1. **Check Status**: Read `CHAR_CMID_TYPE`. `NONE` or `UNDEFINED` means the
    machine holds no usable key
 2. **Set TX Level**: Write `0x01` (REDUCE_POWER) to
-   `CHAR_TX_LEVEL_CHANGE_REQUEST`. The app skips this only for a machine
+   `CHAR_TX_LEVEL_CHANGE_REQUEST`, as a Write Request. That characteristic and
+   `CHAR_CMID` both carry the write property and not write-without-response,
+   and `AbstractCharacteristicHelper.writeToMachine` never sets a write type
+   before blocking on the write callback, so every write the app makes is a
+   request. The app skips this only for a machine
    already at `FINAL`, and abandons the attempt when the write fails
 3. **Write Auth Key**: Write 8-byte random key to `CHAR_CMID`
 4. **Poll**: Read `CHAR_CMID_TYPE` straight away and then once a second until it
