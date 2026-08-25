@@ -316,7 +316,7 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 
 - **Poll interval** (10-600 seconds, default 60): how often to read machine status
 - **Persistent connection** (off by default): keeps the BLE connection open for real-time GATT notifications. Gives instant status updates but blocks the Nespresso mobile app.
-- **Send the TX level request when onboarding** (on by default): the official app asks the machine to drop its transmit power just before handing over the auth token, and the integration does the same. Turn it off if onboarding drops the connection, which one Vertuo Creatista did. The token is written either way.
+- **Send the TX level request when onboarding** (on by default): the official app asks the machine to drop its transmit power just before handing over the auth token, and the integration does the same. Leave it on. It exists to tell two failures apart, not to fix either, and a machine that has been seen refusing the token without it is not better off. See [Onboarding drops the connection](#onboarding-drops-the-connection-gatt-error-133).
 - **Descaling interval (capsules)** (1-10000, default 300): how many brews before descaling is due. Vertuo Next family only.
 - **Descaling interval (days)** (1-3650, default 90): how many days before descaling is due. Vertuo Next family only.
 
@@ -364,16 +364,26 @@ needed.
 
 ### Onboarding drops the connection (GATT error 133)
 
-The log shows the CMID write failing with `error=133`, and every operation after
-it reporting `Characteristic ... was not found`, which is what a disconnected
-link looks like. The token never reached the machine, so its state cannot
-change and retrying on that connection is pointless.
+The log shows the CMID write failing with `error=133`, and the machine gone
+immediately afterwards. If the line before it says the TX level request was
+acknowledged, this is almost certainly a range problem rather than a fault.
 
-Nespresso's own app has a dedicated error for this during pairing, so the
-machines do drop the link at this point. If it happens on every attempt, turn
-off **Send the TX level request when onboarding** in the options and try again.
-That removes the only write that precedes the failure while keeping the one
-that carries the token.
+That request tells the machine to reduce its radio power for the rest of the
+exchange. The official app relies on it too, which is why its pairing screen
+says to stay within about a metre of the machine: a phone in your hand keeps
+the link when the machine goes quiet, and a Bluetooth proxy across the room
+does not.
+
+**Move the proxy next to the machine, within a metre, and reload.** It can go
+back where it was once the machine is onboarded, because the machine only
+lowers its power while it is being paired.
+
+Turning off **Send the TX level request when onboarding** is a diagnostic, not
+a cure. It does stop the disconnect, but on the one Vertuo Creatista this has
+been tested on the machine then acknowledged the token and ignored it,
+staying at `CMID_TYPE=0x03 UNDEFINED` indefinitely. Reduced power looks like a
+precondition for pairing rather than an optional courtesy: Nespresso's own code
+abandons the token write whenever that request fails.
 
 ### "never accepted an auth token"
 

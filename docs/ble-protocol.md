@@ -443,7 +443,13 @@ Source: `VertuoNextMachine.j` and `VertuoNextMachine.setPairingKey` in the APK.
 1. **Check Status**: Read `CHAR_CMID_TYPE`. `NONE` or `UNDEFINED` means the
    machine holds no usable key
 2. **Set TX Level**: Write `0x01` (REDUCE_POWER) to
-   `CHAR_TX_LEVEL_CHANGE_REQUEST`, as a Write Request. That characteristic and
+   `CHAR_TX_LEVEL_CHANGE_REQUEST`, as a Write Request. The machine really does
+   lower its transmit power on this, and a receiver that is not within a metre
+   or so loses it: on a Vertuo Creatista over an ESPHome proxy the link died
+   280 ms after the acknowledgement, every time, and stayed up for minutes when
+   the request was skipped. That is what the app's "stay within 3 ft" pairing
+   instruction is about. Skipping it is not a workaround, since the same
+   machine then acknowledged the CMID write and ignored it. That characteristic and
    `CHAR_CMID` both carry the write property and not write-without-response,
    and `AbstractCharacteristicHelper.writeToMachine` never sets a write type
    before blocking on the write callback, so every write the app makes is a
