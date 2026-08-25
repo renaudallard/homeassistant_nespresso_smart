@@ -316,7 +316,7 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 
 - **Poll interval** (10-600 seconds, default 60): how often to read machine status
 - **Persistent connection** (off by default): keeps the BLE connection open for real-time GATT notifications. Gives instant status updates but blocks the Nespresso mobile app.
-- **Send the TX level request when onboarding** (on by default): the official app asks the machine to drop its transmit power just before handing over the auth token, and the integration does the same. Leave it on. It exists to tell two failures apart, not to fix either, and a machine that has been seen refusing the token without it is not better off. See [Onboarding drops the connection](#onboarding-drops-the-connection-gatt-error-133).
+- **Send the TX level request when onboarding** (on by default): the official app asks the machine to drop its transmit power just before handing over the auth token, and the integration does the same. Leave it on unless you are diagnosing a dropped connection. See [Onboarding drops the connection](#onboarding-drops-the-connection-gatt-error-133).
 - **Descaling interval (capsules)** (1-10000, default 300): how many brews before descaling is due. Vertuo Next family only.
 - **Descaling interval (days)** (1-3650, default 90): how many days before descaling is due. Vertuo Next family only.
 
@@ -379,11 +379,14 @@ back where it was once the machine is onboarded, because the machine only
 lowers its power while it is being paired.
 
 Turning off **Send the TX level request when onboarding** is a diagnostic, not
-a cure. It does stop the disconnect, but on the one Vertuo Creatista this has
-been tested on the machine then acknowledged the token and ignored it,
-staying at `CMID_TYPE=0x03 UNDEFINED` indefinitely. Reduced power looks like a
-precondition for pairing rather than an optional courtesy: Nespresso's own code
-abandons the token write whenever that request fails.
+a cure. It stops the disconnect, and that is all it does.
+
+Reduced power is not a precondition for pairing, despite an earlier version of
+this section saying so. On the one Vertuo Creatista this has been tested on,
+moving the proxy close enough to keep the link through the power drop removed
+the disconnect completely, and the machine still acknowledged the auth token
+and ignored it, staying at `CMID_TYPE=0x03 UNDEFINED`. Whatever that machine
+wants, the transmit power is not it.
 
 ### "never accepted an auth token"
 

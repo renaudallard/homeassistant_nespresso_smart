@@ -448,8 +448,13 @@ Source: `VertuoNextMachine.j` and `VertuoNextMachine.setPairingKey` in the APK.
    or so loses it: on a Vertuo Creatista over an ESPHome proxy the link died
    280 ms after the acknowledgement, every time, and stayed up for minutes when
    the request was skipped. That is what the app's "stay within 3 ft" pairing
-   instruction is about. Skipping it is not a workaround, since the same
-   machine then acknowledged the CMID write and ignored it. That characteristic and
+   instruction is about.
+
+   It is a radio power hint and nothing more. The app skips it entirely when
+   the advertisement already reports FINAL and writes the CMID anyway, and
+   nothing in the app ever writes STANDARD_POWER back. A machine kept in range
+   through the power drop still refused the CMID write on the Creatista, so it
+   is not a precondition for pairing. That characteristic and
    `CHAR_CMID` both carry the write property and not write-without-response,
    and `AbstractCharacteristicHelper.writeToMachine` never sets a write type
    before blocking on the write callback, so every write the app makes is a

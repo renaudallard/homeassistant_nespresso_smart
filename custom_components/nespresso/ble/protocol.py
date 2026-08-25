@@ -417,7 +417,7 @@ def _explain_refused_read(address: str, state: int | None) -> None:
     """Say why the machine refused a protected read, given its pairing state."""
     if state in CMID_TYPE_UNPAIRED:
         _LOGGER.warning(
-            "%s never accepted an auth token (CMID_TYPE=%s) and so refuses to answer. This is not a machine paired to somebody else, it is a pairing that did not complete, and a factory reset will not change it. Leave the machine powered on and within range of the Bluetooth adapter or proxy and let the integration keep trying. If it never gets past this, please report it with a debug log.",
+            "%s never accepted an auth token (CMID_TYPE=%s) and so refuses to answer. This is not a machine paired to somebody else, it is a pairing that did not complete. A factory reset does clear the state, but a machine seen in this condition went straight back into it on the next attempt, so it is not worth the trouble on its own. Leave the machine powered on and within range of the Bluetooth adapter or proxy and let the integration keep trying. If it never gets past this, please report it with a debug log.",
             address,
             _describe_cmid_type(state),
         )
