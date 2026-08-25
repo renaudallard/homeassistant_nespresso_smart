@@ -59,7 +59,7 @@ Each machine stores one auth token (CMID), and only accepts one while it holds n
 | `0x00` | `NONE` | No token stored, ready to accept one |
 | `0x01` | `TEMPORARY` | A token is stored |
 | `0x02` | `FINAL` | A token is stored |
-| `0x03` | `UNDEFINED` | A write was made and the machine did not accept it |
+| `0x03` | `UNDEFINED` | A token was written and the machine could not classify it |
 
 `NONE` and `UNDEFINED` both mean the machine holds no usable token, and the integration keeps trying against either. Once the type is `TEMPORARY` or `FINAL` the machine acknowledges a new token, quietly keeps the one it has, and refuses every protected read with ATT `0x02`, seen as GATT error 2 through a proxy and `NotPermitted` on a local adapter. The integration then needs either the same token or a factory reset. Two options:
 
@@ -88,7 +88,7 @@ Capture the auth token from the Nespresso app using Android's BLE logging:
 4. Disable Bluetooth HCI snoop log
 5. Pull the log: `adb pull /data/misc/bluetooth/logs/btsnoop_hci.log` (or find it at the path shown in Developer Options)
 6. Open in **Wireshark**, filter: `btatt.handle` and look for a Write Request to the auth characteristic (UUID `06aa3a41` for Vertuo Next, `65243a41` for Barista)
-7. The 8-byte value written is the auth token. Convert to 16 hex characters and enter it during setup.
+7. The 8-byte value written is the auth token. Convert to 16 hex characters and enter it during setup. It will start with `8`, which is the marker the app puts on every token it writes.
 
 This method is not available on iOS.
 
@@ -379,7 +379,29 @@ back where it was once the machine is onboarded, because the machine only
 lowers its power while it is being paired.
 
 Turning off **Send the TX level request when onboarding** is a diagnostic, not
-a cure. It stops the disconnect, and that is all it does.
+a cure. It stops the disconnect, and that is all it does. If the machine then
+sits at `CMID_TYPE=0x03 UNDEFINED`, see below.
+
+### "recorded an auth token it could not make sense of"
+
+The machine is at `CMID_TYPE=0x03 UNDEFINED`. It took the write, could not
+classify what it was given, and now refuses every protected read.
+
+Every token the official app writes starts with the nibble `8`. That comes from
+`PairingUtils.getBufferFromByteArray` in the app, which shifts the pairing key
+right by one nibble and puts `0x8` in the space that frees, so the value handed
+to the machine always begins `0x8`. Tokens this integration generated before
+v0.3.8 were random across all 16 bits of that nibble, so fifteen times out of
+sixteen they carried the wrong marker. Older machines accept them anyway. At
+least one Vertuo Creatista does not.
+
+Recovering needs a machine with no token and a token of the right shape:
+
+1. Factory reset the machine
+2. Delete the config entry and add the machine again, leaving the auth token
+   field empty so a new token is generated
+
+Do not paste the old token back in. That is the value the machine rejected.
 
 Reduced power is not a precondition for pairing, despite an earlier version of
 this section saying so. On the one Vertuo Creatista this has been tested on,

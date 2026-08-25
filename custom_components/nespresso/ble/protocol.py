@@ -53,6 +53,8 @@ from ..const import (
     BARISTA_CHAR_STATUS,
     CMID_TYPE_FINAL,
     CMID_TYPE_NAMES,
+    CMID_TYPE_NONE,
+    CMID_TYPE_UNDEFINED,
     CMID_TYPE_UNPAIRED,
     VERTUO_CHAR_AUTH,
     VERTUO_CHAR_CAPS_COUNTER,
@@ -91,9 +93,29 @@ def _decode_ble_string(data: bytes) -> str:
     return data.split(b"\x00", 1)[0].decode("utf-8", errors="replace")
 
 
+# First nibble of every CMID the official app writes.
+#
+# PairingUtils.getBufferFromByteArray in the APK shifts the pairing key right
+# by one nibble and puts 0x8 into the space that frees, so the value handed to
+# CHAR_CMID always starts 0x8n. Firmware appears to read it as a format marker:
+# a Vertuo Creatista given a key without it acknowledged the write, left NONE
+# and settled on UNDEFINED, which is the state the app itself reads as
+# unpaired. Older machines take a key with any first nibble, so this went
+# unnoticed for a long time.
+CMID_MARKER_NIBBLE = "8"
+
+
 def generate_auth_key() -> str:
-    """Generate a random 16-hex-char auth key for machine onboarding."""
-    return uuid.uuid4().hex[:16]
+    """Generate a random 16-hex-char auth key for machine onboarding.
+
+    The key is written to the machine unchanged, so it has to look like a CMID
+    the app would have produced, marker included.
+
+    Keys already in a config entry are deliberately left alone. The machine
+    holds whatever was written to it, and rewriting those in the app's shape
+    would send a value no existing machine has ever seen.
+    """
+    return CMID_MARKER_NIBBLE + uuid.uuid4().hex[:15]
 
 
 # Every BLE operation needs an explicit timeout. Neither bleak nor BlueZ
@@ -415,9 +437,16 @@ def _report_lost_link(address: str, tx_acknowledged: bool) -> None:
 
 def _explain_refused_read(address: str, state: int | None) -> None:
     """Say why the machine refused a protected read, given its pairing state."""
-    if state in CMID_TYPE_UNPAIRED:
+    if state == CMID_TYPE_UNDEFINED:
         _LOGGER.warning(
-            "%s never accepted an auth token (CMID_TYPE=%s) and so refuses to answer. This is not a machine paired to somebody else, it is a pairing that did not complete. A factory reset does clear the state, but a machine seen in this condition went straight back into it on the next attempt, so it is not worth the trouble on its own. Leave the machine powered on and within range of the Bluetooth adapter or proxy and let the integration keep trying. If it never gets past this, please report it with a debug log.",
+            "%s recorded an auth token it could not make sense of (CMID_TYPE=%s) and refuses every protected read. Every token the official app writes begins with the nibble 8, and tokens this integration generated in the past did not, which is the likeliest cause. The app treats a machine in this state as claimed and sends you to a factory reset, and that is what it needs: factory reset the machine, then delete this entry and add the machine again with the auth token field left empty, so a token in the shape the machine expects is generated.",
+            address,
+            _describe_cmid_type(state),
+        )
+        return
+    if state == CMID_TYPE_NONE:
+        _LOGGER.warning(
+            "%s never accepted an auth token (CMID_TYPE=%s) and so refuses to answer. This is not a machine paired to somebody else, it is a pairing that did not complete. Leave the machine powered on and within range of the Bluetooth adapter or proxy and let the integration keep trying. If it never gets past this, please report it with a debug log.",
             address,
             _describe_cmid_type(state),
         )

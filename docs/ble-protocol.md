@@ -427,11 +427,38 @@ which is the only way to see it on a machine that refuses every read.
 
 ### Auth Key Format
 
-Source: `com.sdataway.vertuonext.sdk.models.CCMID`
+Source: `com.sdataway.vertuonext.sdk.models.CCMID`,
+`com.nestle.us.nespresso.iot.PairingUtils`,
+`IoTDataSourceVertuoNextImpl.h`
 
 - **Size:** 8 bytes (`byte[] cMID = new byte[8]`)
-- **Generation:** Random 8 bytes (or 16 hex characters converted to 8 bytes)
 - **Persistence:** Must be stored and reused on subsequent connections
+- **Generation:** not random. The app derives it:
+
+```
+seed   = SHA-1(random UUID) as hex, first 32 chars     PairingUtils.generatePairingKey
+bytes  = first 16 hex chars of seed, as 8 bytes        PairingUtils.prepareHashForPairing
+cmid   = bytes shifted right one nibble, top nibble 8  PairingUtils.getBufferFromByteArray
+```
+
+`getBufferFromByteArray` ORs `0x80` into the first byte, so **every CMID the
+app writes begins with the nibble 8**:
+
+```
+in   0123456789abcdef
+out  80123456789abcde
+```
+
+The seed is what reaches the Nespresso cloud as `pairingKey`, and the derived
+value reaches it as `secret`, base64 encoded. Only the derived value goes over
+BLE, as `PairingKey.secret` in `VertuoNextMachine.j`.
+
+Firmware appears to read that first nibble as a format marker. A Vertuo
+Creatista on firmware 17.3 given a token without it acknowledged the write,
+left `NONE` and settled on `UNDEFINED`, then refused every protected read.
+Older machines accept a token with any first nibble, which is why this went
+unnoticed. The integration generates keys with the marker rather than deriving
+from a seed, since the machine only ever sees the derived value.
 
 ### Onboarding Flow (First Connection)
 
