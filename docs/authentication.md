@@ -30,10 +30,12 @@ The Nespresso Smart app uses OAuth2 with PKCE (Proof Key for Code Exchange) for 
 6. App calls requestAccessToken(authorization_code, code_verifier)
    -> Returns: AccessToken { access_token, refresh_token }
 
-7. access_token authorises subsequent calls, but NOT as a Bearer header.
-   The IDP token response sets an `access-token` cookie, and the ECAPI calls
-   are authorised by replaying that cookie from a shared jar. The only place a
-   `Bearer` header appears is step 5, the authorization-code request.
+7. access_token authorises subsequent calls. The app does this with a cookie:
+   the IDP token response sets an `access-token` cookie and the ECAPI calls
+   replay it from a shared jar. The service ALSO accepts
+   `Authorization: Bearer <access_token>`, which is how an existing third-party
+   client talks to it. The APK tells us what the app sends, not what the API
+   accepts.
 ```
 
 ### Token Refresh Flow
@@ -96,10 +98,12 @@ This follows RFC 7636 (PKCE) for preventing authorization code interception atta
 ### Token Lifecycle
 
 1. **Acquisition**: Obtained through login or registration flow
-2. **Usage**: Replayed as a `Cookie: access-token=<access_token>` on ECAPI
-   calls, not as an `Authorization: Bearer` header. IDP and ECAPI share a host,
-   so one cookie jar covers both. `Bearer` is used only on the intermediate
-   authorization-code call inside the IDP flow itself
+2. **Usage**: the app replays a `Cookie: access-token=<access_token>` on ECAPI
+   calls; IDP and ECAPI share a host, so one cookie jar covers both. A plain
+   `Authorization: Bearer <access_token>` also works, demonstrated by a
+   third-party client running against the live service
+3. **Rotation**: the refresh token rotates on every refresh. A client that does
+   not persist the rotated value locks the account out on its next start
 3. **Refresh**: When access_token expires, refresh_token obtains new pair
 4. **Revocation**: On logout, refresh_token is revoked server-side
 
@@ -116,6 +120,25 @@ account link.
 The token exchange and the refresh call are **not** in that list. So a client
 outside the app cannot be assumed to pass the initial password login, but a
 refresh token, once held, can be renewed without any Akamai involvement.
+
+That gap is exploitable, and the approach is worth recording. The user logs in
+to nespresso.com in their own browser, where Akamai sees a genuine session, then
+pastes a snippet into the console:
+
+```js
+fetch('/ecapi/identityprovider/v1/web-accounts/me/authorize'
+      + '?response_type=code&code_challenge=<S256>&client_id=native-apps',
+      {method:'POST', credentials:'include',
+       headers:{'Content-Type':'application/json'}})
+  .then(r => r.json())
+  .then(d => prompt('code:', d.authorization_code));
+```
+
+`credentials:'include'` sends the browser's own session cookie, so the
+authorization code is minted by the endpoint the app also uses, without any
+password ever reaching the client. The code is then exchanged and refreshed
+through the two endpoints Akamai does not guard. Password handling stays in the
+browser, which is where it belongs.
 
 ## Cookie Management
 
