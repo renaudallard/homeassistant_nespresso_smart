@@ -46,6 +46,7 @@ from .const import (
     DOMAIN,
     MACHINE_FAMILY_NAMES,
     VERTUO_STATE_NAMES,
+    WIFI_STATUS_NAMES,
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator
@@ -164,6 +165,26 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.error_list_code,
+    ),
+    NespressoSensorDescription(
+        key="wifi_status",
+        translation_key="wifi_status",
+        name="WiFi status",
+        icon="mdi:wifi",
+        device_class=SensorDeviceClass.ENUM,
+        options=sorted(set(WIFI_STATUS_NAMES.values())),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda d: d.wifi_status,
+    ),
+    NespressoSensorDescription(
+        key="wifi_ssid",
+        translation_key="wifi_ssid",
+        name="WiFi network",
+        icon="mdi:wifi-cog",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        value_fn=lambda d: d.wifi_ssid,
     ),
     NespressoSensorDescription(
         key="iot_market_name",

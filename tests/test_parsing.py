@@ -62,6 +62,7 @@ from custom_components.nespresso.ble.parsing import (
     parse_venus_advertisement,
     parse_version_v2,
     parse_version_v3,
+    parse_vertuo_wifi_status,
     parse_vertuonext_machine_info,
     parse_vertuonext_status,
 )
@@ -361,6 +362,45 @@ class TestVertuoNextStatus:
 #   bytes 0-1: hardwareVersion (MSB, getVersionV2)
 #   bytes 4-5: firmwareVersion (MSB, getVersionV2)
 # ---------------------------------------------------------------------------
+
+
+class TestVertuoWifiStatus:
+    """Source: CharacWifiCurrentSetup.updateValues in the APK."""
+
+    def _payload(self, ssid: bytes, additional: int, status: int) -> bytes:
+        return ssid.ljust(32, b"\x00") + bytes([additional, status])
+
+    def test_connected(self) -> None:
+        result = parse_vertuo_wifi_status(self._payload(b"HomeNet", 0, 2))
+        assert result["wifi_status"] == "connected"
+        assert result["wifi_ssid"] == "HomeNet"
+
+    def test_not_configured_is_the_bluetooth_only_case(self) -> None:
+        """A machine that has never been put on WiFi, which is not a fault."""
+        result = parse_vertuo_wifi_status(self._payload(b"", 0, 18))
+        assert result["wifi_status"] == "not_configured"
+        assert result["wifi_ssid"] is None
+
+    def test_additional_info_wins_over_the_status_byte(self) -> None:
+        """Byte 32 overrides byte 33 whenever it is non-zero.
+
+        That is how a real reason reaches the user instead of a bare
+        not_connected: `if (additionalInfo > 0) status = additionalInfo`.
+        """
+        result = parse_vertuo_wifi_status(self._payload(b"HomeNet", 26, 0))
+        assert result["wifi_status"] == "wrong_password"
+
+    def test_zero_additional_info_leaves_the_status_byte_alone(self) -> None:
+        result = parse_vertuo_wifi_status(self._payload(b"HomeNet", 0, 1))
+        assert result["wifi_status"] == "connecting"
+
+    def test_unmapped_code_is_unknown(self) -> None:
+        result = parse_vertuo_wifi_status(self._payload(b"", 0, 99))
+        assert result["wifi_status"] == "unknown"
+
+    def test_short_payload_raises(self) -> None:
+        with pytest.raises(ValueError):
+            parse_vertuo_wifi_status(b"\x00" * 33)
 
 
 class TestBaristaMachineInfo:

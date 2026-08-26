@@ -37,6 +37,32 @@
           "rinsing_paused": "Spülen pausiert",
           "unknown": "Unbekannt"
         }
+      },
+      "wifi_status": {
+        "name": "WLAN-Status",
+        "state": {
+          "not_connected": "Nicht verbunden",
+          "connecting": "Verbindung wird hergestellt",
+          "connected": "Verbunden",
+          "updating_combo_firmware": "Combo-Firmware wird aktualisiert",
+          "updating_firmware": "Firmware wird aktualisiert",
+          "updating_recipes": "Rezepte werden aktualisiert",
+          "cloud_onboarding": "Cloud-Einrichtung",
+          "connection_failed": "Verbindung fehlgeschlagen",
+          "server_unreachable": "Server nicht erreichbar",
+          "not_configured": "Nicht konfiguriert",
+          "mqtt_init_error": "MQTT-Initialisierungsfehler",
+          "combo_firmware_update_failed": "Combo-Firmware-Update fehlgeschlagen",
+          "firmware_update_failed": "Firmware-Update fehlgeschlagen",
+          "recipe_update_failed": "Rezept-Update fehlgeschlagen",
+          "market_not_set": "Markt nicht gesetzt",
+          "no_internet": "Kein Internet",
+          "wrong_password": "Falsches Passwort",
+          "unknown": "Unbekannt"
+        }
+      },
+      "wifi_ssid": {
+        "name": "WLAN-Netzwerk"
       }
     }
   },

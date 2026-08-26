@@ -37,6 +37,32 @@
           "rinsing_paused": "Rinsing paused",
           "unknown": "Unknown"
         }
+      },
+      "wifi_status": {
+        "name": "WiFi status",
+        "state": {
+          "not_connected": "Not connected",
+          "connecting": "Connecting",
+          "connected": "Connected",
+          "updating_combo_firmware": "Updating combo firmware",
+          "updating_firmware": "Updating firmware",
+          "updating_recipes": "Updating recipes",
+          "cloud_onboarding": "Cloud onboarding",
+          "connection_failed": "Connection failed",
+          "server_unreachable": "Server unreachable",
+          "not_configured": "Not configured",
+          "mqtt_init_error": "MQTT init error",
+          "combo_firmware_update_failed": "Combo firmware update failed",
+          "firmware_update_failed": "Firmware update failed",
+          "recipe_update_failed": "Recipe update failed",
+          "market_not_set": "Market not set",
+          "no_internet": "No internet",
+          "wrong_password": "Wrong password",
+          "unknown": "Unknown"
+        }
+      },
+      "wifi_ssid": {
+        "name": "WiFi network"
       }
     }
   },

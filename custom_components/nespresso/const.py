@@ -99,6 +99,38 @@ VERTUO_CHAR_ERROR_SELECTION: Final = "06aa3a13-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_IOT_MARKET: Final = "06aa3a79-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_MACHINE_PARAMS: Final = "06aa3a22-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_USER_SETTINGS: Final = "06aa3a44-f22a-11e3-9daa-0002a5d5c51b"
+VERTUO_CHAR_WIFI_CURRENT: Final = "06aa3a29-f22a-11e3-9daa-0002a5d5c51b"
+
+# ---------------------------------------------------------------------------
+# WiFi status reported by CHAR_WIFI_CURRENT_SETUP
+# Source: com.sdataway.vertuonext.sdk.models.WifiCurrentSetup.WifiStatusEnum
+#
+# Only worth reading on a machine you might want to reach through Nespresso's
+# cloud, since the remote maintenance functions go through AWS IoT and only
+# arrive if the machine itself is online. A machine driven over Bluetooth alone
+# will sit at not_configured, which is not a fault.
+# ---------------------------------------------------------------------------
+
+WIFI_STATUS_NAMES: Final[dict[int, str]] = {
+    0: "not_connected",
+    1: "connecting",
+    2: "connected",
+    8: "updating_combo_firmware",
+    9: "updating_firmware",
+    10: "updating_recipes",
+    11: "cloud_onboarding",
+    16: "connection_failed",
+    17: "server_unreachable",
+    18: "not_configured",
+    20: "mqtt_init_error",
+    21: "combo_firmware_update_failed",
+    22: "firmware_update_failed",
+    23: "recipe_update_failed",
+    24: "market_not_set",
+    25: "no_internet",
+    26: "wrong_password",
+    255: "unknown",
+}
 
 # ---------------------------------------------------------------------------
 # Pairing key state

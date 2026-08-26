@@ -37,6 +37,32 @@
           "rinsing_paused": "Płukanie wstrzymane",
           "unknown": "Nieznany"
         }
+      },
+      "wifi_status": {
+        "name": "Stan WiFi",
+        "state": {
+          "not_connected": "Nie połączono",
+          "connecting": "Łączenie",
+          "connected": "Połączono",
+          "updating_combo_firmware": "Aktualizacja oprogramowania combo",
+          "updating_firmware": "Aktualizacja oprogramowania",
+          "updating_recipes": "Aktualizacja przepisów",
+          "cloud_onboarding": "Parowanie z chmurą",
+          "connection_failed": "Błąd połączenia",
+          "server_unreachable": "Serwer nieosiągalny",
+          "not_configured": "Nieskonfigurowano",
+          "mqtt_init_error": "Błąd inicjalizacji MQTT",
+          "combo_firmware_update_failed": "Błąd aktualizacji oprogramowania combo",
+          "firmware_update_failed": "Błąd aktualizacji oprogramowania",
+          "recipe_update_failed": "Błąd aktualizacji przepisów",
+          "market_not_set": "Nie ustawiono rynku",
+          "no_internet": "Brak internetu",
+          "wrong_password": "Nieprawidłowe hasło",
+          "unknown": "Nieznany"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Sieć WiFi"
       }
     }
   },

@@ -37,6 +37,32 @@
           "rinsing_paused": "Spoelen gepauzeerd",
           "unknown": "Onbekend"
         }
+      },
+      "wifi_status": {
+        "name": "Wifi-status",
+        "state": {
+          "not_connected": "Niet verbonden",
+          "connecting": "Verbinden",
+          "connected": "Verbonden",
+          "updating_combo_firmware": "Combo-firmware bijwerken",
+          "updating_firmware": "Firmware bijwerken",
+          "updating_recipes": "Recepten bijwerken",
+          "cloud_onboarding": "Cloudkoppeling",
+          "connection_failed": "Verbinding mislukt",
+          "server_unreachable": "Server onbereikbaar",
+          "not_configured": "Niet geconfigureerd",
+          "mqtt_init_error": "MQTT-initialisatiefout",
+          "combo_firmware_update_failed": "Combo-firmware-update mislukt",
+          "firmware_update_failed": "Firmware-update mislukt",
+          "recipe_update_failed": "Recept-update mislukt",
+          "market_not_set": "Markt niet ingesteld",
+          "no_internet": "Geen internet",
+          "wrong_password": "Onjuist wachtwoord",
+          "unknown": "Onbekend"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Wifi-netwerk"
       }
     }
   },

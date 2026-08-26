@@ -54,6 +54,7 @@ from .ble.parsing import (
     parse_profile_version,
     parse_serial_number,
     parse_venus_advertisement,
+    parse_vertuo_wifi_status,
     parse_vertuonext_machine_info,
     parse_vertuonext_status,
     parse_vmini_fota_status,
@@ -780,6 +781,17 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             water_hardness = settings.get("water_hardness")
             auto_power_off = settings.get("auto_power_off")
 
+        wifi_status = None
+        wifi_ssid = None
+        if raw.wifi_current_bytes:
+            try:
+                wifi = parse_vertuo_wifi_status(raw.wifi_current_bytes)
+            except ValueError as wifi_err:
+                _LOGGER.debug("WiFi status parse failed: %s", wifi_err)
+            else:
+                wifi_status = wifi.get("wifi_status")
+                wifi_ssid = wifi.get("wifi_ssid")
+
         error_code = None
         if raw.error_info_bytes and len(raw.error_info_bytes) >= 3:
             err = parse_error_information(raw.error_info_bytes)
@@ -811,6 +823,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             cup_length_prog=bool(status.get("cup_length_prog", False)),
             water_hardness=water_hardness,
             auto_power_off=auto_power_off,
+            wifi_status=wifi_status,
+            wifi_ssid=wifi_ssid,
             error_code=error_code,
             caps_counter=caps_counter,
             error_list_code=parse_error_information(raw.error_list_bytes).get(

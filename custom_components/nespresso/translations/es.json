@@ -37,6 +37,32 @@
           "rinsing_paused": "Enjuague pausado",
           "unknown": "Desconocido"
         }
+      },
+      "wifi_status": {
+        "name": "Estado del wifi",
+        "state": {
+          "not_connected": "No conectado",
+          "connecting": "Conectando",
+          "connected": "Conectado",
+          "updating_combo_firmware": "Actualizando firmware combo",
+          "updating_firmware": "Actualizando firmware",
+          "updating_recipes": "Actualizando recetas",
+          "cloud_onboarding": "Vinculación con la nube",
+          "connection_failed": "Error de conexión",
+          "server_unreachable": "Servidor inaccesible",
+          "not_configured": "Sin configurar",
+          "mqtt_init_error": "Error de inicio de MQTT",
+          "combo_firmware_update_failed": "Error al actualizar el firmware combo",
+          "firmware_update_failed": "Error al actualizar el firmware",
+          "recipe_update_failed": "Error al actualizar las recetas",
+          "market_not_set": "Mercado sin definir",
+          "no_internet": "Sin internet",
+          "wrong_password": "Contraseña incorrecta",
+          "unknown": "Desconocido"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Red wifi"
       }
     }
   },

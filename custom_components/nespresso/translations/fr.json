@@ -37,6 +37,32 @@
           "rinsing_paused": "Rinçage en pause",
           "unknown": "Inconnu"
         }
+      },
+      "wifi_status": {
+        "name": "État du WiFi",
+        "state": {
+          "not_connected": "Non connecté",
+          "connecting": "Connexion en cours",
+          "connected": "Connecté",
+          "updating_combo_firmware": "Mise à jour du micrologiciel combo",
+          "updating_firmware": "Mise à jour du micrologiciel",
+          "updating_recipes": "Mise à jour des recettes",
+          "cloud_onboarding": "Association au cloud",
+          "connection_failed": "Échec de la connexion",
+          "server_unreachable": "Serveur injoignable",
+          "not_configured": "Non configuré",
+          "mqtt_init_error": "Erreur d'initialisation MQTT",
+          "combo_firmware_update_failed": "Échec de la mise à jour du micrologiciel combo",
+          "firmware_update_failed": "Échec de la mise à jour du micrologiciel",
+          "recipe_update_failed": "Échec de la mise à jour des recettes",
+          "market_not_set": "Marché non défini",
+          "no_internet": "Pas d'accès internet",
+          "wrong_password": "Mot de passe incorrect",
+          "unknown": "Inconnu"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Réseau WiFi"
       }
     }
   },

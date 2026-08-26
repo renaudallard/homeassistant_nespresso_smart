@@ -70,6 +70,7 @@ from ..const import (
     VERTUO_CHAR_SERIAL,
     VERTUO_CHAR_STATUS,
     VERTUO_CHAR_USER_SETTINGS,
+    VERTUO_CHAR_WIFI_CURRENT,
     VMINI_CHAR_FOTA_STATUS,
     VMINI_CHAR_FW_REV,
     VMINI_CHAR_MACHINE_TOKEN,
@@ -794,6 +795,15 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Capsule counter not available")
 
+        # WiFi status (optional). Only interesting on a machine that might
+        # reach Nespresso's cloud, and absent on models without WiFi.
+        wifi_current = None
+        try:
+            wifi_current = await _read(client, VERTUO_CHAR_WIFI_CURRENT)
+            _LOGGER.debug("Vertuo WiFi current setup raw: %s", wifi_current.hex())
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Vertuo WiFi status not available")
+
         # IoT market name (optional)
         iot_market = None
         try:
@@ -824,6 +834,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
             caps_counter_bytes=bytes(caps_counter) if caps_counter else None,
             error_list_bytes=bytes(error_list_entry) if error_list_entry else None,
             iot_market_bytes=bytes(iot_market) if iot_market else None,
+            wifi_current_bytes=bytes(wifi_current) if wifi_current else None,
             gatt_dump=gatt_dump,
         )
 

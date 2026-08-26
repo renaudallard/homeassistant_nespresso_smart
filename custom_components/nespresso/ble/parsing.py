@@ -32,7 +32,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ..const import BARISTA_STATE_NAMES, CMID_TYPE_NAMES, VERTUO_STATE_NAMES
+from ..const import (
+    BARISTA_STATE_NAMES,
+    CMID_TYPE_NAMES,
+    VERTUO_STATE_NAMES,
+    WIFI_STATUS_NAMES,
+)
 
 
 def _get_bit(byte_val: int, bit_pos: int) -> bool:
@@ -196,6 +201,32 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
         "cup_length_prog": _get_bit(b1, 5),
         "capsule_container_full": _get_bit(b1, 6),
         "brewing_unit_closed": _get_bit(b1, 7),
+    }
+
+
+def parse_vertuo_wifi_status(data: bytes) -> dict[str, str | None]:
+    """Parse the Vertuo WiFi current setup characteristic.
+
+    Source: CharacWifiCurrentSetup.updateValues in the APK
+      bytes 0-31: SSID, null terminated
+      byte 32:    additional info, an error or progress code
+      byte 33:    WiFi status
+
+    The status the app shows is not simply byte 33. When byte 32 is non-zero it
+    wins, which is how a code like wrong_password or no_internet reaches the
+    user instead of a bare not_connected. The IP fields the model declares are
+    never filled in from this characteristic, so they are not decoded here.
+    """
+    if len(data) < 34:
+        raise ValueError(f"Vertuo WiFi status requires >= 34 bytes, got {len(data)}")
+
+    additional_info = data[32]
+    status = additional_info if additional_info > 0 else data[33]
+    ssid = data[:32].split(b"\x00", 1)[0].decode("utf-8", errors="replace")
+
+    return {
+        "wifi_status": WIFI_STATUS_NAMES.get(status, "unknown"),
+        "wifi_ssid": ssid or None,
     }
 
 

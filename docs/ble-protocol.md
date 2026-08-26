@@ -425,6 +425,29 @@ the first status byte, in both the Vertuo and the Barista SDK. Those bytes also
 ride in the advertisement, so the pairing state can be read without connecting,
 which is the only way to see it on a machine that refuses every read.
 
+### WiFi Current Setup (06AA3A29)
+
+Source: `CharacWifiCurrentSetup.updateValues`
+
+| Offset | Size | Field |
+|--------|------|-------|
+| 0 | 32 | SSID, null terminated |
+| 32 | 1 | additional info |
+| 33 | 1 | WiFi status |
+
+The status the app displays is not simply byte 33. When byte 32 is non-zero it
+takes precedence, which is how a specific reason such as `wrong_password` or
+`no_internet` surfaces instead of a bare `not_connected`:
+
+```java
+status = getByteUnsigned(data, 0x21);
+if (wifiAdditionalInfo > 0) status = wifiAdditionalInfo;
+wifiStatus = WifiStatusEnum.valueOf(status);
+```
+
+The IP, subnet, gateway, DNS and BSSID fields the model declares are never
+populated from this characteristic, so there is nothing to decode past byte 33.
+
 ### Auth Key Format
 
 Source: `com.sdataway.vertuonext.sdk.models.CCMID`,

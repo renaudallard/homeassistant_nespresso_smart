@@ -317,6 +317,8 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 - **Poll interval** (10-600 seconds, default 60): how often to read machine status
 - **Persistent connection** (off by default): keeps the BLE connection open for real-time GATT notifications. Gives instant status updates but blocks the Nespresso mobile app.
 - **Send the TX level request when onboarding** (on by default): the official app asks the machine to drop its transmit power just before handing over the auth token, and the integration does the same. Leave it on unless you are diagnosing a dropped connection. See [Onboarding drops the connection](#onboarding-drops-the-connection-gatt-error-133).
+The Vertuo family also gets a **WiFi status** and **WiFi network** sensor, both diagnostic. Most machines driven over Bluetooth report `not_configured`, which is normal and not a fault: it means the machine has never been put on WiFi. They matter because Nespresso's own maintenance functions, descaling among them, are cloud calls that reach the machine through AWS IoT, so a machine that is not online cannot receive them at all.
+
 - **Descaling interval (capsules)** (1-10000, default 300): how many brews before descaling is due. Vertuo Next family only.
 - **Descaling interval (days)** (1-3650, default 90): how many days before descaling is due. Vertuo Next family only.
 
