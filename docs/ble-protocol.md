@@ -564,6 +564,13 @@ It never worked on any machine and was removed.
 
 Source: `github.com/bulldog5046/ha_nespresso_integration` (BLE captures), decompiled APK (smali)
 
+**Frame width.** `CharacCommandReq.setValue` allocates `0x13` = 19 bytes, and a
+Creatista answers on `CHAR_COMMAND_RSP` with 19 as well: three header bytes and
+a fixed 16-byte data array, padded regardless of what `dataControl` says is
+meaningful. The brew command was sent as 10 bytes for a long time, which is the
+length of the packet capture it came from. A Vertuo Next answers a short write;
+a Creatista acknowledges one and does nothing.
+
 **Important:** The Nespresso APK does NOT send brew commands over BLE. The
 `VertuoNextMachine.configure()` method is an empty stub. The app sends brew
 commands through the IoT/MQTT cloud layer (AWS IoT). However, the machine

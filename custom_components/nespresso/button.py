@@ -35,6 +35,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .ble.protocol import build_command_frame
 from .const import (
     DOMAIN,
     MACHINE_FAMILY_NAMES,
@@ -306,14 +307,18 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         brew_type = VERTUO_BREW_TYPE_VALUES.get(self.coordinator.brew_type, 1)
         temp = VERTUO_TEMPERATURE_VALUES.get(self.coordinator.brew_temperature, 0)
 
-        # Try simple CCommandReq first (works on Vertuo Next)
-        buf = bytearray(10)
-        buf[0] = 3  # cmdID: machine command
-        buf[1] = 5  # subCmdID: start brew
-        buf[2] = 7  # dataControl: dataLength=7
-        buf[3] = 4  # data[0]: brew subtype
-        buf[8] = temp  # data[5]: temperature
-        buf[9] = brew_type  # data[6]: brew type
+        # Try simple CCommandReq first (works on Vertuo Next).
+        #
+        # CharacCommandReq.setValue in the APK allocates 19 bytes and so does
+        # the response: three header bytes and a fixed 16-byte data array. This
+        # was 10 bytes, the length of a packet capture from a Vertuo Next, and
+        # that machine answers a short write anyway. A Creatista does not: it
+        # acknowledges the write, says nothing, and does not brew.
+        buf = build_command_frame(
+            3,  # cmdID: machine command
+            5,  # subCmdID: start brew
+            bytes([4, 0, 0, 0, 0, temp, brew_type]),
+        )
 
         _LOGGER.info(
             "Brewing on %s: type=%d temp=%d cmd=%s",
@@ -325,7 +330,7 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
 
         try:
             rsp = await self.coordinator.async_send_command(
-                VERTUO_CHAR_COMMAND_REQ, VERTUO_CHAR_COMMAND_RSP, bytes(buf)
+                VERTUO_CHAR_COMMAND_REQ, VERTUO_CHAR_COMMAND_RSP, buf
             )
             if rsp:
                 _LOGGER.info("Brew response from %s: %s", self._address, rsp.hex())

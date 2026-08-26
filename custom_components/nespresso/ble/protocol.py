@@ -56,6 +56,7 @@ from ..const import (
     CMID_TYPE_NONE,
     CMID_TYPE_UNDEFINED,
     CMID_TYPE_UNPAIRED,
+    COMMAND_FRAME_LEN,
     VERTUO_CHAR_AUTH,
     VERTUO_CHAR_CAPS_COUNTER,
     VERTUO_CHAR_COMMAND_RSP,
@@ -410,6 +411,35 @@ async def _authenticate(
 
     _LOGGER.debug("Auth succeeded for %s", address)
     return True
+
+
+# Widest payload a command frame carries. CCommandReq declares data[16], and
+# the frame is three header bytes plus that array whatever the length says.
+COMMAND_DATA_LEN = COMMAND_FRAME_LEN - 3
+
+
+def build_command_frame(cmd_id: int, sub_cmd_id: int, data: bytes) -> bytes:
+    """Build a CHAR_COMMAND_REQ frame.
+
+    The frame is a fixed width. CharacCommandReq.setValue allocates 19 bytes
+    and the machine answers with 19, so the data array is padded out even when
+    dataControl says fewer bytes are meaningful. A Vertuo Next tolerates a
+    short write, which is how a 10-byte capture became the whole command for a
+    while; a Creatista acknowledges one and does nothing.
+
+    dataControl carries the length in bits 0-4, so a payload longer than 31
+    could not be described even if it fitted.
+    """
+    if len(data) > COMMAND_DATA_LEN:
+        raise ValueError(
+            f"Command payload must be at most {COMMAND_DATA_LEN} bytes, got {len(data)}"
+        )
+    frame = bytearray(COMMAND_FRAME_LEN)
+    frame[0] = cmd_id
+    frame[1] = sub_cmd_id
+    frame[2] = len(data)
+    frame[3 : 3 + len(data)] = data
+    return bytes(frame)
 
 
 # CHAR_WIFI_SETUP is one fixed 119-byte frame, from CharacWifiSetup.setValue.

@@ -105,6 +105,19 @@ VERTUO_CHAR_WIFI_SCAN_SELECT: Final = "06aa3a39-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_WIFI_SCAN_RESULT: Final = "06aa3a49-f22a-11e3-9daa-0002a5d5c51b"
 
 # ---------------------------------------------------------------------------
+# CCommandReq / CCommandRsp frame width
+# Source: CharacCommandReq.setValue allocates 0x13 bytes, and a Creatista
+# answers on CHAR_COMMAND_RSP with the same 19.
+#
+#   0      cmdID
+#   1      subCmdID
+#   2      dataControl: length in bits 0-4, 0x40 toggle, 0x80 more packets
+#   3..18  data, a fixed 16-byte array whatever the length byte says
+# ---------------------------------------------------------------------------
+
+COMMAND_FRAME_LEN: Final = 19
+
+# ---------------------------------------------------------------------------
 # WiFi security types accepted by CHAR_WIFI_SETUP
 # Source: CWifiSetup.WifiSecurityTypeEnum. Note there is no value 4.
 # ---------------------------------------------------------------------------
