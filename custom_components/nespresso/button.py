@@ -329,8 +329,15 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         )
 
         try:
+            # Hold the connection open. BST runs on the same session, and
+            # until now the simple command closed it on the way out, so the
+            # fallback died on "No persistent connection" before it could send
+            # anything. async_release_kept_connection below is what closes it.
             rsp = await self.coordinator.async_send_command(
-                VERTUO_CHAR_COMMAND_REQ, VERTUO_CHAR_COMMAND_RSP, buf
+                VERTUO_CHAR_COMMAND_REQ,
+                VERTUO_CHAR_COMMAND_RSP,
+                buf,
+                keep_open=True,
             )
             if rsp:
                 _LOGGER.info("Brew response from %s: %s", self._address, rsp.hex())

@@ -402,13 +402,23 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 await client.disconnect()
 
     async def async_send_command(
-        self, cmd_uuid: str, rsp_uuid: str, data: bytes, retries: int = 3
+        self,
+        cmd_uuid: str,
+        rsp_uuid: str,
+        data: bytes,
+        retries: int = 3,
+        keep_open: bool = False,
     ) -> bytes | None:
         """Send a command and wait for the response notification.
 
         Reuses the persistent connection if available (same session as
         the poll that authenticated and read status). Falls back to a
         new connection otherwise.
+
+        With keep_open, a connection opened here is handed to self._client
+        rather than closed, so a caller with a fallback to try can stay on the
+        same session. It then owns it, and must call
+        async_release_kept_connection.
         """
         async with self._ble_lock:
             own_client = False
@@ -483,7 +493,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 return bytes(response) if response is not None else None
             finally:
                 if own_client:
-                    await client.disconnect()
+                    if keep_open:
+                        self._client = client
+                        self._keep_connection = True
+                    else:
+                        await client.disconnect()
 
     async def async_release_kept_connection(self) -> None:
         """Release the temporary connection kept for brew."""
