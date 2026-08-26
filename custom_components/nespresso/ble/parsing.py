@@ -207,15 +207,20 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
 def parse_vertuo_wifi_status(data: bytes) -> dict[str, str | None]:
     """Parse the Vertuo WiFi current setup characteristic.
 
-    Source: CharacWifiCurrentSetup.updateValues in the APK
-      bytes 0-31: SSID, null terminated
-      byte 32:    additional info, an error or progress code
-      byte 33:    WiFi status
+    Source: CharacWifiCurrentSetup in the APK, a 60-byte record
+      bytes 0-31:  SSID, null terminated
+      byte 32:     additional info, an error or progress code
+      byte 33:     WiFi status
+      bytes 34-53: IPv4, subnet, gateway, DNS1, DNS2, four bytes each
+      bytes 54-59: BSSID
 
     The status the app shows is not simply byte 33. When byte 32 is non-zero it
     wins, which is how a code like wrong_password or no_internet reaches the
-    user instead of a bare not_connected. The IP fields the model declares are
-    never filled in from this characteristic, so they are not decoded here.
+    user instead of a bare not_connected.
+
+    Only the first 34 bytes are needed here. updateValues decodes those, and a
+    separate method fills the address block, which is easy to miss and easy to
+    conclude wrongly that the machine never sends it.
     """
     if len(data) < 34:
         raise ValueError(f"Vertuo WiFi status requires >= 34 bytes, got {len(data)}")

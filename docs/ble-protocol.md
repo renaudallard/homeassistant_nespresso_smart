@@ -429,11 +429,19 @@ which is the only way to see it on a machine that refuses every read.
 
 Source: `CharacWifiCurrentSetup.updateValues`
 
+A 60-byte record.
+
 | Offset | Size | Field |
 |--------|------|-------|
 | 0 | 32 | SSID, null terminated |
 | 32 | 1 | additional info |
 | 33 | 1 | WiFi status |
+| 34 | 4 | IPv4 address |
+| 38 | 4 | subnet mask |
+| 42 | 4 | gateway |
+| 46 | 4 | DNS 1 |
+| 50 | 4 | DNS 2 |
+| 54 | 6 | BSSID |
 
 The status the app displays is not simply byte 33. When byte 32 is non-zero it
 takes precedence, which is how a specific reason such as `wrong_password` or
@@ -445,8 +453,10 @@ if (wifiAdditionalInfo > 0) status = wifiAdditionalInfo;
 wifiStatus = WifiStatusEnum.valueOf(status);
 ```
 
-The IP, subnet, gateway, DNS and BSSID fields the model declares are never
-populated from this characteristic, so there is nothing to decode past byte 33.
+`updateValues` decodes only the first 34 bytes. The address block is filled by
+a separate method on the same class, `b([B)V`, which is easy to overlook: read
+`updateValues` alone and you would conclude the machine never sends an address.
+The integration decodes only the first 34 bytes, which is all the status needs.
 
 ### Auth Key Format
 
