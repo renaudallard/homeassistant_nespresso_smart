@@ -291,6 +291,72 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             finally:
                 await client.disconnect()
 
+    async def _async_connected(self) -> BleakClient:
+        """Connect and authenticate, for a one-shot operation.
+
+        The caller owns the client and must disconnect it. Kept separate from
+        the poll path, which manages its own connection lifetime.
+        """
+        device = bluetooth.async_ble_device_from_address(
+            self.hass, self.address, connectable=True
+        )
+        if device is None:
+            raise BleakError("Machine not found")
+        client = await establish_connection(
+            BleakClient, device, self.address, max_attempts=2
+        )
+        try:
+            if self.auth_key:
+                from .ble.protocol import _authenticate
+
+                if not await _authenticate(
+                    client, self.auth_key, self.family, self.send_tx_level
+                ):
+                    raise BleakError("Machine did not accept the auth token")
+        except Exception:
+            await client.disconnect()
+            raise
+        return client
+
+    async def async_scan_wifi(self) -> list[dict[str, object]]:
+        """Return the WiFi networks the machine can see."""
+        if self.family is not MachineFamily.VERTUO_NEXT:
+            raise BleakError("WiFi setup is only supported on Vertuo machines")
+        from .ble.protocol import async_scan_wifi
+
+        async with self._ble_lock:
+            client = await self._async_connected()
+            try:
+                return await async_scan_wifi(client)
+            finally:
+                await client.disconnect()
+
+    async def async_configure_wifi(
+        self,
+        market: str,
+        ssid: str,
+        password: str,
+        security_type: int,
+        connection_index: int,
+    ) -> None:
+        """Put the machine on a WiFi network, then refresh so the status shows."""
+        if self.family is not MachineFamily.VERTUO_NEXT:
+            raise BleakError("WiFi setup is only supported on Vertuo machines")
+        from .ble.protocol import async_configure_wifi
+
+        async with self._ble_lock:
+            client = await self._async_connected()
+            try:
+                await async_configure_wifi(
+                    client, market, ssid, password, security_type, connection_index
+                )
+            finally:
+                await client.disconnect()
+
+        # The machine takes a while to join, so the first refresh usually shows
+        # connecting rather than connected. The poll cycle catches up.
+        await self.async_request_refresh()
+
     async def async_write_char(self, char_uuid: str, data: bytes) -> None:
         """Write to a BLE characteristic with proper locking and auth.
 

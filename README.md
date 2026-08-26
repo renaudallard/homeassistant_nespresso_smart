@@ -324,6 +324,49 @@ The Vertuo family also gets a **WiFi status** and **WiFi network** sensor, both 
 
 Nespresso quotes 300 capsules or 3 months for the Vertuo range, whichever comes first. Both limits are configurable because hard water needs more frequent descaling. Brews are counted from machine state transitions, so they are only counted while Home Assistant is running.
 
+## WiFi setup
+
+Vertuo machines can be put on WiFi over Bluetooth, which is what the official app
+does during onboarding. Two actions do it:
+
+- `nespresso.scan_wifi` returns the networks the machine can see. The machine
+  does the scanning, so the list is what the machine can reach, not what Home
+  Assistant can
+- `nespresso.configure_wifi` joins one of them
+
+```yaml
+action: nespresso.configure_wifi
+data:
+  config_entry_id: <your entry>
+  market: GB
+  ssid: MyNetwork
+  password: hunter2
+  security: wpa2
+```
+
+`market` is a two-letter country code and is not optional in practice. The
+machine reports `market_not_set` and never reaches Nespresso's servers without
+it, so it is written before the credentials, in the order the app uses.
+
+Watch the **WiFi status** sensor for the outcome. `connecting` becomes
+`connected` on success, and the failure states are specific: `wrong_password`,
+`no_internet`, `connection_failed`, `server_unreachable`.
+
+Two things worth knowing before using this:
+
+- **The passphrase is sent to the machine in clear.** That is how the official
+  app sends it, and the characteristic has no encrypted alternative. It goes over
+  an encrypted BLE link when the machine asks for one, which the Vertuo family
+  does, but it is stored and transmitted as plain text either way
+- Only DHCP is supported. The static address fields exist in the protocol and are
+  written with their octets reversed, which is not a detail worth risking
+  somebody's network configuration on until someone needs it
+
+Putting a machine on WiFi does not give Home Assistant anything new by itself.
+Nespresso's cloud maintenance functions, descaling among them, need the machine
+registered to a Nespresso account through their app as well. See
+[Limitations](#limitations).
+
 ## Limitations
 
 - **Vertuo brewing**: Experimental. The brew command was captured from Vertuo Next models and may not work on all machines. The Vertuo Pop does not support BLE brewing at all (the Nespresso app itself does not offer a brew button for it), so no brew button is created for it. Custom recipes with exact ml volumes are not yet supported.

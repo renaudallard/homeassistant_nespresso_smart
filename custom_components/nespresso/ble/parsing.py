@@ -36,6 +36,7 @@ from ..const import (
     BARISTA_STATE_NAMES,
     CMID_TYPE_NAMES,
     VERTUO_STATE_NAMES,
+    WIFI_SECURITY_NAMES,
     WIFI_STATUS_NAMES,
 )
 
@@ -232,6 +233,43 @@ def parse_vertuo_wifi_status(data: bytes) -> dict[str, str | None]:
     return {
         "wifi_status": WIFI_STATUS_NAMES.get(status, "unknown"),
         "wifi_ssid": ssid or None,
+    }
+
+
+# A scan result whose security byte is this marks the end of the list, not a
+# network. 0xF0 is a genuine network of unknown security and must not be
+# confused with it.
+WIFI_SCAN_END = 0xFF
+
+# Longest scan the integration will walk. The machine ends the list itself, so
+# this only bounds a machine that never does.
+WIFI_SCAN_MAX_ENTRIES = 30
+
+
+def parse_wifi_scan_entry(data: bytes) -> dict[str, object] | None:
+    """Parse one CHAR_WIFISCANRESULT entry, or None at the end of the list.
+
+    Source: CharacWifiScanResult in the APK, 42 bytes
+      byte 0:      security type
+      bytes 1-32:  SSID, null terminated
+      bytes 33-34: signal strength, big endian signed
+      byte 35:     connection index, echoed back when connecting
+      bytes 36-41: BSSID
+    """
+    if len(data) < 36:
+        raise ValueError(f"WiFi scan entry requires >= 36 bytes, got {len(data)}")
+
+    security = data[0]
+    ssid = data[1:33].split(b"\x00", 1)[0].decode("utf-8", errors="replace")
+    if security == WIFI_SCAN_END and not ssid:
+        return None
+
+    return {
+        "ssid": ssid,
+        "security": WIFI_SECURITY_NAMES.get(security, "unknown"),
+        "security_type": security,
+        "signal_strength": int.from_bytes(data[33:35], "big", signed=True),
+        "connection_index": data[35],
     }
 
 

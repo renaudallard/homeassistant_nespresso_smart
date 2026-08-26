@@ -71,6 +71,9 @@ from ..const import (
     VERTUO_CHAR_STATUS,
     VERTUO_CHAR_USER_SETTINGS,
     VERTUO_CHAR_WIFI_CURRENT,
+    VERTUO_CHAR_WIFI_SCAN_RESULT,
+    VERTUO_CHAR_WIFI_SCAN_SELECT,
+    VERTUO_CHAR_WIFI_SETUP,
     VMINI_CHAR_FOTA_STATUS,
     VMINI_CHAR_FW_REV,
     VMINI_CHAR_MACHINE_TOKEN,
@@ -85,6 +88,7 @@ from ..const import (
     MachineFamily,
 )
 from ..models import RawMachineData
+from .parsing import WIFI_SCAN_MAX_ENTRIES, parse_wifi_scan_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -406,6 +410,142 @@ async def _authenticate(
 
     _LOGGER.debug("Auth succeeded for %s", address)
     return True
+
+
+# CHAR_WIFI_SETUP is one fixed 119-byte frame, from CharacWifiSetup.setValue.
+#
+#   0        setup type, DHCP or static
+#   1..32    SSID
+#   33       security type
+#   34..97   passphrase, in clear
+#   98..117  IPv4, subnet, gateway, DNS1, DNS2, four bytes each
+#   118      connection index
+#
+# Only DHCP is offered here. The five address fields are written with their
+# octets reversed, buf[base + i] = octet[3 - i], which is a detail worth
+# nobody's static configuration going wrong over: leave them zero and let the
+# machine ask a DHCP server, which is what the app does for DHCP too.
+WIFI_SETUP_FRAME_LEN = 119
+WIFI_SETUP_DHCP = 0
+WIFI_SSID_OFFSET = 1
+WIFI_SSID_LEN = 32
+WIFI_SECURITY_OFFSET = 33
+WIFI_KEY_OFFSET = 34
+WIFI_KEY_LEN = 64
+WIFI_CONNECTION_INDEX_OFFSET = 118
+
+# Written to byte 118 when the network was typed in rather than picked from a
+# scan result. The app echoes back the index the scan gave it.
+WIFI_CONNECTION_INDEX_MANUAL = 0xFF
+
+# The machine settles between a scan index write and the matching result. The
+# app waits for a notification and sleeps 100 ms per entry; this reads the
+# characteristic instead, so the same pause is what keeps a read from returning
+# the previous entry.
+WIFI_SCAN_SETTLE = 0.2
+
+
+def build_wifi_setup_frame(
+    ssid: str,
+    password: str,
+    security_type: int,
+    connection_index: int = WIFI_CONNECTION_INDEX_MANUAL,
+) -> bytes:
+    """Build the CHAR_WIFI_SETUP payload for a DHCP network.
+
+    Lengths are checked rather than truncated. The APK copies both strings in
+    with a bare System.arraycopy and no clamp, so an over-long SSID would run
+    into the security type byte and an over-long passphrase into the address
+    block. Refusing is the only safe answer: this write reconfigures a real
+    machine's network.
+    """
+    ssid_bytes = ssid.encode("utf-8")
+    key_bytes = password.encode("utf-8")
+    if not 1 <= len(ssid_bytes) <= WIFI_SSID_LEN:
+        raise ValueError(
+            f"SSID must be 1 to {WIFI_SSID_LEN} bytes, got {len(ssid_bytes)}"
+        )
+    if len(key_bytes) > WIFI_KEY_LEN:
+        raise ValueError(
+            f"Passphrase must be at most {WIFI_KEY_LEN} bytes, got {len(key_bytes)}"
+        )
+    if not 0 <= connection_index <= 0xFF:
+        raise ValueError(f"Connection index out of range: {connection_index}")
+
+    frame = bytearray(WIFI_SETUP_FRAME_LEN)
+    frame[0] = WIFI_SETUP_DHCP
+    frame[WIFI_SSID_OFFSET : WIFI_SSID_OFFSET + len(ssid_bytes)] = ssid_bytes
+    frame[WIFI_SECURITY_OFFSET] = security_type
+    frame[WIFI_KEY_OFFSET : WIFI_KEY_OFFSET + len(key_bytes)] = key_bytes
+    frame[WIFI_CONNECTION_INDEX_OFFSET] = connection_index
+    return bytes(frame)
+
+
+async def async_scan_wifi(client: BleakClient) -> list[dict[str, object]]:
+    """Ask the machine which networks it can see.
+
+    Writing an index to the selection characteristic is what starts the scan,
+    there is no separate start command. The machine ends the list itself with a
+    sentinel entry.
+
+    The app stops only once it has collected five networks AND seen the
+    sentinel, so a machine reporting fewer than five never lets it out of the
+    loop. Stop at the sentinel.
+    """
+    networks: list[dict[str, object]] = []
+    for index in range(WIFI_SCAN_MAX_ENTRIES):
+        await _write(
+            client,
+            VERTUO_CHAR_WIFI_SCAN_SELECT,
+            index.to_bytes(2, "little"),
+            response=True,
+        )
+        await asyncio.sleep(WIFI_SCAN_SETTLE)
+        raw = await _read(client, VERTUO_CHAR_WIFI_SCAN_RESULT)
+        entry = parse_wifi_scan_entry(bytes(raw))
+        if entry is None:
+            break
+        _LOGGER.debug("WiFi scan %d: %s", index, entry)
+        networks.append(entry)
+    else:
+        _LOGGER.warning(
+            "%s listed %d networks without ending the list, stopping there",
+            client.address,
+            len(networks),
+        )
+    return networks
+
+
+async def async_configure_wifi(
+    client: BleakClient,
+    market: str,
+    ssid: str,
+    password: str,
+    security_type: int,
+    connection_index: int = WIFI_CONNECTION_INDEX_MANUAL,
+) -> None:
+    """Put the machine on a WiFi network.
+
+    The market code goes first, which is the order the app uses and which the
+    machine's own MQTT_MARKET_NOT_SET status explains: without it the machine
+    joins the network and then cannot reach Nespresso at all.
+
+    The passphrase travels in clear, exactly as the official app sends it.
+    """
+    code = market.strip().upper()
+    if len(code) != 2 or not code.isascii() or not code.isalpha():
+        raise ValueError(f"Market must be two ASCII letters, got {market!r}")
+
+    frame = build_wifi_setup_frame(ssid, password, security_type, connection_index)
+
+    await _write(client, VERTUO_CHAR_IOT_MARKET, code.encode("ascii"), response=True)
+    _LOGGER.debug("Market code %s written to %s", code, client.address)
+    await _write(client, VERTUO_CHAR_WIFI_SETUP, frame, response=True)
+    _LOGGER.info(
+        "WiFi credentials for %s written to %s, watch the WiFi status sensor",
+        ssid,
+        client.address,
+    )
 
 
 def _describe_cmid_type(state: int | None) -> str:

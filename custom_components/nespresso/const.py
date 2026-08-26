@@ -100,6 +100,28 @@ VERTUO_CHAR_IOT_MARKET: Final = "06aa3a79-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_MACHINE_PARAMS: Final = "06aa3a22-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_USER_SETTINGS: Final = "06aa3a44-f22a-11e3-9daa-0002a5d5c51b"
 VERTUO_CHAR_WIFI_CURRENT: Final = "06aa3a29-f22a-11e3-9daa-0002a5d5c51b"
+VERTUO_CHAR_WIFI_SETUP: Final = "06aa3a19-f22a-11e3-9daa-0002a5d5c51b"
+VERTUO_CHAR_WIFI_SCAN_SELECT: Final = "06aa3a39-f22a-11e3-9daa-0002a5d5c51b"
+VERTUO_CHAR_WIFI_SCAN_RESULT: Final = "06aa3a49-f22a-11e3-9daa-0002a5d5c51b"
+
+# ---------------------------------------------------------------------------
+# WiFi security types accepted by CHAR_WIFI_SETUP
+# Source: CWifiSetup.WifiSecurityTypeEnum. Note there is no value 4.
+# ---------------------------------------------------------------------------
+
+WIFI_SECURITY_TYPES: Final[dict[str, int]] = {
+    "open": 0,
+    "wep": 1,
+    "wpa": 2,
+    "wpa2": 3,
+    "wpa_enterprise": 5,
+    "wpa3": 6,
+    "wpa2_wpa3": 7,
+}
+
+WIFI_SECURITY_NAMES: Final[dict[int, str]] = {
+    value: name for name, value in WIFI_SECURITY_TYPES.items()
+}
 
 # ---------------------------------------------------------------------------
 # WiFi status reported by CHAR_WIFI_CURRENT_SETUP

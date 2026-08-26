@@ -98,5 +98,47 @@
         }
       }
     }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Rechercher les réseaux WiFi",
+      "description": "Demander à la machine quels réseaux WiFi elle voit. C'est la machine qui effectue la recherche, pas Home Assistant.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Machine",
+          "description": "La machine Nespresso concernée."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Configurer le WiFi",
+      "description": "Connecter la machine à un réseau WiFi. La phrase secrète est transmise en clair, exactement comme le fait l'application Nespresso officielle. Le résultat apparaît sur le capteur d'état WiFi.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Machine",
+          "description": "La machine Nespresso concernée."
+        },
+        "market": {
+          "name": "Marché",
+          "description": "Code pays à deux lettres, par exemple FR. Sans lui la machine n'atteindra pas les serveurs Nespresso."
+        },
+        "ssid": {
+          "name": "Nom du réseau",
+          "description": "Le SSID à rejoindre, 32 octets au maximum."
+        },
+        "password": {
+          "name": "Phrase secrète",
+          "description": "64 octets au maximum. Laisser vide pour un réseau ouvert."
+        },
+        "security": {
+          "name": "Sécurité",
+          "description": "Le type de sécurité du réseau."
+        },
+        "connection_index": {
+          "name": "Index de connexion",
+          "description": "Reprendre l'index d'un résultat de recherche. Laisser à 255 en saisie manuelle."
+        }
+      }
+    }
   }
 }

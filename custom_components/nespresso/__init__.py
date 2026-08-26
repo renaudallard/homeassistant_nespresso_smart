@@ -27,11 +27,19 @@ from __future__ import annotations
 
 import logging
 
+import voluptuous as vol
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 
 from .ble.parsing import nespresso_manufacturer_data
@@ -49,6 +57,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MACHINE_FAMILY_NAMES,
+    WIFI_SECURITY_TYPES,
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator, counter_store
@@ -63,6 +72,68 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.EVENT,
 ]
+
+
+SERVICE_SCAN_WIFI = "scan_wifi"
+SERVICE_CONFIGURE_WIFI = "configure_wifi"
+
+ATTR_ENTRY_ID = "config_entry_id"
+
+_SCAN_WIFI_SCHEMA = vol.Schema({vol.Required(ATTR_ENTRY_ID): cv.string})
+
+_CONFIGURE_WIFI_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTRY_ID): cv.string,
+        vol.Required("market"): vol.All(cv.string, vol.Length(min=2, max=2)),
+        vol.Required("ssid"): cv.string,
+        vol.Optional("password", default=""): cv.string,
+        vol.Optional("security", default="wpa2"): vol.In(sorted(WIFI_SECURITY_TYPES)),
+        vol.Optional("connection_index", default=255): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=255)
+        ),
+    }
+)
+
+
+def _coordinator(hass: HomeAssistant, entry_id: str) -> NespressoCoordinator:
+    """Look up the coordinator a service call is aimed at."""
+    data = hass.data.get(DOMAIN, {}).get(entry_id)
+    if data is None:
+        raise ValueError(f"No Nespresso machine configured under {entry_id}")
+    coordinator: NespressoCoordinator = data["coordinator"]
+    return coordinator
+
+
+async def _async_register_services(hass: HomeAssistant) -> None:
+    """Register the WiFi services once, not per config entry."""
+    if hass.services.has_service(DOMAIN, SERVICE_SCAN_WIFI):
+        return
+
+    async def _scan(call: ServiceCall) -> ServiceResponse:
+        coordinator = _coordinator(hass, call.data[ATTR_ENTRY_ID])
+        networks = await coordinator.async_scan_wifi()
+        return {"networks": networks}
+
+    async def _configure(call: ServiceCall) -> None:
+        coordinator = _coordinator(hass, call.data[ATTR_ENTRY_ID])
+        await coordinator.async_configure_wifi(
+            call.data["market"],
+            call.data["ssid"],
+            call.data["password"],
+            WIFI_SECURITY_TYPES[call.data["security"]],
+            call.data["connection_index"],
+        )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SCAN_WIFI,
+        _scan,
+        schema=_SCAN_WIFI_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_CONFIGURE_WIFI, _configure, schema=_CONFIGURE_WIFI_SCHEMA
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -170,6 +241,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             bluetooth.BluetoothScanningMode.PASSIVE,
         )
     )
+
+    await _async_register_services(hass)
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

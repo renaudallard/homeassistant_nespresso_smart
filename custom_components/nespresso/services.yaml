@@ -1,0 +1,52 @@
+scan_wifi:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: nespresso
+
+configure_wifi:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: nespresso
+    market:
+      required: true
+      example: GB
+      selector:
+        text:
+    ssid:
+      required: true
+      example: MyNetwork
+      selector:
+        text:
+    password:
+      required: false
+      example: hunter2
+      selector:
+        text:
+          type: password
+    security:
+      required: false
+      default: wpa2
+      selector:
+        select:
+          options:
+            - open
+            - wep
+            - wpa
+            - wpa2
+            - wpa_enterprise
+            - wpa3
+            - wpa2_wpa3
+    connection_index:
+      required: false
+      default: 255
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
