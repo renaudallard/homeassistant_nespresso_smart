@@ -276,7 +276,7 @@ If there is a used capsule in the machine, a notification asks you to replace it
 
 Multiple presses of the Brew button are debounced. Only one brew command is sent.
 
-The brew command is sent on the same BLE connection used for status polling (required by the machine). If the simple command gets no response, the integration falls back to the BST (Byte Sequence Transfer) recipe protocol used by the Nespresso app.
+The brew command is sent on the same BLE connection used for status polling (required by the machine). It is known to work on a Vertuo Next only. A Vertuo Pop and a Vertuo Creatista both accept the write and do nothing, and the official app has no Bluetooth brew command for any model, so there is nothing else to send.
 
 **Note:** BLE brewing is experimental. It was reverse-engineered from BLE captures on Vertuo Next models and may not work on all machines.
 

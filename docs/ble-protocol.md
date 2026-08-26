@@ -239,6 +239,18 @@ Offset  Size  Field           Range
 
 ## Byte Sequence Transfer (BST) Protocol
 
+**Nothing in the app uses this.** `ByteSequenceTransfer` and `BSTProtocol` are
+referenced by 15 files and every one of them is inside `com/sdataway/ble2`. No
+machine SDK drives them: `VertuoNextDevice` has no recipe or BST method at all,
+and `VertuoNextMachine`'s only `BSTProtocol` reference borrows a constant as a
+magic byte. It is dead code in v1.2.5, kept here because the format is
+documented and may become useful, not because it was ever observed on the wire.
+
+The integration had a BST fallback for Vertuo brewing. It was removed once a
+Creatista proved the point: `CMD_INIT` gets no `RSP_INIT`, which is what a
+machine that does not implement BST on the command characteristic would do.
+
+
 Source: `com.sdataway.ble2.BSTProtocol`
 
 Used for transferring large data payloads (recipes, firmware) that exceed the 20-byte BLE MTU.
@@ -647,7 +659,7 @@ Source: `com.sdataway.vertuonext.machine.machine.actions.model.VertuoNextRecipeT
 
 Source: `com.sdataway.vertuonext.machine.machine.actions.model.VertuoNextSendRecipeOptions`
 
-The APK supports a more advanced recipe mechanism using BST (Byte Sequence Transfer)
+The APK contains a recipe mechanism using BST (Byte Sequence Transfer)
 protocol for custom recipes with exact volumes:
 
 ```

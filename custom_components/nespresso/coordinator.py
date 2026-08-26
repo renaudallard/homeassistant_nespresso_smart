@@ -407,18 +407,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         rsp_uuid: str,
         data: bytes,
         retries: int = 3,
-        keep_open: bool = False,
     ) -> bytes | None:
         """Send a command and wait for the response notification.
 
         Reuses the persistent connection if available (same session as
         the poll that authenticated and read status). Falls back to a
         new connection otherwise.
-
-        With keep_open, a connection opened here is handed to self._client
-        rather than closed, so a caller with a fallback to try can stay on the
-        same session. It then owns it, and must call
-        async_release_kept_connection.
         """
         async with self._ble_lock:
             own_client = False
@@ -493,11 +487,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 return bytes(response) if response is not None else None
             finally:
                 if own_client:
-                    if keep_open:
-                        self._client = client
-                        self._keep_connection = True
-                    else:
-                        await client.disconnect()
+                    await client.disconnect()
 
     async def async_release_kept_connection(self) -> None:
         """Release the temporary connection kept for brew."""
@@ -510,18 +500,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     await client.disconnect()
                 except Exception as err:  # noqa: BLE001
                     _LOGGER.debug("Error disconnecting BLE client: %s", err)
-
-    async def async_bst_send(self, cmd_uuid: str, rsp_uuid: str, data: bytes) -> bool:
-        """Send data via BST protocol on the kept connection."""
-        async with self._ble_lock:
-            client = self._client
-            if client is None or not client.is_connected:
-                _LOGGER.error("No persistent connection for BST send")
-                return False
-
-            from .ble.bst import bst_send
-
-            return await bst_send(client, cmd_uuid, rsp_uuid, data)
 
     async def async_load_counters(
         self, descaling_capsules: int, descaling_days: int
