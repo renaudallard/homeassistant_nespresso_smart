@@ -30,7 +30,10 @@ The Nespresso Smart app uses OAuth2 with PKCE (Proof Key for Code Exchange) for 
 6. App calls requestAccessToken(authorization_code, code_verifier)
    -> Returns: AccessToken { access_token, refresh_token }
 
-7. access_token is used as Bearer token in all subsequent API calls
+7. access_token authorises subsequent calls, but NOT as a Bearer header.
+   The IDP token response sets an `access-token` cookie, and the ECAPI calls
+   are authorised by replaying that cookie from a shared jar. The only place a
+   `Bearer` header appears is step 5, the authorization-code request.
 ```
 
 ### Token Refresh Flow
@@ -93,11 +96,26 @@ This follows RFC 7636 (PKCE) for preventing authorization code interception atta
 ### Token Lifecycle
 
 1. **Acquisition**: Obtained through login or registration flow
-2. **Usage**: Attached as `Authorization: Bearer <access_token>` header
+2. **Usage**: Replayed as a `Cookie: access-token=<access_token>` on ECAPI
+   calls, not as an `Authorization: Bearer` header. IDP and ECAPI share a host,
+   so one cookie jar covers both. `Bearer` is used only on the intermediate
+   authorization-code call inside the IDP flow itself
 3. **Refresh**: When access_token expires, refresh_token obtains new pair
 4. **Revocation**: On logout, refresh_token is revoked server-side
 
 ---
+
+### Bot protection
+
+The login endpoint is behind Akamai Bot Manager. `AkamaiInterceptor` attaches an
+`X-acf-sensor-data` header produced by the obfuscated Cyberfend SDK
+(`com.akamai.botman.CYFMonitor`) to exactly six endpoints: the password token
+call, forgot-password, web-accounts, both progressive-registration variants and
+account link.
+
+The token exchange and the refresh call are **not** in that list. So a client
+outside the app cannot be assumed to pass the initial password login, but a
+refresh token, once held, can be renewed without any Akamai involvement.
 
 ## Cookie Management
 
