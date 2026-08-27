@@ -149,24 +149,46 @@ The one time that was actually tested, on a Vertuo Creatista, the reset cleared
 the pairing token and left the link key alone: the next connection answered with
 GATT error 15, encrypted, and onboarded from `NONE` as it should.
 
-If a machine does come back from a reset without its key, the proxy sorts itself
-out. It starts encryption with the key it stored, the machine refuses, and the
-ESP32 erases that bond from its own flash before it reports the failure, which
-arrives as error 97. The connection after that pairs from scratch. So there is
-normally nothing to clear by hand, and clearing it at that point only throws
-away a bond the proxy has already deleted.
+A machine can also lose its key without being reset. Taking a firmware update
+over WiFi is one way, since the machine can come back without its bond table
+while keeping the pairing token, which lives in a different store.
 
-If encryption still fails immediately after an error 97, reboot the proxy. The
-flash copy is already gone by then and a reboot drops the stale copy the ESP32
-is still holding in memory.
+When that happens the proxy cannot recover on its own. ESPHome pairs with
+`esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT)`, and of the three security
+actions only the `NO_MITM` and `MITM` variants carry an "else re-pair with the
+remote device" clause. So the proxy presents the key it stored, the controller
+fails to turn encryption on, and the failure arrives as error 97 with nothing
+bringing it back to a fresh exchange.
 
-Only one shape genuinely gets stuck: a machine that answers by dropping the link
-rather than refusing it, because then the proxy is never told its key was wrong
-and keeps reusing it. That reads as a bare `TimeoutError` with no error number,
-on every poll, and it survives a proxy reboot. No machine has been seen doing
-this. If yours does, erasing the proxy's bond is the only fix, and it is a last
-resort: a factory reset of the proxy drops the bonds for every device it serves,
-and reflashing it over serial takes its WiFi credentials too.
+The integration handles that. On error 97 it asks the proxy once to remove its
+bond for that machine, which is `esp_ble_remove_bond_device` behind ESPHome's
+unpair request:
+
+```
+Cleared the Bluetooth proxy's stored key for AA:BB:CC:DD:EE:FF, which the
+machine no longer accepts. The connection drops with it and the next poll
+pairs from scratch.
+```
+
+The connection really does drop, by design: while the link is up Bluedroid
+deletes nothing, it marks the device and takes the link down first, and the
+removal finishes once the link is gone. The next poll reconnects with no stored
+key and runs a full pairing exchange. Nothing on the machine is touched, only
+the key held by the proxy.
+
+Do not reboot the proxy to fix this. A reboot clears strictly less than the
+failure has already cleared: on any reason other than 80, 81 or 82, ESP-IDF's
+`btc_dm_ble_auth_cmpl_evt` logs `remove bond in flash`, calls
+`btc_dm_remove_ble_bonding_keys()` and commits to NVS, while `btm_sec.c` clears
+the in-memory key on the same failure.
+
+Removing the bond by hand is a last resort and rarely the right tool: a factory
+reset of the proxy drops the bonds for every device it serves, and reflashing it
+over serial takes its WiFi credentials too.
+
+ESPHome 2026.8.0 or newer is needed for the automatic clearing. Up to 2026.7.4
+the firmware answered an unpair request with the wrong message type, so the
+request expires instead of being refused, and the log says so at debug level.
 
 ### Through a local Bluetooth adapter
 
@@ -206,10 +228,12 @@ Expected result: `Pairing successful`.
 machine has neither a display nor a keypad, so it rejects the pairing with
 `org.bluez.Error.ConnectionAttemptFailed`.
 
-**The bond is yours to manage.** The integration never removes it. A stale bond
-left over from a factory-reset machine blocks reconnection and shows up as
-`Software caused connection abort`, and clearing it is a manual step, see
-[Troubleshooting](#software-caused-connection-abort).
+**This bond is yours to manage.** The integration never removes a bond held by a
+local adapter, only one held by a proxy, and only on error 97. A pairing on the
+host is one you set up by hand and may share with other tools, so nothing here
+deletes it. A stale bond left over from a factory-reset machine blocks
+reconnection and shows up as `Software caused connection abort`, and clearing it
+is a manual step, see [Troubleshooting](#software-caused-connection-abort).
 
 ### Ordering that avoids trouble
 
