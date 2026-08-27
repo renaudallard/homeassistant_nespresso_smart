@@ -144,9 +144,29 @@ a factory reset of the proxy erases it, and a second proxy pairs on its own the
 first time it is used. Only passkey-free pairing can complete over a proxy,
 which is what these machines use.
 
-If the machine was factory reset while the proxy still holds its old key, the
-proxy keeps reusing that key and the link never gets encrypted again. Factory
-reset or reflash the proxy to clear it.
+A factory reset of the machine does not necessarily cost the proxy its bond.
+The one time that was actually tested, on a Vertuo Creatista, the reset cleared
+the pairing token and left the link key alone: the next connection answered with
+GATT error 15, encrypted, and onboarded from `NONE` as it should.
+
+If a machine does come back from a reset without its key, the proxy sorts itself
+out. It starts encryption with the key it stored, the machine refuses, and the
+ESP32 erases that bond from its own flash before it reports the failure, which
+arrives as error 97. The connection after that pairs from scratch. So there is
+normally nothing to clear by hand, and clearing it at that point only throws
+away a bond the proxy has already deleted.
+
+If encryption still fails immediately after an error 97, reboot the proxy. The
+flash copy is already gone by then and a reboot drops the stale copy the ESP32
+is still holding in memory.
+
+Only one shape genuinely gets stuck: a machine that answers by dropping the link
+rather than refusing it, because then the proxy is never told its key was wrong
+and keeps reusing it. That reads as a bare `TimeoutError` with no error number,
+on every poll, and it survives a proxy reboot. No machine has been seen doing
+this. If yours does, erasing the proxy's bond is the only fix, and it is a last
+resort: a factory reset of the proxy drops the bonds for every device it serves,
+and reflashing it over serial takes its WiFi credentials too.
 
 ### Through a local Bluetooth adapter
 
