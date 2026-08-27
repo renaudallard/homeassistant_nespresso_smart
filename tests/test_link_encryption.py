@@ -35,6 +35,17 @@ import pytest
 from custom_components.nespresso.ble import protocol
 
 
+def test_pair_budget_outlasts_the_transport() -> None:
+    """We must not be the layer that gives up first.
+
+    aioesphomeapi arms a single 30 second deadline for the pairing request and
+    never re-arms it. Cancelling before that expires means the log gets a bare
+    TimeoutError instead of the reason, which is what left an entire issue's
+    worth of failures with no code attached to any of them.
+    """
+    assert protocol.BLE_PAIR_TIMEOUT > 30.0
+
+
 class FakeClient:
     """Enough of a BleakClient for the link handling."""
 

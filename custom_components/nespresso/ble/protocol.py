@@ -131,10 +131,40 @@ def generate_auth_key() -> str:
 # coordinator lock.
 BLE_OP_TIMEOUT = 10.0
 
-# A pairing request needs its own budget. The ESPHome API waits 30 seconds for
-# the proxy to answer, so a machine that never finishes the exchange would
-# stall a whole poll while the coordinator lock is held.
-BLE_PAIR_TIMEOUT = 10.0
+# A pairing request needs its own budget, and it is not the same one a GATT
+# operation needs.
+#
+# 10 seconds was fitted to the wrong procedure. All 38 timings we have came
+# from a machine the proxy already held a key for, where the request is one
+# link layer round trip to switch encryption on: on a Creatista those ran 0.20
+# to 0.69 seconds. With no stored key the same call runs a full SMP exchange
+# instead, and we have never measured one of those.
+#
+# 35 seconds puts us behind the one budget below us that is genuinely fixed, so
+# that layer expires first and gets to say why. aioesphomeapi arms a single
+# 30 second deadline when it sends the request and never re-arms it
+# (DEFAULT_BLE_TIMEOUT), and bleak-esphome turns the expiry into a TimeoutError
+# carrying the message instead of a bare one.
+#
+# The ESP32's own SMP timer is not a second bound to clear. SMP_WAIT_FOR_RSP_TOUT
+# is also 30 seconds, but it is an inactivity timer, stopped and restarted on
+# every SMP packet sent and received, so a machine that answers each one slowly
+# can stretch the exchange well past it. It only runs at all when there is no
+# stored key, since the stored-key branch starts encryption from the LTK
+# without sending SMP at all.
+#
+# At 10 seconds we cancelled first every time, so a machine that could not
+# finish the exchange produced a bare TimeoutError and the reason never reached
+# the log. That cost a reporter 92 failures with no code attached to any of
+# them.
+#
+# The cost is real and is not yet bounded. _ble_lock is held across a whole
+# poll and the brew and WiFi services queue behind it, and a failing poll pairs
+# twice, once per connection. That is 70 seconds against a 60 second scan
+# interval, and the first refresh runs inside async_setup_entry, so a machine
+# stuck here is slow to delete. Pairing that keeps failing has to back off, and
+# until it does this trades responsiveness for a diagnosable log line.
+BLE_PAIR_TIMEOUT = 35.0
 
 # ATT errors a machine returns when it will not answer over a plain link. It
 # sends 5, insufficient authentication, while it holds no key for us, and 15,
