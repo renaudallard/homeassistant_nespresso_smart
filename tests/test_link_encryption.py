@@ -62,9 +62,11 @@ class FakeClient:
 def _clean_state():
     protocol._NEEDS_ENCRYPTION.clear()
     protocol._ELEVATED.clear()
+    protocol._PAIR_FAILURES.clear()
     yield
     protocol._NEEDS_ENCRYPTION.clear()
     protocol._ELEVATED.clear()
+    protocol._PAIR_FAILURES.clear()
 
 
 class TestPrepareLink:
@@ -126,3 +128,84 @@ class TestElevateRecordsTheAddress:
         assert asyncio.run(protocol._elevate(client, self._err(2))) is False
         assert client.address not in protocol._NEEDS_ENCRYPTION
         assert client.pair_calls == 0
+
+
+class FailingClient(FakeClient):
+    """A machine that will not pair, however often it is asked."""
+
+    def __init__(self, address: str = "AA:BB:CC:DD:EE:FF", error: str = "") -> None:
+        super().__init__(address)
+        self.error = error or "Pairing failed due to error: 97"
+
+    async def pair(self) -> bool:
+        self.pair_calls += 1
+        raise protocol.BleakError(self.error)
+
+
+def _ask(address: str, error: str = "") -> FailingClient:
+    """One connection's worth of asking, since each one brings a new client."""
+    client = FailingClient(address, error)
+    asyncio.run(protocol._pair(client))
+    return client
+
+
+class TestPairBackoff:
+    def test_the_first_failures_are_all_attempted(self) -> None:
+        """A transient refusal must not cost the machine its next few tries."""
+        attempts = sum(_ask("AA:BB:CC:DD:EE:FF").pair_calls for _ in range(4))
+        assert attempts == 4
+
+    def test_it_goes_quiet_after_the_threshold(self) -> None:
+        for _ in range(protocol.PAIR_QUIET_AFTER):
+            _ask("AA:BB:CC:DD:EE:FF")
+        assert _ask("AA:BB:CC:DD:EE:FF").pair_calls == 0
+
+    def test_it_never_gives_up(self) -> None:
+        """A machine can be reset and re-onboarded at any moment."""
+        asked = [bool(_ask("AA:BB:CC:DD:EE:FF").pair_calls) for _ in range(60)]
+        assert asked.count(True) > 1
+        assert True in asked[protocol.PAIR_RETRY_EVERY :]
+
+    def test_a_second_machine_is_unaffected(self) -> None:
+        """The count is per address, not global."""
+        for _ in range(protocol.PAIR_QUIET_AFTER + 1):
+            _ask("AA:BB:CC:DD:EE:FF")
+        assert _ask("11:22:33:44:55:66").pair_calls == 1
+
+    def test_recovery_waits_for_the_next_retry_slot(self) -> None:
+        """The price of backing off, stated rather than hidden.
+
+        A machine that starts working again is not noticed until an attempt
+        comes round, so up to about ten minutes pass after a factory reset
+        before the integration tries it. Reloading the entry does not shorten
+        that, since the count lives in this module.
+        """
+        for _ in range(protocol.PAIR_QUIET_AFTER):
+            _ask("AA:BB:CC:DD:EE:FF")
+        working = FakeClient()
+        asyncio.run(protocol._pair(working))
+        assert working.pair_calls == 0
+
+    def test_success_clears_the_count(self) -> None:
+        """A machine that comes back is served at full rate from then on."""
+        protocol._PAIR_FAILURES["AA:BB:CC:DD:EE:FF"] = protocol.PAIR_RETRY_EVERY
+        working = FakeClient()
+        asyncio.run(protocol._pair(working))
+        assert working.pair_calls == 1
+        assert "AA:BB:CC:DD:EE:FF" not in protocol._PAIR_FAILURES
+        assert _ask("AA:BB:CC:DD:EE:FF").pair_calls == 1
+
+
+class TestPairErrorCode:
+    def test_the_code_is_read_off_the_message(self) -> None:
+        """bleak-esphome formats it into the string and nowhere else."""
+        err = protocol.BleakError("Pairing failed due to error: 97")
+        assert protocol._pair_error_code(err) == 97
+
+    def test_97_is_not_a_passkey_failure(self) -> None:
+        """ESP_AUTH_SMP_PASSKEY_FAIL is 78. Claiming 97 was it sent users nowhere."""
+        assert "passkey" not in protocol.PAIR_ERROR_REASONS[97]
+        assert "passkey" in protocol.PAIR_ERROR_REASONS[78]
+
+    def test_a_timeout_carries_no_code(self) -> None:
+        assert protocol._pair_error_code(TimeoutError()) is None

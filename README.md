@@ -480,6 +480,47 @@ raises it before the first read on the next connection, so the warning stops
 after the first poll. It starts again once after a Home Assistant restart,
 because that memory is not persisted.
 
+### "Could not encrypt the link"
+
+The proxy was asked to pair and could not. The machine goes on refusing every
+protected read until the link is encrypted, so the entities stay unavailable.
+
+```
+Could not encrypt the link to AA:BB:CC:DD:EE:FF: Pairing failed due to error: 97,
+the proxy could not start encryption on the link.
+```
+
+The number comes from the ESP32, and it is worth reading literally rather than
+guessing. The values are `esp_ble_auth_fail_rsn_t` from ESP-IDF, which starts at
+78, so they are not the failure codes from the Bluetooth specification and do
+not mean the same things:
+
+| Code | Meaning |
+| --- | --- |
+| 78 | The machine asked for a passkey. A proxy cannot provide one |
+| 80 | The machine wants an authenticated link, which a proxy cannot provide |
+| 82 | The machine says it does not support pairing |
+| 86 | The machine is refusing repeated attempts |
+| 93 | The proxy could not decide how to pair. Check `io_capability` on it |
+| 96 | Another security procedure was already running |
+| 97 | The proxy could not start encryption on the link |
+| 99 | The machine never answered the pairing request |
+| 102 | The link dropped during the exchange |
+
+A bare `TimeoutError` instead of a code means nothing came back at all within
+35 seconds.
+
+The integration keeps asking, because a machine can be factory reset and
+re-onboarded at any time and the next poll has to notice. It does not keep
+asking at full rate: after four consecutive failures for one machine it drops
+to roughly one attempt every ten minutes, and the warning becomes a debug line
+in between. A request that succeeds resets that immediately.
+
+One consequence worth knowing: once it has backed off, a machine that starts
+working again is not picked up until the next attempt comes round, so allow up
+to ten minutes after a factory reset. Restarting Home Assistant clears the
+count, reloading the integration does not.
+
 ### Reading the pairing state without connecting
 
 The advertisement carries the pairing state in bits 5-6 of its first byte, so it

@@ -32,6 +32,7 @@ from __future__ import annotations
 import asyncio
 import binascii
 import logging
+import re
 import uuid
 import weakref
 from abc import ABC, abstractmethod
@@ -158,12 +159,12 @@ BLE_OP_TIMEOUT = 10.0
 # the log. That cost a reporter 92 failures with no code attached to any of
 # them.
 #
-# The cost is real and is not yet bounded. _ble_lock is held across a whole
-# poll and the brew and WiFi services queue behind it, and a failing poll pairs
-# twice, once per connection. That is 70 seconds against a 60 second scan
-# interval, and the first refresh runs inside async_setup_entry, so a machine
-# stuck here is slow to delete. Pairing that keeps failing has to back off, and
-# until it does this trades responsiveness for a diagnosable log line.
+# The cost is real, which is why PAIR_QUIET_AFTER exists. _ble_lock is held
+# across a whole poll and the brew and WiFi services queue behind it, and a
+# failing poll pairs twice, once per connection. Left unbounded that is 70
+# seconds against a 60 second scan interval, and the first refresh runs inside
+# async_setup_entry, so a machine stuck here would be slow to delete. The
+# backoff keeps the full price to the first couple of polls.
 BLE_PAIR_TIMEOUT = 35.0
 
 # ATT errors a machine returns when it will not answer over a plain link. It
@@ -217,6 +218,57 @@ _ELEVATED: weakref.WeakSet[BleakClient] = weakref.WeakSet()
 # it the noisy way. Persisting it would mean writing to the config entry from
 # the BLE layer for the sake of one log line.
 _NEEDS_ENCRYPTION: set[str] = set()
+
+# How many pairing requests may fail for an address before we stop asking on
+# every connection, and how sparse the asking becomes afterwards.
+#
+# Giving up entirely is wrong: a machine can be factory reset and re-onboarded
+# at any moment, and the next poll has to notice without a restart. But a proxy
+# forgets the bond between connections, so a machine that needs an encrypted
+# link needs a request every time, and when those requests stop working that is
+# two a minute forever. One reporter's log carried 92 identical warnings and
+# was still climbing when he disabled the integration.
+#
+# Four covers the transient cases, since the counter advances on skipped
+# attempts too. After that it is one attempt in twenty, which at two
+# connections a poll and a 60 second interval is roughly one every ten minutes.
+PAIR_QUIET_AFTER = 4
+PAIR_RETRY_EVERY = 20
+
+# Failed pairing requests per address. Keyed on the address and not on the
+# client, because establish_connection builds a fresh BleakClient for every
+# connection, so anything hanging off the client resets twice a poll and can
+# never count. Lost on restart, like _NEEDS_ENCRYPTION above.
+_PAIR_FAILURES: dict[str, int] = {}
+
+# The pairing failure reasons worth naming, from esp_ble_auth_fail_rsn_t.
+#
+# The enum starts at ESP_AUTH_SMP_PASSKEY_FAIL = 78, which is HCI_ERR_MAX_ERR
+# plus 10 plus the SMP status, so these are NOT the failure codes from the
+# Bluetooth spec and must not be read as such. 97 is ENC_FAIL, not the passkey
+# failure the old warning here claimed it was.
+#
+# Only the codes that tell a user something different are listed. Anything else
+# prints as a bare number, which is still more than the old text managed.
+PAIR_ERROR_REASONS: dict[int, str] = {
+    78: "the machine asked for a passkey, which a proxy cannot provide",
+    80: "the machine wants an authenticated link, which a proxy cannot provide",
+    82: "the machine says it does not support pairing",
+    86: "the machine is refusing repeated attempts",
+    93: "the proxy could not decide how to pair, so check io_capability on it",
+    96: "another security procedure was already running",
+    97: "the proxy could not start encryption on the link",
+    99: "the machine never answered the pairing request",
+    102: "the link dropped during the exchange",
+}
+
+# bleak-esphome builds the pairing failure as a plain BleakError with the
+# number formatted into the message and nothing on the exception carrying it,
+# so the string is the only place it exists. Matching a message is normally the
+# mistake this file warns about in _is_read_not_permitted, but there is no
+# attribute here to prefer over it, and the format is identical in every
+# bleak-esphome release currently shipping.
+_PAIR_ERROR_RE = re.compile(r"Pairing failed due to error:\s*(\d+)")
 
 _T = TypeVar("_T")
 
@@ -297,31 +349,71 @@ async def _elevate(client: BleakClient, err: BleakError) -> bool:
     return await _pair(client)
 
 
+def _pair_error_code(err: BaseException) -> int | None:
+    """Return the ESP-IDF pairing failure code carried by err, or None."""
+    match = _PAIR_ERROR_RE.search(str(err))
+    return int(match.group(1)) if match else None
+
+
 async def _pair(client: BleakClient) -> bool:
-    """Ask the transport to encrypt the link. True when it did."""
+    """Ask the transport to encrypt the link. True when it did.
+
+    One request per connection while they are working, and progressively fewer
+    once they are not. The address keeps the count, so the backoff survives the
+    fresh client every connection brings, and a request that succeeds clears
+    it. The price is that a machine which starts working again is not noticed
+    until the next attempt comes round.
+    """
     _ELEVATED.add(client)
+    address = client.address
+    failures = _PAIR_FAILURES.get(address, 0)
+    if failures >= PAIR_QUIET_AFTER and failures % PAIR_RETRY_EVERY:
+        _PAIR_FAILURES[address] = failures + 1
+        _LOGGER.debug(
+            "Not asking %s to pair again yet, %d requests have failed",
+            address,
+            failures,
+        )
+        return False
+
+    # Loud on the first failure and on the sparse retries after that, quiet in
+    # between. Everything a user can act on is in the first warning, and the
+    # ninety-second one is what made this look like a runaway.
+    level = (
+        logging.WARNING
+        if failures == 0 or failures >= PAIR_QUIET_AFTER
+        else logging.DEBUG
+    )
     try:
         await asyncio.wait_for(client.pair(), BLE_PAIR_TIMEOUT)
     except NotImplementedError:
-        _LOGGER.warning(
+        _PAIR_FAILURES[address] = failures + 1
+        _LOGGER.log(
+            level,
             "The Bluetooth proxy serving %s cannot pair. Set 'active: true' under "
             "bluetooth_proxy in the proxy configuration, update its ESPHome "
             "firmware, then reload the integration.",
-            client.address,
+            address,
         )
         return False
     except (BleakError, TimeoutError) as pair_err:
         # The request may still have created a bond on the proxy, which the
         # next connection reuses. Nothing to undo here. A timeout carries no
         # message of its own, so fall back to the exception name.
-        _LOGGER.warning(
-            "Pairing %s through the Bluetooth proxy failed: %s. If this repeats, "
-            "the machine is asking for a passkey, which a proxy cannot provide.",
-            client.address,
+        _PAIR_FAILURES[address] = failures + 1
+        code = _pair_error_code(pair_err)
+        reason = PAIR_ERROR_REASONS.get(code) if code is not None else None
+        _LOGGER.log(
+            level,
+            "Could not encrypt the link to %s: %s%s. The machine will keep "
+            "refusing protected reads until the link is encrypted.",
+            address,
             str(pair_err) or type(pair_err).__name__,
+            f", {reason}" if reason else "",
         )
         return False
-    _LOGGER.info("Encrypted the link to %s", client.address)
+    _PAIR_FAILURES.pop(address, None)
+    _LOGGER.info("Encrypted the link to %s", address)
     return True
 
 
