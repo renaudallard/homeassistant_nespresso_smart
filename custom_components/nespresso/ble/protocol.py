@@ -167,21 +167,6 @@ BLE_OP_TIMEOUT = 10.0
 # backoff keeps the full price to the first couple of polls.
 BLE_PAIR_TIMEOUT = 35.0
 
-# How long to give a request to clear the proxy's bond.
-#
-# Nothing like the pairing budget. esp_ble_remove_bond_device returns as soon
-# as it has queued its message to the BTC task, so a working proxy answers at
-# once and this never comes near expiring.
-#
-# It is here for the firmware that cannot answer at all. Up to ESPHome 2026.7.4
-# the UNPAIR request was answered with a BluetoothDevicePairingResponse instead
-# of a BluetoothDeviceUnpairingResponse, so the client waits for a message that
-# never arrives and burns aioesphomeapi's full 30 seconds. 2026.8.0 fixed that
-# and also clears the connection's paired flag so the next request is not
-# answered from is_paired(). Expiring early keeps the older firmware from adding
-# half a minute to a poll that has already failed.
-BLE_UNPAIR_TIMEOUT = 10.0
-
 # ATT errors a machine returns when it will not answer over a plain link. It
 # sends 5, insufficient authentication, while it holds no key for us, and 15,
 # insufficient encryption, once it has one and only wants the link turned on.
@@ -255,35 +240,6 @@ PAIR_RETRY_EVERY = 20
 # connection, so anything hanging off the client resets twice a poll and can
 # never count. Lost on restart, like _NEEDS_ENCRYPTION above.
 _PAIR_FAILURES: dict[str, int] = {}
-
-# The pairing failure that means the proxy is holding a key the machine will not
-# accept: ESP_AUTH_SMP_ENC_FAIL, "the Controller failed to start encryption".
-#
-# It matters on its own because the proxy cannot recover from it. ESPHome pairs
-# with esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT), and that security
-# action has no fallback: the ESP-IDF header gives an "else re-pair with the
-# remote device" clause to the NO_MITM and MITM variants and not to this one. So
-# a proxy still holding a bond the machine has dropped presents the stored key,
-# the controller fails to turn encryption on, and nothing brings it back to a
-# fresh exchange by itself.
-#
-# The number is only ever produced by an ESPHome proxy, which is what keeps
-# _drop_proxy_bond away from a local adapter. It arrives as the ESP-IDF
-# auth-complete reason, forwarded verbatim by the proxy and formatted into the
-# message _PAIR_ERROR_RE reads.
-PAIR_ERROR_ENC_FAIL = 97
-
-# Addresses whose proxy bond we have already asked to have removed.
-#
-# One request is all that can help. The removal is unconditional, so a second
-# one has nothing left to delete, and repeating it would cost a connection per
-# poll for nothing. Cleared when a pairing succeeds, because the bond that
-# succeeded can go stale later in exactly the same way.
-#
-# Lost on restart, like _NEEDS_ENCRYPTION above. That is the right way round:
-# after a restart one more attempt is cheap, and the alternative is persisting
-# it in the config entry for the sake of a single connection.
-_UNPAIRED: set[str] = set()
 
 # The pairing failure reasons worth naming, from esp_ble_auth_fail_rsn_t.
 #
@@ -399,49 +355,6 @@ def _pair_error_code(err: BaseException) -> int | None:
     return int(match.group(1)) if match else None
 
 
-async def _drop_proxy_bond(client: BleakClient) -> None:
-    """Ask the proxy to forget its stored key, so the next poll pairs afresh.
-
-    Only ever reached for PAIR_ERROR_ENC_FAIL, which no local adapter can
-    produce, so unpair() cannot fire against BlueZ here. That matters: on BlueZ
-    it would remove a pairing the host owns and the user set up by hand.
-
-    Nothing on the machine is at risk. The only thing removed is the link key
-    the proxy holds, which the machine has already refused. The CMID token that
-    took a factory reset to install lives on the machine and is untouched.
-
-    This costs the connection it runs on, by design. bta_dm_remove_device checks
-    whether the ACL is up and, when it is, deletes nothing: it marks the device
-    BTA_DM_UNPAIRING and calls btm_remove_acl to take the link down first, and
-    the removal finishes once the link is gone. Which is why there is no retry
-    of the pairing here. The poll that got us this far has already failed, and
-    the next one reconnects with no stored key, so esp_ble_set_encryption falls
-    out of the reuse branch into a full SMP_Pair on its own.
-    """
-    address = client.address
-    _UNPAIRED.add(address)
-    try:
-        await asyncio.wait_for(client.unpair(), BLE_UNPAIR_TIMEOUT)
-    except NotImplementedError:
-        # Same feature flag as pair(), so the warning there has already told
-        # the user what to do about it.
-        _LOGGER.debug("The Bluetooth proxy serving %s cannot unpair", address)
-        return
-    except (BleakError, TimeoutError) as err:
-        _LOGGER.debug(
-            "Could not clear the stored key for %s: %s",
-            address,
-            str(err) or type(err).__name__,
-        )
-        return
-    _LOGGER.info(
-        "Cleared the Bluetooth proxy's stored key for %s, which the machine no "
-        "longer accepts. The connection drops with it and the next poll pairs "
-        "from scratch.",
-        address,
-    )
-
-
 async def _pair(client: BleakClient) -> bool:
     """Ask the transport to encrypt the link. True when it did.
 
@@ -484,6 +397,27 @@ async def _pair(client: BleakClient) -> bool:
         )
         return False
     except (BleakError, TimeoutError) as pair_err:
+        # Nothing to undo here, and in particular do not ask the proxy to
+        # unpair. That was tried and taken straight back out.
+        #
+        # Error 97 says the proxy started encryption from a key the machine
+        # refused, and it is tempting to clear that key from here. By the time
+        # the error arrives it is already gone: the same auth-complete that
+        # carries the code runs btc_dm_ble_auth_cmpl_evt in ESP-IDF, where any
+        # reason other than 80, 81 or 82 falls to a default branch that logs
+        # "remove bond in flash" and calls btc_dm_remove_ble_bonding_keys().
+        # So an unpair would delete nothing and cost the connection, because
+        # bta_dm_remove_device takes the link down before removing anything.
+        #
+        # A reporter's log settles it. One connection failed with 97 in 252 ms
+        # and the very next one paired in 776 ms with nothing done in between,
+        # which is the full exchange the erase leaves behind.
+        #
+        # The failure that does strand a bond is the one carrying no code at
+        # all: with no auth-complete, ESP-IDF never erases, and the same dead
+        # key comes back every connection. A proxy crashing mid-exchange is one
+        # way to get there. That case wants evidence before it wants a fix.
+        #
         # A timeout carries no message of its own, so fall back to the
         # exception name.
         _PAIR_FAILURES[address] = failures + 1
@@ -497,14 +431,8 @@ async def _pair(client: BleakClient) -> bool:
             str(pair_err) or type(pair_err).__name__,
             f", {reason}" if reason else "",
         )
-        # One failure says the request created no bond, and one says it found a
-        # bond it could not use. Only the second is worth acting on, and the
-        # proxy will not act on it by itself.
-        if code == PAIR_ERROR_ENC_FAIL and address not in _UNPAIRED:
-            await _drop_proxy_bond(client)
         return False
     _PAIR_FAILURES.pop(address, None)
-    _UNPAIRED.discard(address)
     _LOGGER.info("Encrypted the link to %s", address)
     return True
 

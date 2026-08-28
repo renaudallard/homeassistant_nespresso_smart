@@ -52,14 +52,10 @@ class FakeClient:
     def __init__(self, address: str = "AA:BB:CC:DD:EE:FF") -> None:
         self.address = address
         self.pair_calls = 0
-        self.unpair_calls = 0
 
     async def pair(self) -> bool:
         self.pair_calls += 1
         return True
-
-    async def unpair(self) -> None:
-        self.unpair_calls += 1
 
 
 @pytest.fixture(autouse=True)
@@ -67,12 +63,10 @@ def _clean_state():
     protocol._NEEDS_ENCRYPTION.clear()
     protocol._ELEVATED.clear()
     protocol._PAIR_FAILURES.clear()
-    protocol._UNPAIRED.clear()
     yield
     protocol._NEEDS_ENCRYPTION.clear()
     protocol._ELEVATED.clear()
     protocol._PAIR_FAILURES.clear()
-    protocol._UNPAIRED.clear()
 
 
 class TestPrepareLink:
@@ -215,91 +209,3 @@ class TestPairErrorCode:
 
     def test_a_timeout_carries_no_code(self) -> None:
         assert protocol._pair_error_code(TimeoutError()) is None
-
-
-class TimingOutClient(FakeClient):
-    """A pairing request that expires without the transport saying why."""
-
-    async def pair(self) -> bool:
-        self.pair_calls += 1
-        raise TimeoutError
-
-
-class RefusingUnpairClient(FailingClient):
-    """A proxy that cannot clear its bond, or will not admit to having done so."""
-
-    def __init__(self, error: BaseException) -> None:
-        super().__init__()
-        self.unpair_error = error
-
-    async def unpair(self) -> None:
-        self.unpair_calls += 1
-        raise self.unpair_error
-
-
-class TestStaleProxyBond:
-    """Error 97 is the one failure the proxy cannot recover from on its own.
-
-    esp_ble_set_encryption is called with ESP_BLE_SEC_ENCRYPT, which reuses a
-    stored key and has no "else re-pair" clause, so a bond the machine has
-    dropped is presented again on every connection until something removes it.
-    """
-
-    def test_it_clears_the_bond(self) -> None:
-        assert _ask("AA:BB:CC:DD:EE:FF").unpair_calls == 1
-
-    def test_it_only_asks_once(self) -> None:
-        """The removal is unconditional, so a second request has nothing to do."""
-        _ask("AA:BB:CC:DD:EE:FF")
-        assert _ask("AA:BB:CC:DD:EE:FF").unpair_calls == 0
-
-    def test_another_code_leaves_the_bond_alone(self) -> None:
-        """78 says the request created no bond, so there is none to remove."""
-        client = _ask("AA:BB:CC:DD:EE:FF", "Pairing failed due to error: 78")
-        assert client.unpair_calls == 0
-
-    def test_a_bare_timeout_leaves_the_bond_alone(self) -> None:
-        """No code came back, so nothing says the proxy is holding anything."""
-        client = TimingOutClient()
-        asyncio.run(protocol._pair(client))
-        assert client.unpair_calls == 0
-
-    def test_a_backed_off_attempt_does_not_clear_it(self) -> None:
-        """A skipped request produces no failure code, so nothing acts on one."""
-        for _ in range(protocol.PAIR_QUIET_AFTER):
-            _ask("AA:BB:CC:DD:EE:FF")
-        skipped = _ask("AA:BB:CC:DD:EE:FF")
-        assert skipped.pair_calls == 0
-        assert skipped.unpair_calls == 0
-
-    def test_a_later_success_re_arms_it(self) -> None:
-        """The bond that worked can go stale later in exactly the same way."""
-        _ask("AA:BB:CC:DD:EE:FF")
-        asyncio.run(protocol._pair(FakeClient()))
-        assert "AA:BB:CC:DD:EE:FF" not in protocol._UNPAIRED
-        assert _ask("AA:BB:CC:DD:EE:FF").unpair_calls == 1
-
-    @pytest.mark.parametrize(
-        "error",
-        [
-            NotImplementedError(),
-            protocol.BleakError("Unpairing failed due to error: 5"),
-            TimeoutError(),
-        ],
-        ids=["too old to unpair", "proxy refused", "proxy never answered"],
-    )
-    def test_a_failed_clear_is_survivable(self, error: BaseException) -> None:
-        """None of these is worth failing a poll that has already failed.
-
-        The timeout is the one with a name: up to ESPHome 2026.7.4 the firmware
-        answered UNPAIR with a BluetoothDevicePairingResponse, so the client
-        waits for a message that never arrives.
-        """
-        client = RefusingUnpairClient(error)
-        asyncio.run(protocol._pair(client))
-        assert client.unpair_calls == 1
-        assert client.address in protocol._UNPAIRED
-
-    def test_the_unpair_budget_is_short(self) -> None:
-        """It must not add the transport's full deadline to a failed poll."""
-        assert protocol.BLE_UNPAIR_TIMEOUT < 30.0
