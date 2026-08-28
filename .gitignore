@@ -16,3 +16,8 @@ __pycache__/
 *.pyc
 .venv/
 *.egg-info/
+
+# Scratch space: working notes, issue drafts, reporter logs and diagnostics,
+# firmware and vendor sources pulled down while investigating. Nothing in here
+# is part of the integration, and some of it is other people's data.
+tmp/
