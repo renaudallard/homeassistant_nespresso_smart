@@ -170,6 +170,14 @@ pair successfully on the following connection, with nothing done in between.
 So there is normally nothing to clear by hand, and clearing it at that point
 only throws away a key the proxy has already deleted.
 
+Because the recovery is the next connection, the integration gets out of the way
+of a failed one as fast as it can. A pairing request that comes back with a
+failure means the link is plain and the machine will not answer, so the poll
+gives up there instead of spending a ten second timeout on the onboard status
+read and another on the token write. That turns a failing cycle from about
+twenty eight seconds into under one, and the recovery lands on the next poll
+rather than a poll and a half later.
+
 Do not reboot the proxy either. A reboot clears strictly less than the failure
 has already cleared, since `btm_sec.c` drops the in-memory key on the same
 failure that erases the flash copy.

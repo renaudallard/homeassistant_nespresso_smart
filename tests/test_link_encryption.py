@@ -209,3 +209,113 @@ class TestPairErrorCode:
 
     def test_a_timeout_carries_no_code(self) -> None:
         assert protocol._pair_error_code(TimeoutError()) is None
+
+
+class TalkingClient(FakeClient):
+    """A machine that pairs and then answers, to prove the bail is selective."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.reads = 0
+        self.writes = 0
+
+    async def read_gatt_char(self, char: str) -> bytearray:
+        self.reads += 1
+        return bytearray(b"\x02")  # CMID_TYPE FINAL, so no onboarding
+
+    async def write_gatt_char(self, char: str, data: bytes, response: bool) -> None:
+        self.writes += 1
+
+
+class SilentClient(FailingClient):
+    """A machine that never pairs and never answers, which is the real shape.
+
+    read and write hang rather than raise, because that is what the reporter's
+    proxy did: the machine simply did not answer on a plain link and there was
+    no ATT error to report, so each operation burned BLE_OP_TIMEOUT.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.reads = 0
+        self.writes = 0
+
+    async def read_gatt_char(self, char: str) -> bytearray:
+        self.reads += 1
+        await asyncio.sleep(3600)
+        return bytearray()
+
+    async def write_gatt_char(self, char: str, data: bytes, response: bool) -> None:
+        self.writes += 1
+        await asyncio.sleep(3600)
+
+
+class TestPrepareLinkVerdict:
+    """_prepare_link now says whether protected reads are worth attempting."""
+
+    def test_unknown_machine_is_worth_trying(self) -> None:
+        """Nothing is known against it, so the reactive path gets its chance."""
+        assert asyncio.run(protocol._prepare_link(FakeClient())) is True
+
+    def test_a_successful_pairing_is_worth_trying(self) -> None:
+        client = FakeClient()
+        protocol._NEEDS_ENCRYPTION.add(client.address)
+        assert asyncio.run(protocol._prepare_link(client)) is True
+
+    def test_a_failed_pairing_is_not(self) -> None:
+        client = FailingClient()
+        protocol._NEEDS_ENCRYPTION.add(client.address)
+        assert asyncio.run(protocol._prepare_link(client)) is False
+
+    def test_a_backed_off_attempt_is_not_either(self) -> None:
+        """Nothing asked for encryption, so the link is still plain."""
+        for _ in range(protocol.PAIR_QUIET_AFTER):
+            _ask("AA:BB:CC:DD:EE:FF")
+        client = FailingClient()
+        protocol._NEEDS_ENCRYPTION.add(client.address)
+        assert asyncio.run(protocol._prepare_link(client)) is False
+        assert client.pair_calls == 0
+
+
+class TestNoDeadTimeAfterAFailedPairing:
+    """A failed pairing must cost the pairing, and nothing after it.
+
+    A reporter's poll ran 28 seconds against a 60 second interval. Twenty of
+    those came after the pairing request had already returned its answer, spent
+    on an onboard status read and a CMID write that the machine was never going
+    to answer over a plain link, at BLE_OP_TIMEOUT apiece.
+
+    It matters beyond the wasted time. When a proxy erases a stale key on a
+    failed pairing it is the next connection that recovers, so how fast the
+    failed one gets out of the way is the whole of the recovery latency.
+    """
+
+    def test_it_gives_up_without_touching_the_machine(self) -> None:
+        client = SilentClient()
+        protocol._NEEDS_ENCRYPTION.add(client.address)
+        assert (
+            asyncio.run(
+                protocol._authenticate(
+                    client, "8" + "0" * 15, protocol.MachineFamily.VERTUO_NEXT
+                )
+            )
+            is False
+        )
+        assert client.pair_calls == 1
+        assert client.reads == 0
+        assert client.writes == 0
+
+    def test_an_encrypted_link_is_left_alone(self) -> None:
+        """The bail must not fire on a machine whose link came up fine."""
+        client = TalkingClient()
+        protocol._NEEDS_ENCRYPTION.add(client.address)
+        assert (
+            asyncio.run(
+                protocol._authenticate(
+                    client, "8" + "0" * 15, protocol.MachineFamily.VERTUO_NEXT
+                )
+            )
+            is True
+        )
+        assert client.reads > 0
+        assert client.writes > 0

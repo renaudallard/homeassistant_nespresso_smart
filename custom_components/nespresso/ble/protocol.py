@@ -317,18 +317,22 @@ def _is_read_not_permitted(err: BaseException) -> bool:
     return getattr(err, "dbus_error_details", None) == "Read not permitted"
 
 
-async def _prepare_link(client: BleakClient) -> None:
+async def _prepare_link(client: BleakClient) -> bool:
     """Encrypt the link before the first read, on a machine known to want it.
 
     Only ever fires for an address that has already answered ATT 5 or 15, which
     keeps it away from a local adapter: BlueZ raises security by itself and
     never surfaces those codes, so nothing here can start waiting on a pairing
     agent that nobody registers.
+
+    Returns True when protected characteristics are worth attempting. False
+    means this machine has already refused a plain read at least once and the
+    link is still not encrypted, so they are not.
     """
     if client.address not in _NEEDS_ENCRYPTION or client in _ELEVATED:
-        return
+        return True
     _LOGGER.debug("Encrypting the link to %s up front", client.address)
-    await _pair(client)
+    return await _pair(client)
 
 
 async def _elevate(client: BleakClient, err: BleakError) -> bool:
@@ -498,7 +502,24 @@ async def _authenticate(
     the operation hangs instead.
     """
     address = client.address
-    await _prepare_link(client)
+    if not await _prepare_link(client):
+        # Stop here rather than spend BLE_OP_TIMEOUT apiece finding out.
+        #
+        # We only get a False from a machine that has already refused a plain
+        # read, so an unencrypted link means every operation below is going to
+        # fail. What it does not do is fail quickly. A reporter's poll ran 28
+        # seconds, of which twenty were spent after the pairing request had
+        # already come back with its answer: ten on the onboard status read and
+        # ten more on the CMID write, both of which the machine simply never
+        # answered.
+        #
+        # Cost of being wrong is one poll, and the next one re-tests, so this
+        # is not a state anything can latch into. The gain is the part that
+        # matters: when the proxy erases a stale key on a failed pairing it is
+        # the *next* connection that recovers, and this is what gets us there
+        # in seconds instead of half a minute.
+        _LOGGER.debug("Link to %s is not encrypted, skipping the auth attempt", address)
+        return False
 
     if family == MachineFamily.VMINI:
         return await _authenticate_vmini(client, auth_key)
@@ -739,8 +760,14 @@ async def _read_cmid_type(client: BleakClient, char: str, address: str) -> int |
     except TimeoutError:
         # A hang here is the signature of an unencrypted link on a local
         # adapter, which no other symptom makes obvious, so spell out the fix.
-        # A proxy never hangs on this, it answers with an ATT error that
-        # _gatt_op has already handled by the time we get here.
+        #
+        # A proxy was assumed never to reach this, on the grounds that it
+        # answers with an ATT error _gatt_op has already handled. Not true: a
+        # machine can leave a read on an unencrypted link unanswered and the
+        # proxy has nothing to report, so this timed out on one for a full ten
+        # seconds. _prepare_link now returns early in that case, which is the
+        # real remedy, and the text below still applies to the local adapter
+        # this warning was written for.
         _LOGGER.warning(
             "Reading onboard status from %s timed out, so the link is not encrypted. Pair the machine once from a terminal on the Home Assistant host: bluetoothctl / agent NoInputNoOutput / default-agent / scan on / pair %s. Note that the default 'agent on' does NOT work: it requests MITM protection with a passkey, which a coffee machine cannot provide. Through an ESPHome Bluetooth proxy this is not the right remedy, the proxy pairs by itself and only needs 'active: true' under bluetooth_proxy.",
             address,
