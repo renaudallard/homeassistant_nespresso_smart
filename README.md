@@ -572,6 +572,11 @@ working again is not picked up until the next attempt comes round, so allow up
 to ten minutes after a factory reset. Restarting Home Assistant clears the
 count, reloading the integration does not.
 
+A failing poll writes this warning and Home Assistant's own `Error fetching
+Nespresso ... data`, and nothing else. Both are printed when the machine stops
+answering rather than on every poll after that. What each characteristic did is
+at debug, under `custom_components.nespresso.ble.protocol`.
+
 ### Reading the pairing state without connecting
 
 The advertisement carries the pairing state in bits 5-6 of its first byte, so it

@@ -1052,7 +1052,11 @@ async def _read_char(
         _LOGGER.debug("Read %s [%s]: %s", name, char_uuid, value.hex())
         return value
     except Exception as err:
-        _LOGGER.error("Failed to read %s [%s]: %s", name, char_uuid, err)
+        # Debug, because this is re-raised: the coordinator turns it into an
+        # UpdateFailed carrying the same message, and Home Assistant logs that
+        # one. An error here only meant the user read the same failure twice,
+        # once with the characteristic named and once without.
+        _LOGGER.debug("Failed to read %s [%s]: %s", name, char_uuid, err)
         raise
 
 
