@@ -205,6 +205,12 @@ ONBOARD_RETRY_DELAY = 2.0
 # refusing afterwards must not trigger a pairing request per characteristic.
 _ELEVATED: weakref.WeakSet[BleakClient] = weakref.WeakSet()
 
+# Clients whose link the transport actually encrypted. Separate from the set
+# above, which only records that we asked: a request that failed leaves the
+# client in one and not the other, and that difference is the whole of
+# link_is_plain below.
+_ENCRYPTED: weakref.WeakSet[BleakClient] = weakref.WeakSet()
+
 # Addresses that have refused an operation over a plain link at least once.
 #
 # A proxy clears its paired flag on every connection and only encrypts when the
@@ -437,8 +443,19 @@ async def _pair(client: BleakClient) -> bool:
         )
         return False
     _PAIR_FAILURES.pop(address, None)
+    _ENCRYPTED.add(client)
     _LOGGER.info("Encrypted the link to %s", address)
     return True
+
+
+def link_is_plain(client: BleakClient) -> bool:
+    """True when this machine wants an encrypted link and this one is not.
+
+    The answer is only ever yes for a machine that has already refused a plain
+    operation, so a local adapter never lands here: BlueZ raises security by
+    itself and the codes that populate _NEEDS_ENCRYPTION never surface.
+    """
+    return client.address in _NEEDS_ENCRYPTION and client not in _ENCRYPTED
 
 
 async def _gatt_op(client: BleakClient, op: Callable[[], Awaitable[_T]]) -> _T:

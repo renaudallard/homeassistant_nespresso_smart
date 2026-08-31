@@ -62,10 +62,12 @@ class FakeClient:
 def _clean_state():
     protocol._NEEDS_ENCRYPTION.clear()
     protocol._ELEVATED.clear()
+    protocol._ENCRYPTED.clear()
     protocol._PAIR_FAILURES.clear()
     yield
     protocol._NEEDS_ENCRYPTION.clear()
     protocol._ELEVATED.clear()
+    protocol._ENCRYPTED.clear()
     protocol._PAIR_FAILURES.clear()
 
 
@@ -319,3 +321,34 @@ class TestNoDeadTimeAfterAFailedPairing:
         )
         assert client.reads > 0
         assert client.writes > 0
+
+
+class TestLinkIsPlain:
+    """What the poll path asks before deciding a read is worth attempting."""
+
+    def test_an_unknown_machine_is_not_called_plain(self) -> None:
+        """It has never refused anything, so nothing here applies to it.
+
+        This is what keeps a local adapter out: BlueZ raises security itself
+        and the ATT codes that populate _NEEDS_ENCRYPTION never reach us.
+        """
+        assert protocol.link_is_plain(FakeClient()) is False
+
+    def test_a_failed_pairing_leaves_the_link_plain(self) -> None:
+        client = FailingClient()
+        protocol._NEEDS_ENCRYPTION.add(client.address)
+        asyncio.run(protocol._prepare_link(client))
+        assert protocol.link_is_plain(client) is True
+
+    def test_a_successful_pairing_does_not(self) -> None:
+        client = FakeClient()
+        protocol._NEEDS_ENCRYPTION.add(client.address)
+        asyncio.run(protocol._prepare_link(client))
+        assert protocol.link_is_plain(client) is False
+
+    def test_the_next_connection_is_plain_again(self) -> None:
+        """The proxy forgets between connections, so a new client starts over."""
+        first = FakeClient()
+        protocol._NEEDS_ENCRYPTION.add(first.address)
+        asyncio.run(protocol._prepare_link(first))
+        assert protocol.link_is_plain(FakeClient()) is True

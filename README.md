@@ -113,7 +113,7 @@ The machine answers with GATT error 5, `Insufficient authentication`, or 15,
 
 ```
 Error reading char/descriptor for handle 0x32, status=5
-Auth failed on second attempt
+Could not encrypt the link to AA:BB:CC:DD:EE:FF
 ```
 
 The two codes are the same problem at different stages. A machine that holds no
@@ -177,6 +177,12 @@ gives up there instead of spending a ten second timeout on the onboard status
 read and another on the token write. That turns a failing cycle from about
 twenty eight seconds into under one, and the recovery lands on the next poll
 rather than a poll and a half later.
+
+The poll stops there rather than reading anyway. Two pairing requests have
+failed by that point and nothing left in the cycle can ask for a third, so the
+read would be refused with a GATT error describing none of it. One line says
+what happened instead, and Home Assistant prints it once per outage rather than
+once per poll.
 
 Do not reboot the proxy either. A reboot clears strictly less than the failure
 has already cleared, since `btm_sec.c` drops the in-memory key on the same

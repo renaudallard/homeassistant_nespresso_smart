@@ -723,7 +723,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 self.auth_key = generate_auth_key()
                 _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
 
-            from .ble.protocol import _authenticate
+            from .ble.protocol import _authenticate, link_is_plain
 
             auth_ok = await _authenticate(
                 client, self.auth_key, self.family, self.send_tx_level
@@ -741,7 +741,21 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     client, self.auth_key, self.family, self.send_tx_level
                 )
                 if not auth_ok:
-                    _LOGGER.warning("Auth failed on second attempt")
+                    _LOGGER.debug("Auth failed on the second attempt")
+
+            # Two pairing requests have failed and nothing here can ask for a
+            # third: _pair marks the client either way, so the read below would
+            # go out over a plain link, be refused, and report a GATT error
+            # that describes none of it. Stop with the reason we already have.
+            #
+            # Only that one case. Authentication also fails on a write the
+            # machine refused or a verify read it would not answer, and a
+            # status read can still work through either.
+            if not auth_ok and link_is_plain(client):
+                raise UpdateFailed(
+                    f"Could not encrypt the link to {self.address}, "
+                    "so the machine refuses every protected read"
+                )
 
             protocol = get_protocol(self.family)
             raw = await protocol.async_read_all(client, self.auth_key)
@@ -757,6 +771,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 _LOGGER.debug("Keeping connection for pending brew")
             else:
                 await client.disconnect()
+        except UpdateFailed:
+            # Already carries its own reason, so drop the link and let it
+            # through rather than have the catch-all rewrite it.
+            await client.disconnect()
+            raise
         except (BleakError, TimeoutError) as err:
             await client.disconnect()
             raise UpdateFailed(f"BLE read failed: {err}") from err
