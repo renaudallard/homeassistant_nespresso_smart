@@ -198,19 +198,46 @@ class TestPairBackoff:
         assert _ask("AA:BB:CC:DD:EE:FF").pair_calls == 1
 
 
-class TestPairErrorCode:
+class TestPairFailureReason:
     def test_the_code_is_read_off_the_message(self) -> None:
         """bleak-esphome formats it into the string and nowhere else."""
         err = protocol.BleakError("Pairing failed due to error: 97")
-        assert protocol._pair_error_code(err) == 97
+        assert protocol._pair_failure_reason(err) == protocol.PAIR_ERROR_REASONS[97]
 
     def test_97_is_not_a_passkey_failure(self) -> None:
         """ESP_AUTH_SMP_PASSKEY_FAIL is 78. Claiming 97 was it sent users nowhere."""
         assert "passkey" not in protocol.PAIR_ERROR_REASONS[97]
         assert "passkey" in protocol.PAIR_ERROR_REASONS[78]
 
-    def test_a_timeout_carries_no_code(self) -> None:
-        assert protocol._pair_error_code(TimeoutError()) is None
+    def test_a_timeout_carries_no_reason(self) -> None:
+        assert protocol._pair_failure_reason(TimeoutError()) is None
+
+    def test_a_dropped_link_is_named_despite_the_proxy_text(self) -> None:
+        """The words are from the wrong enum, so decode the number instead.
+
+        aioesphomeapi prints a disconnect reason through esp_gatt_status_t,
+        where 8 reads as insufficient authorization. It is a supervision
+        timeout, and the machine refused nothing.
+        """
+        err = protocol.BleakError(
+            "Peripheral C4:D8:D5:7D:D8:32 changed connection status while "
+            "waiting for BluetoothDevicePairingResponse: "
+            "Insufficient authorization (8)"
+        )
+        reason = protocol._pair_failure_reason(err)
+        assert reason is not None
+        assert reason.startswith("the link dropped during the exchange")
+        assert protocol.CONN_DROP_REASONS[8] in reason
+        assert "authorization" not in reason
+
+    def test_an_unnamed_drop_still_says_the_link_dropped(self) -> None:
+        err = protocol.BleakError(
+            "Peripheral C4:D8:D5:7D:D8:32 changed connection status while "
+            "waiting for BluetoothDevicePairingResponse: Unknown error (1)"
+        )
+        assert protocol._pair_failure_reason(err) == (
+            "the link dropped during the exchange"
+        )
 
 
 class TalkingClient(FakeClient):

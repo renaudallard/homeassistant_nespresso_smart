@@ -561,6 +561,33 @@ not mean the same things:
 A bare `TimeoutError` instead of a code means nothing came back at all within
 35 seconds.
 
+Sometimes the link goes away before the proxy has answered at all, and then the
+warning quotes a different message:
+
+```
+Could not encrypt the link to AA:BB:CC:DD:EE:FF: Peripheral AA:BB:CC:DD:EE:FF
+changed connection status while waiting for BluetoothDevicePairingResponse:
+Insufficient authorization (8), the link dropped during the exchange, the
+machine stopped answering.
+```
+
+Ignore the words the proxy puts in front of the number. They come from
+`esp_gatt_status_t`, and the number does not: it is a disconnect reason,
+`esp_gatt_conn_reason_t`, so 8 is a supervision timeout rather than the
+authorization failure the text claims. Nothing was refused. The clause the
+integration adds after it is the one to read:
+
+| Code | Meaning |
+| --- | --- |
+| 8 | The machine stopped answering. Usually distance |
+| 19 | The machine hung up |
+| 22 | The proxy hung up |
+| 34 | The machine stopped answering a link-layer request |
+| 62 | The connection was never established |
+
+This is the same condition as pairing error 102 above, seen from the other
+side, and it clears itself the same way on the next connection.
+
 The integration keeps asking, because a machine can be factory reset and
 re-onboarded at any time and the next poll has to notice. It does not keep
 asking at full rate: after four consecutive failures for one machine it drops

@@ -268,13 +268,39 @@ PAIR_ERROR_REASONS: dict[int, str] = {
     102: "the link dropped during the exchange",
 }
 
-# bleak-esphome builds the pairing failure as a plain BleakError with the
-# number formatted into the message and nothing on the exception carrying it,
-# so the string is the only place it exists. Matching a message is normally the
+# Why the link went away while the pairing request was still outstanding, from
+# esp_gatt_conn_reason_t.
+#
+# aioesphomeapi never sees the proxy's answer in this case. It raises on the
+# connection state change that arrives first and prints the number through
+# ESPHOME_GATT_ERRORS, a copy of esp_gatt_status_t. That is the wrong table:
+# ESPHome fills the field from param->disconnect.reason in
+# bluetooth_proxy/bluetooth_connection.cpp, which is esp_gatt_conn_reason_t.
+# So 8 is ESP_GATT_CONN_TIMEOUT, a supervision timeout, and not the
+# "Insufficient authorization" the message claims. The words are wrong, the
+# number is not, which is why this decodes the number and leaves the rest of
+# the transport's text alone.
+#
+# The condition itself is the one the proxy reports as pairing error 102 when
+# its answer wins the race, so nothing else needs to change: ESP-IDF still runs
+# auth-complete on a link lost during SMP, the stale key is erased, and the
+# next connection pairs from scratch.
+CONN_DROP_REASONS: dict[int, str] = {
+    8: "the machine stopped answering",
+    19: "the machine hung up",
+    22: "the proxy hung up",
+    34: "the machine stopped answering a link-layer request",
+    62: "the connection was never established",
+}
+
+# bleak-esphome builds both failures as a plain BleakError with the number
+# formatted into the message and nothing on the exception carrying it, so the
+# string is the only place it exists. Matching a message is normally the
 # mistake this file warns about in _is_read_not_permitted, but there is no
 # attribute here to prefer over it, and the format is identical in every
 # bleak-esphome release currently shipping.
 _PAIR_ERROR_RE = re.compile(r"Pairing failed due to error:\s*(\d+)")
+_CONN_DROP_RE = re.compile(r"changed connection status while waiting for .*\((\d+)\)")
 
 _T = TypeVar("_T")
 
@@ -359,10 +385,24 @@ async def _elevate(client: BleakClient, err: BleakError) -> bool:
     return await _pair(client)
 
 
-def _pair_error_code(err: BaseException) -> int | None:
-    """Return the ESP-IDF pairing failure code carried by err, or None."""
-    match = _PAIR_ERROR_RE.search(str(err))
-    return int(match.group(1)) if match else None
+def _pair_failure_reason(err: BaseException) -> str | None:
+    """Say why a pairing request failed, or None when nothing is recognised.
+
+    Two shapes, because two things race to answer. Normally the proxy replies
+    and the reason is its own failure code. When the link drops instead, the
+    connection state change arrives first and the pairing reply never does, so
+    the code has to come out of that message and out of a different enum.
+    """
+    text = str(err)
+    match = _PAIR_ERROR_RE.search(text)
+    if match:
+        return PAIR_ERROR_REASONS.get(int(match.group(1)))
+    match = _CONN_DROP_RE.search(text)
+    if not match:
+        return None
+    named = CONN_DROP_REASONS.get(int(match.group(1)))
+    dropped = "the link dropped during the exchange"
+    return f"{dropped}, {named}" if named else dropped
 
 
 async def _pair(client: BleakClient) -> bool:
@@ -428,11 +468,15 @@ async def _pair(client: BleakClient) -> bool:
         # key comes back every connection. A proxy crashing mid-exchange is one
         # way to get there. That case wants evidence before it wants a fix.
         #
+        # A link that simply drops is not that case, even though it also
+        # arrives without a pairing code: smp_pair_terminate still raises an
+        # auth-complete, carrying SMP_CONN_TOUT, and that reaches the same
+        # default branch and the same erase.
+        #
         # A timeout carries no message of its own, so fall back to the
         # exception name.
         _PAIR_FAILURES[address] = failures + 1
-        code = _pair_error_code(pair_err)
-        reason = PAIR_ERROR_REASONS.get(code) if code is not None else None
+        reason = _pair_failure_reason(pair_err)
         _LOGGER.log(
             level,
             "Could not encrypt the link to %s: %s%s. The machine will keep "
