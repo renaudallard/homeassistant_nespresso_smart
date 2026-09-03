@@ -31,7 +31,6 @@ from bleak import BleakError
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -39,10 +38,10 @@ from .const import (
     BARISTA_CHAR_LANGUAGE,
     BARISTA_CHAR_RECIPE_SELECTION,
     DOMAIN,
-    MACHINE_FAMILY_NAMES,
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator
+from .entity import machine_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,17 +134,7 @@ class NespressoRecipeSelect(CoordinatorEntity[NespressoCoordinator], SelectEntit
         super().__init__(coordinator)
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_recipe_select"
-        family = MachineFamily(entry.data["family"])
-        data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
 
     async def async_select_option(self, option: str) -> None:
         """Write recipe index to machine via BLE."""
@@ -184,17 +173,7 @@ class NespressoLanguageSelect(CoordinatorEntity[NespressoCoordinator], SelectEnt
         super().__init__(coordinator)
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_language_select"
-        family = MachineFamily(entry.data["family"])
-        data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
 
     async def async_select_option(self, option: str) -> None:
         """Write language code to machine via BLE."""
@@ -238,17 +217,7 @@ class NespressoVertuoBrewTypeSelect(
         super().__init__(coordinator)
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_vertuo_brew_type"
-        family = MachineFamily(entry.data["family"])
-        data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
 
     async def async_select_option(self, option: str) -> None:
         """Select brew type (stored on coordinator, used by brew button)."""
@@ -286,14 +255,4 @@ class NespressoVertuoTemperatureSelect(
         super().__init__(coordinator)
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_vertuo_brew_temp"
-        family = MachineFamily(entry.data["family"])
-        data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)

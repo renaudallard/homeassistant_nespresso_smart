@@ -31,17 +31,16 @@ from bleak import BleakError
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
-    MACHINE_FAMILY_NAMES,
     VERTUO_CHAR_USER_SETTINGS,
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator
+from .entity import machine_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,17 +81,7 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
         super().__init__(coordinator)
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_water_hardness_setting"
-        family = MachineFamily(entry.data["family"])
-        data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
 
     @property
     def native_value(self) -> float | None:
@@ -147,17 +136,7 @@ class NespressoAutoPowerOff(CoordinatorEntity[NespressoCoordinator], NumberEntit
         super().__init__(coordinator)
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_auto_power_off_setting"
-        family = MachineFamily(entry.data["family"])
-        data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
 
     @property
     def native_value(self) -> float | None:

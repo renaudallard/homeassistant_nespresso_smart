@@ -38,13 +38,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .ble.protocol import build_command_frame
 from .const import (
     DOMAIN,
-    MACHINE_FAMILY_NAMES,
     VERTUO_CHAR_COMMAND_REQ,
     VERTUO_CHAR_COMMAND_RSP,
     VMINI_CHAR_FOTA_COMMAND,
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator
+from .entity import machine_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,17 +141,7 @@ class NespressoFotaCheckButton(CoordinatorEntity[NespressoCoordinator], ButtonEn
         super().__init__(coordinator)
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_fota_check"
-        family = MachineFamily(entry.data["family"])
-        data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
 
     async def async_press(self) -> None:
         """Send CHECK_FOR_UPDATE command (0x00) to CHAR_FOTA_COMMAND."""
@@ -186,17 +176,7 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         self._brew_pending = False
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_vertuo_brew"
-        family = MachineFamily(entry.data["family"])
-        data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
 
     async def async_press(self) -> None:
         """Send brew command to the machine.

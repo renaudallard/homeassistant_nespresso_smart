@@ -35,12 +35,12 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MACHINE_FAMILY_NAMES, MachineFamily
+from .const import DOMAIN, MachineFamily
 from .coordinator import NespressoCoordinator
+from .entity import machine_device_info
 from .models import NespressoMachineData
 
 
@@ -174,17 +174,7 @@ class NespressoBinarySensor(
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{entry.data['address']}_{description.key}"
-        family = MachineFamily(entry.data["family"])
-        data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.data["address"])},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
 
     @property
     def is_on(self) -> bool | None:

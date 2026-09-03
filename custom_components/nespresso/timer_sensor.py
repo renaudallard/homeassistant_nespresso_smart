@@ -36,12 +36,11 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MACHINE_FAMILY_NAMES, MachineFamily
 from .coordinator import NespressoCoordinator
+from .entity import machine_device_info
 
 BREWING_STATES = {"brewing"}
 
@@ -62,17 +61,7 @@ class NespressoBrewingDuration(CoordinatorEntity[NespressoCoordinator], SensorEn
         super().__init__(coordinator)
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_brewing_duration"
-        family = MachineFamily(entry.data["family"])
-        data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
         self._brew_start: float | None = None
         self._countdown_unsub: CALLBACK_TYPE | None = None
 

@@ -28,18 +28,17 @@ from __future__ import annotations
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     BARISTA_STATE_NAMES,
     DOMAIN,
-    MACHINE_FAMILY_NAMES,
     VERTUO_STATE_NAMES,
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator
+from .entity import machine_device_info
 
 ALL_EVENT_TYPES = sorted(
     set(BARISTA_STATE_NAMES.values()) | set(VERTUO_STATE_NAMES.values()) | {"unknown"}
@@ -76,17 +75,8 @@ class NespressoStateChangeEvent(CoordinatorEntity[NespressoCoordinator], EventEn
         super().__init__(coordinator)
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_state_change"
-        family = MachineFamily(entry.data["family"])
         data = coordinator.data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-            model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
-            serial_number=data.serial_number if data else None,
-            sw_version=data.firmware_version if data else None,
-            hw_version=data.hardware_version if data else None,
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
         self._last_state: str | None = data.machine_state if data else None
 
     @callback
