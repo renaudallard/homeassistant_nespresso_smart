@@ -48,7 +48,12 @@ Copy `custom_components/nespresso/` into your Home Assistant `config/custom_comp
 
 After installation, the integration will auto-discover Nespresso machines via Bluetooth. Ensure your machine is powered on and within BLE range.
 
-During setup, you can optionally provide an **auth token** (16 hex characters). This is only needed if the machine is already paired with the Nespresso app and you don't want to reset it. If left empty, the integration generates a new token and onboards the machine (requires a factory reset first if the machine was previously paired).
+During setup the **auth token** field is optional. Leave it empty on a machine
+that has never been paired and the integration generates its own token. On a
+machine the Nespresso app already claimed, fill it in rather than reset the
+machine: either the 32 character pairing key from your Nespresso account, which
+the integration converts to the token itself, or the 16 character token read
+off a Bluetooth capture. See below for both.
 
 ### Machine already paired with the Nespresso app
 
@@ -61,9 +66,40 @@ Each machine stores one auth token (CMID), and only accepts one while it holds n
 | `0x02` | `FINAL` | A token is stored |
 | `0x03` | `UNDEFINED` | A token was written and the machine could not classify it |
 
-`NONE` and `UNDEFINED` both mean the machine holds no usable token, and the integration keeps trying against either. Once the type is `TEMPORARY` or `FINAL` the machine acknowledges a new token, quietly keeps the one it has, and refuses every protected read with ATT `0x02`, seen as GATT error 2 through a proxy and `NotPermitted` on a local adapter. The integration then needs either the same token or a factory reset. Two options:
+`NONE` and `UNDEFINED` both mean the machine holds no usable token, and the integration keeps trying against either. Once the type is `TEMPORARY` or `FINAL` the machine acknowledges a new token, quietly keeps the one it has, and refuses every protected read with ATT `0x02`, seen as GATT error 2 through a proxy and `NotPermitted` on a local adapter. The integration then needs either the same token or a factory reset. Three options:
 
-**Option A: Factory reset the machine (simplest)**
+**Option A: Recover the pairing key from your Nespresso account (no reset)**
+
+The app does not invent the key on the machine, it registers it against your
+account, so it is still there to be read. This is the only route that leaves the
+phone app working, because the machine keeps the token it already has.
+
+Log in at [nespresso.com](https://www.nespresso.com/) in a browser, open the
+developer console on that page (F12, or Ctrl+Shift+J) and run:
+
+```js
+const market = location.pathname.split('/')[1];  // fr on www.nespresso.com/fr/fr/
+const get = async p => (await fetch(p, {credentials: 'include'})).json();
+const me = await get(`/ecapi/customers/v7/${market}/b2c/me/personal-info`);
+const res = await get(`/ecapi/machines/v1/${market}/b2c/${me.memberNumber}`);
+console.table((Array.isArray(res) ? res : res.machines ?? []).map(m =>
+    ({serial: m.serialNumber, mac: m.macAddress, pairingKey: m.pairingKey})));
+```
+
+Copy the `pairingKey` of the machine you are adding, 32 hex characters, and
+paste it into the auth token field during setup. The integration derives the
+token from it exactly as the app does.
+
+Both paths carry your market as their first segment, which is where the country
+code in the page URL comes from. If the calls fail, check that segment: it is
+your two letter country code, in lower case.
+
+It has to be a browser. The account endpoints sit behind Akamai Bot Manager,
+which the app satisfies with an `X-acf-sensor-data` header it builds on the
+device, so `curl` gets `403 NOT_ALLOWED`. A logged-in browser already holds the
+cookies that pass the check.
+
+**Option B: Factory reset the machine**
 
 A factory reset clears the stored auth token and all settings. The Bluetooth pairing button alone is not sufficient; a full factory reset is required.
 
@@ -78,7 +114,7 @@ bluetoothctl remove <MACHINE_MAC_ADDRESS>
 
 Then remove and re-add the integration in HA. The Nespresso app will also need to re-pair.
 
-**Option B: Extract the existing token (Android only)**
+**Option C: Extract the existing token from a Bluetooth capture (Android only)**
 
 Capture the auth token from the Nespresso app using Android's BLE logging:
 
@@ -244,11 +280,12 @@ is a manual step, see [Troubleshooting](#software-caused-connection-abort).
 
 ### Ordering that avoids trouble
 
-1. Factory reset the machine, only if it was paired with the app (see [Machine already paired with the Nespresso app](#machine-already-paired-with-the-nespresso-app))
+1. If the app has paired the machine, recover its pairing key or factory reset
+   it (see [Machine already paired with the Nespresso app](#machine-already-paired-with-the-nespresso-app))
 2. On a host with its own Bluetooth adapter, pair from `bluetoothctl` as
    above. Through a proxy there is nothing to do by hand
-3. Add the integration, leaving the auth token field **empty** so it generates
-   and stores its own
+3. Add the integration, either pasting that pairing key or leaving the auth
+   token field **empty** so it generates and stores its own
 4. Keep the phone's Bluetooth off until setup finishes, or the app may claim
    the machine first
 
@@ -449,14 +486,15 @@ Also seen as `NotPermitted` on a local adapter, or GATT error 2 through a proxy.
 
 The machine stores one auth token and only accepts a new one while it holds none
 at all. Something else onboarded it first, usually the Nespresso app, and it will
-now refuse every read. Nothing can be done over Bluetooth: factory reset the
-machine (see [Machine already paired with the Nespresso app](#machine-already-paired-with-the-nespresso-app)),
-then add the integration again leaving the auth token field empty.
+now refuse every read. Nothing can be done about that over Bluetooth, but the key
+the app used is registered against your Nespresso account and can be recovered
+and pasted in, which is Option A of [Machine already paired with the Nespresso
+app](#machine-already-paired-with-the-nespresso-app). Failing that, factory reset
+the machine and add the integration again leaving the auth token field empty.
 
 The token the integration generates is stored in the config entry, so deleting
-the entry throws it away and costs another factory reset. If you have the token,
-put it in the auth token field when adding the machine back and no reset is
-needed.
+the entry throws it away. If you have the token, put it in the auth token field
+when adding the machine back and nothing else is needed.
 
 ### Onboarding drops the connection (GATT error 133)
 

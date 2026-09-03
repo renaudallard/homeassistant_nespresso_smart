@@ -70,15 +70,18 @@
     "step": {
       "bluetooth_confirm": {
         "title": "Nespresso machine bevestigen",
-        "description": "{name} gevonden. Laat het token leeg om een nieuw token te genereren (vereist het indrukken van de Bluetooth-knop op de machine). Als de machine al gekoppeld is met de Nespresso-app, vul dan het bestaande token in (16 hexadecimale tekens).",
+        "description": "{name} gevonden. Laat dit veld leeg bij een machine die nooit gekoppeld is geweest, dan maakt de integratie zijn eigen token aan. Als de Nespresso-app deze machine al gekoppeld heeft, plak dan de koppelsleutel van 32 tekens uit je Nespresso-account zodat ze allebei blijven werken, of het token van 16 tekens uit een Bluetooth-opname.",
         "data": {
-          "auth_token": "Authenticatietoken (optioneel, 16 hex tekens)"
+          "auth_token": "Token of koppelsleutel (optioneel)"
         }
       },
       "user": {
         "title": "Nespresso Smart",
         "description": "Deze integratie vereist Bluetooth. Machines worden automatisch ontdekt."
       }
+    },
+    "error": {
+      "invalid_auth_token": "Dit is geen koppelsleutel en geen token. Verwacht: 32 hexadecimale tekens uit je Nespresso-account, of 16 uit een Bluetooth-opname."
     },
     "abort": {
       "already_configured": "Machine is al geconfigureerd.",

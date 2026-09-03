@@ -37,6 +37,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 
+from .ble.protocol import normalize_auth_key
 from .const import (
     CONF_DESCALING_CAPSULES,
     CONF_DESCALING_DAYS,
@@ -174,20 +175,25 @@ class NespressoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovered device."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            data: dict[str, Any] = {
-                "address": self._discovery_info.address  # type: ignore[union-attr]
-                if self._discovery_info
-                else "",
-                "family": self._family.value
-                if self._family
-                else MachineFamily.VERTUO_NEXT.value,
-                "name": self._name,
-            }
             token = user_input.get("auth_token", "").strip()
-            if token:
-                data["auth_key"] = token
-            return self.async_create_entry(title=self._name, data=data)
+            auth_key = normalize_auth_key(token) if token else None
+            if token and auth_key is None:
+                errors["auth_token"] = "invalid_auth_token"
+            else:
+                data: dict[str, Any] = {
+                    "address": self._discovery_info.address  # type: ignore[union-attr]
+                    if self._discovery_info
+                    else "",
+                    "family": self._family.value
+                    if self._family
+                    else MachineFamily.VERTUO_NEXT.value,
+                    "name": self._name,
+                }
+                if auth_key:
+                    data["auth_key"] = auth_key
+                return self.async_create_entry(title=self._name, data=data)
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
@@ -197,6 +203,7 @@ class NespressoConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional("auth_token", default=""): str,
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_user(

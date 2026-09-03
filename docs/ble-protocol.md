@@ -502,8 +502,16 @@ Firmware appears to read that first nibble as a format marker. A Vertuo
 Creatista on firmware 17.3 given a token without it acknowledged the write,
 left `NONE` and settled on `UNDEFINED`, then refused every protected read.
 Older machines accept a token with any first nibble, which is why this went
-unnoticed. The integration generates keys with the marker rather than deriving
-from a seed, since the machine only ever sees the derived value.
+unnoticed. A generated key therefore carries the marker from the start: the
+integration builds it as `8` plus 15 random nibbles, which is the same value the
+derivation would have produced from a random seed.
+
+The derivation still matters for a machine the app has already claimed, whose
+seed the account holds. Shifting a hex string right by one nibble drops its last
+character, so the two APK steps together are `8` followed by the seed's first 15
+characters, and the integration accepts a 32 character seed at setup on that
+basis. Seed `a1b2c3d4e5f60718293a4b5c6d7e8f90` gives CMID `8a1b2c3d4e5f6071`,
+whose base64 is `ihssPU5fYHE=`, the value the account carries as `secret`.
 
 ### Onboarding Flow (First Connection)
 

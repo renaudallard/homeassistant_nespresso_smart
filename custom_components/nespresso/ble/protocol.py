@@ -125,6 +125,39 @@ def generate_auth_key() -> str:
     return CMID_MARKER_NIBBLE + uuid.uuid4().hex[:15]
 
 
+def normalize_auth_key(text: str) -> str | None:
+    """Return the CMID for a typed auth token or Nespresso pairing key.
+
+    Two shapes are accepted. Sixteen hex characters is a CMID already, the
+    value read off a Bluetooth capture of the app. Thirty-two is the pairing
+    key the account holds, which never travels over BLE: the machine only ever
+    sees a value derived from it.
+
+    PairingUtils derives that value in two steps, prepareHashForPairing cutting
+    the key to sixteen hex characters and getBufferFromByteArray shifting those
+    eight bytes right by one nibble, with 0x8 filling the space that frees:
+
+        out[0] = (in[0] & 0xF0) >> 4 | 0x80
+        out[i] = (in[i - 1] & 0x0F) << 4 | (in[i] & 0xF0) >> 4
+
+    Shifting a hex string right by one nibble is dropping its last character,
+    so the two steps together are the slice below. Pairing key
+    a1b2c3d4e5f60718293a4b5c6d7e8f90 gives 8a1b2c3d4e5f6071, which is the value
+    the account stores beside it as `secret`, base64 encoded.
+
+    Returns None on anything else, so the config flow can say so at the form
+    rather than let unhexlify raise on every poll.
+    """
+    key = text.strip().lower().replace(":", "").replace(" ", "")
+    if not key or not set(key) <= set("0123456789abcdef"):
+        return None
+    if len(key) == 16:
+        return key
+    if len(key) == 32:
+        return CMID_MARKER_NIBBLE + key[:15]
+    return None
+
+
 # Every BLE operation needs an explicit timeout. Neither bleak nor BlueZ
 # enforces one: when BlueZ tries to raise link security and the machine does
 # not answer, the await hangs forever. Without this, a config entry stayed

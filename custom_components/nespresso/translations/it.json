@@ -70,15 +70,18 @@
     "step": {
       "bluetooth_confirm": {
         "title": "Conferma macchina Nespresso",
-        "description": "Trovata {name}. Lascia vuoto il token per generarne uno nuovo (richiede la pressione del pulsante Bluetooth sulla macchina). Se la macchina è già associata all'app Nespresso, inserisci il token esistente (16 caratteri esadecimali).",
+        "description": "Trovata {name}. Lascia vuoto questo campo su una macchina mai associata e l'integrazione genera il proprio token. Se l'app Nespresso ha già associato questa macchina, incolla la chiave di associazione di 32 caratteri del tuo account Nespresso così continuano a funzionare entrambe, oppure il token di 16 caratteri letto da una cattura Bluetooth.",
         "data": {
-          "auth_token": "Token di autenticazione (opzionale, 16 caratteri hex)"
+          "auth_token": "Token o chiave di associazione (facoltativo)"
         }
       },
       "user": {
         "title": "Nespresso Smart",
         "description": "Questa integrazione richiede il Bluetooth. Le macchine vengono scoperte automaticamente."
       }
+    },
+    "error": {
+      "invalid_auth_token": "Non è né una chiave di associazione né un token. Sono attesi 32 caratteri esadecimali dal tuo account Nespresso, o 16 da una cattura Bluetooth."
     },
     "abort": {
       "already_configured": "La macchina è già configurata.",

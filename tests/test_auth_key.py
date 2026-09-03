@@ -22,12 +22,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-"""Unit tests for auth key generation.
+"""Unit tests for auth key generation and for reading a typed key.
 
 The key is written to the machine unchanged, so its shape has to match what
 the Nespresso Smart APK v1.2.5 produces in PairingUtils.getBufferFromByteArray.
 """
 
+import random
 import sys
 from unittest.mock import MagicMock
 
@@ -52,7 +53,23 @@ sys.modules.setdefault("bleak_retry_connector", MagicMock())
 from custom_components.nespresso.ble.protocol import (
     CMID_MARKER_NIBBLE,
     generate_auth_key,
+    normalize_auth_key,
 )
+
+
+def apk_derive(pairing_key: str) -> str:
+    """Derive the CMID the way the APK does, for the tests to compare against.
+
+    A transcription of PairingUtils.prepareHashForPairing followed by
+    getBufferFromByteArray, kept in its original byte-shifting form so the
+    slice in normalize_auth_key has something independent to agree with.
+    """
+    raw = bytes.fromhex((pairing_key + "0")[:16])
+    out = bytearray(8)
+    out[0] = ((raw[0] & 0xF0) >> 4) | 0x80
+    for i in range(1, 8):
+        out[i] = ((raw[i - 1] & 0x0F) << 4) | ((raw[i] & 0xF0) >> 4)
+    return out.hex()
 
 
 class TestGenerateAuthKey:
@@ -81,3 +98,49 @@ class TestGenerateAuthKey:
         keys = {generate_auth_key() for _ in range(50)}
         assert len(keys) == 50
         assert len({k[1:] for k in keys}) == 50
+
+
+class TestNormalizeAuthKey:
+    def test_reads_a_pairing_key_from_the_account(self) -> None:
+        """32 hex characters is the key the Nespresso account holds.
+
+        This one is the placeholder from the protocol notes, whose derived
+        value the account stores as `secret`, ihssPU5fYHE= in base64.
+        """
+        assert (
+            normalize_auth_key("a1b2c3d4e5f60718293a4b5c6d7e8f90") == "8a1b2c3d4e5f6071"
+        )
+
+    def test_agrees_with_the_apk(self) -> None:
+        """The slice and the byte shift are the same function."""
+        rng = random.Random(0)
+        for _ in range(200):
+            pairing_key = f"{rng.getrandbits(128):032x}"
+            assert normalize_auth_key(pairing_key) == apk_derive(pairing_key)
+
+    def test_keeps_a_captured_token(self) -> None:
+        """16 hex characters is a CMID already, nothing to derive."""
+        assert normalize_auth_key("8a1b2c3d4e5f6071") == "8a1b2c3d4e5f6071"
+
+    def test_tolerates_how_it_was_copied(self) -> None:
+        assert normalize_auth_key("  8A1B2C3D4E5F6071 ") == "8a1b2c3d4e5f6071"
+        assert normalize_auth_key("8a:1b:2c:3d:4e:5f:60:71") == "8a1b2c3d4e5f6071"
+
+    def test_rejects_everything_else(self) -> None:
+        """Better said at the form than raised by unhexlify on every poll."""
+        for text in (
+            "",
+            "   ",
+            "8a1b2c3d4e5f607",
+            "8a1b2c3d4e5f60712",
+            "a1b2c3d4e5f60718293a4b5c6d7e8f9",
+            "a1b2c3d4e5f60718293a4b5c6d7e8f901",
+            "8a1b2c3d4e5f607g",
+            "not a key at all",
+        ):
+            assert normalize_auth_key(text) is None
+
+    def test_generated_keys_survive_a_round_trip(self) -> None:
+        for _ in range(50):
+            key = generate_auth_key()
+            assert normalize_auth_key(key) == key
