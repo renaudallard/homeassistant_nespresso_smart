@@ -195,13 +195,18 @@ class NespressoConfigFlow(ConfigFlow, domain=DOMAIN):
                     data["auth_key"] = auth_key
                 return self.async_create_entry(title=self._name, data=data)
 
+        # Hand back what was typed when the key is rejected. It is 32 characters
+        # copied out of a browser, and clearing the field costs the paste.
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders={"name": self._name},
-            data_schema=vol.Schema(
-                {
-                    vol.Optional("auth_token", default=""): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Optional("auth_token", default=""): str,
+                    }
+                ),
+                user_input,
             ),
             errors=errors,
         )
