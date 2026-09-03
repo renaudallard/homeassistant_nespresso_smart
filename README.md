@@ -383,7 +383,7 @@ The brew command is sent on the same BLE connection used for status polling (req
 
 **Note:** BLE brewing is experimental. It was reverse-engineered from BLE captures on Vertuo Next models and may not work on all machines.
 
-**Vertuo Pop:** Remote brewing over BLE is not supported by this machine. The Nespresso app itself does not offer a brew button for the Vertuo Pop, and the machine does not respond to any known BLE brew command. Only status monitoring and settings like water hardness work over BLE. The brew button is therefore not created on a machine whose platform code is `CV2` or `DV2`, both of which are the Pop.
+**Vertuo Pop and Vertuo Creatista:** Remote brewing over BLE is not supported by these machines. The Nespresso app itself does not offer a brew button for any model, and neither machine responds to a known BLE brew command: both acknowledge the write and stay idle. Only status monitoring and settings like water hardness work over BLE. The brew button is therefore not created on a machine whose platform code is `CV2` or `DV2`, which are the Pop, or `CV5`, which is the Creatista.
 
 ### Events and Triggers
 
@@ -472,7 +472,7 @@ registered to a Nespresso account through their app as well. See
 
 ## Limitations
 
-- **Vertuo brewing**: Experimental. The brew command was captured from Vertuo Next models and may not work on all machines. The Vertuo Pop does not support BLE brewing at all (the Nespresso app itself does not offer a brew button for it), so no brew button is created for it. Custom recipes with exact ml volumes are not yet supported.
+- **Vertuo brewing**: Experimental. The brew command was captured from Vertuo Next models and may not work on all machines. The Vertuo Pop and the Vertuo Creatista do not support BLE brewing at all (the Nespresso app itself offers no brew button for any model), so no brew button is created for either. Custom recipes with exact ml volumes are not yet supported.
 - **Maintenance commands**: Descaling, rinsing, emptying command IDs are not in the decompiled code. Needs real hardware testing.
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
