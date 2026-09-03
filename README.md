@@ -24,6 +24,21 @@ Built by reverse-engineering the Nespresso Smart Android app (v1.2.5).
 | Vertuo Next (Venus) | `06AA1910-F22A-11E3-9DAA-0002A5D5C51B` | VertuoNext, VertuoPop, VertuoPopPlus, VertuoLattissima, VertuoCreatista, VertuoUp |
 | VMini | `96600100-526E-4676-A11A-AF1EB848165B` | Vertuo Mini |
 
+Every machine in the Venus family advertises that one service UUID, so the model
+shown on the device page comes from the platform code instead, which appears in
+the serial number and in the BLE name:
+
+| Code | Model |
+|------|-------|
+| CV1, DV1, CV3, DV3 | Vertuo Next |
+| CV2, DV2 | Vertuo Pop |
+| CV6, DV6 | Vertuo Pop+ |
+| DV5 | Vertuo Lattissima |
+| CV5 | Vertuo Creatista |
+
+A machine that has not told us its name or serial yet is shown as Vertuo Next
+until the first successful read.
+
 ## Installation
 
 ### HACS (recommended)
@@ -368,7 +383,7 @@ The brew command is sent on the same BLE connection used for status polling (req
 
 **Note:** BLE brewing is experimental. It was reverse-engineered from BLE captures on Vertuo Next models and may not work on all machines.
 
-**Vertuo Pop:** Remote brewing over BLE is not supported by this machine. The Nespresso app itself does not offer a brew button for the Vertuo Pop, and the machine does not respond to any known BLE brew command. Only status monitoring and settings like water hardness work over BLE.
+**Vertuo Pop:** Remote brewing over BLE is not supported by this machine. The Nespresso app itself does not offer a brew button for the Vertuo Pop, and the machine does not respond to any known BLE brew command. Only status monitoring and settings like water hardness work over BLE. The brew button is therefore not created on a machine whose platform code is `CV2` or `DV2`, both of which are the Pop.
 
 ### Events and Triggers
 

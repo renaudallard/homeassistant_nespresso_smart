@@ -56,11 +56,11 @@ from .const import (
     DEFAULT_DESCALING_DAYS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    MACHINE_FAMILY_NAMES,
     WIFI_SECURITY_TYPES,
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator, counter_store
+from .entity import machine_model
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -184,7 +184,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         identifiers={(DOMAIN, address)},
         name=entry.data.get("name", "Nespresso"),
         manufacturer="Nespresso",
-        model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
+        model=machine_model(entry, coordinator),
     )
     coordinator.set_device_id(device_entry.id)
 

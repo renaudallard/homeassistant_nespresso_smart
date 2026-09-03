@@ -44,34 +44,23 @@ from .const import (
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator
-from .entity import machine_device_info
+from .entity import machine_device_info, platform_code
 
 _LOGGER = logging.getLogger(__name__)
 
 # Vertuo platform codes with no BLE brew support. The Nespresso app itself
 # offers no brew button for these models and the machine ignores every known
 # brew command, so exposing a button that silently does nothing is worse than
-# not exposing one. The code appears both in the serial number
-# ("23222CV2f2001582072") and in the BLE name ("CV2_5443B29C51B2").
-NO_BREW_PLATFORM_CODES = ("CV2",)
+# not exposing one. Both codes are the Vertuo Pop.
+NO_BREW_PLATFORM_CODES = ("CV2", "DV2")
 
 
 def _supports_brewing(coordinator: NespressoCoordinator, entry: ConfigEntry) -> bool:
     """Return False for Vertuo models known to reject BLE brew commands."""
-    data = coordinator.data
-    candidates = (
-        entry.data.get("name") or "",
-        (data.serial_number if data else None) or "",
-        (data.iot_market_name if data else None) or "",
-    )
-    for text in candidates:
-        upper = text.upper()
-        for code in NO_BREW_PLATFORM_CODES:
-            if code in upper:
-                _LOGGER.debug(
-                    "Brew button skipped: %r matches non-brewing model %s", text, code
-                )
-                return False
+    code = platform_code(entry, coordinator)
+    if code in NO_BREW_PLATFORM_CODES:
+        _LOGGER.debug("Brew button skipped: %s does not brew over BLE", code)
+        return False
     return True
 
 

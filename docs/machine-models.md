@@ -31,6 +31,29 @@ Source: `com.nestle.p060us.nespresso.nespressosmartmachines.domain.model.Machine
 | Barista | Barista | WHITE |
 | Generic | Generic | (default) |
 
+### Platform Codes
+
+Source: `MachineTypeKt.a`, the map from machine type to the strings that identify
+it. The three character codes appear in the serial number
+(`23222CV2f2001582072`) and in the BLE advertised name (`CV2_5443B29C51B2`,
+`Vertuo_CV5_78421CC0B0EE`), which is the only way to tell two machines of the
+same family apart over Bluetooth. The rest are cloud-side aliases, seen in
+`machineSerialized` and never over BLE.
+
+| Machine Type | Platform codes | Cloud aliases |
+|--------------|----------------|---------------|
+| VertuoNext | CV1, DV1, CV3, DV3 | VENUS |
+| VertuoPop | CV2, DV2 | VENUS_ONE |
+| VertuoPopPlus | CV6, DV6 | VENUS_MOON |
+| VertuoLattissima | DV5 | VENUS_1PLUS1_DL |
+| VertuoCreatista | CV5 | VENUS_1PLUS1_BR |
+| VertuoUp | MC1, MD1, MC2, MD2 | VENUS_MINI |
+| Barista | W10, W11 | WHITE |
+
+The integration only uses the Venus codes. A Barista and a Vertuo Mini are
+already named by their family, and searching a serial number for a three
+character code invents matches when it has nothing to gain.
+
 ---
 
 ## Hardware Families

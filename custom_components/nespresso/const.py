@@ -329,3 +329,25 @@ MACHINE_FAMILY_NAMES: Final[dict[MachineFamily, str]] = {
     MachineFamily.VERTUO_NEXT: "Vertuo Next",
     MachineFamily.VMINI: "Vertuo Mini",
 }
+
+# Every machine on the Venus profile answers to the Vertuo Next family, so the
+# family alone cannot tell a Pop from a Creatista. The platform code can: it
+# appears in the serial number ("23222CV2f2001582072") and in the BLE name
+# ("CV2_5443B29C51B2", "Vertuo_CV5_78421CC0B0EE").
+#
+# Source: MachineTypeKt.a in the APK. It also carries codes for the other two
+# families, W10 and W11 for the Barista and MC1, MD1, MC2, MD2 for the machine
+# it calls Vertuo Up, but those name the family we already have. The VENUS*
+# and WHITE aliases beside them are cloud-side names that never reach us.
+VERTUO_PLATFORM_NAMES: Final[dict[str, str]] = {
+    "CV1": "Vertuo Next",
+    "DV1": "Vertuo Next",
+    "CV3": "Vertuo Next",
+    "DV3": "Vertuo Next",
+    "CV2": "Vertuo Pop",
+    "DV2": "Vertuo Pop",
+    "CV6": "Vertuo Pop+",
+    "DV6": "Vertuo Pop+",
+    "DV5": "Vertuo Lattissima",
+    "CV5": "Vertuo Creatista",
+}

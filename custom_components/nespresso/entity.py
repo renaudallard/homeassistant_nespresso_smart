@@ -25,11 +25,58 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, MACHINE_FAMILY_NAMES, MachineFamily
-from .coordinator import NespressoCoordinator
+from .const import (
+    DOMAIN,
+    MACHINE_FAMILY_NAMES,
+    VERTUO_PLATFORM_NAMES,
+    MachineFamily,
+)
+
+if TYPE_CHECKING:
+    # Only the annotations need it, and importing the coordinator for real
+    # would drag Home Assistant in behind it, which the tests do not have.
+    from .coordinator import NespressoCoordinator
+
+
+def platform_code(entry: ConfigEntry, coordinator: NespressoCoordinator) -> str | None:
+    """Return the machine's platform code, if anything it told us carries one.
+
+    Three places can hold it and none of them is always there: the BLE name is
+    missing from some advertisements, and the serial and the market name only
+    arrive with the first successful read.
+    """
+    if MachineFamily(entry.data["family"]) != MachineFamily.VERTUO_NEXT:
+        return None
+    data = coordinator.data
+    for text in (
+        entry.data.get("name") or "",
+        (data.serial_number if data else None) or "",
+        (data.iot_market_name if data else None) or "",
+    ):
+        upper = text.upper()
+        for code in VERTUO_PLATFORM_NAMES:
+            if code in upper:
+                return code
+    return None
+
+
+def machine_model(entry: ConfigEntry, coordinator: NespressoCoordinator) -> str:
+    """Name the model, falling back to the family when nothing says more.
+
+    Only the Venus profile needs this. A Barista and a Vertuo Mini are already
+    named by their family, and searching their serials for a three character
+    code would only invent matches.
+    """
+    code = platform_code(entry, coordinator)
+    if code is not None:
+        return VERTUO_PLATFORM_NAMES[code]
+    family = MachineFamily(entry.data["family"])
+    return MACHINE_FAMILY_NAMES.get(family, "Unknown")
 
 
 def machine_device_info(
@@ -40,13 +87,12 @@ def machine_device_info(
     Twelve entities spelled this out identically, which was eleven chances for
     two of them to disagree about what the device is called.
     """
-    family = MachineFamily(entry.data["family"])
     data = coordinator.data
     return DeviceInfo(
         identifiers={(DOMAIN, entry.data["address"])},
         name=entry.data.get("name", "Nespresso"),
         manufacturer="Nespresso",
-        model=MACHINE_FAMILY_NAMES.get(family, "Unknown"),
+        model=machine_model(entry, coordinator),
         serial_number=data.serial_number if data else None,
         sw_version=data.firmware_version if data else None,
         hw_version=data.hardware_version if data else None,
