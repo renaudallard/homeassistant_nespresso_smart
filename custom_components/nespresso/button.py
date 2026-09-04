@@ -177,7 +177,7 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
 
         # Tell the coordinator to keep the next poll connection alive
         # so we can send the brew on the same authenticated session
-        self.coordinator._keep_connection = True
+        self.coordinator.keep_connection()
 
         waiting = {"heating", "initializing", "ready_old_capsule"}
         waking = {"power_save", "standby"}

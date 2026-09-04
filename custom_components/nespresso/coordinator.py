@@ -755,6 +755,20 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             )
             return record
 
+    def keep_connection(self) -> None:
+        """Ask the next poll to leave its connection open.
+
+        A command has to go out on the session that authenticated, so the brew
+        button sets this before the poll it intends to ride on, and releases it
+        in a finally. The release half was already public and this half was not.
+        """
+        self._keep_connection = True
+
+    @property
+    def is_connected(self) -> bool:
+        """Whether a connection is being held open right now."""
+        return self._client is not None
+
     async def async_release_kept_connection(self) -> None:
         """Release the temporary connection kept for brew."""
         self._keep_connection = False
