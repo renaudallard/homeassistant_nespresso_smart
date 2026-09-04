@@ -630,6 +630,25 @@ That single call is also the whole command vocabulary the APK gives us. Every
 other `VertuoNextMachine` coroutine was decompiled and none of them constructs a
 `CCommandReq`.
 
+**An older app does not help, checked rather than assumed.** v0.3.10 bundles
+only the `vertuonext` SDK, before the Barista and VMini ones existed, and its
+`VertuoNextMachine` has the same coroutines as v1.2.5: pair, set the key,
+factory reset, post pairing, status, firmware, water hardness, wifi, market,
+disconnect. No brew, no recipe, no `CCommandReq` beyond the reset.
+
+The brew vocabulary it does contain, `BrewAction`, `BREW_ACTION_NAME` and a
+`BrewingOptions` carrying volume, recipe, temperature and customer, lives
+entirely in `com.nestle.mse.iot.msl.mock.machine`, the simulator the developers
+test against. `MockMachineInternal.executeSimulatedAction` drives it and no
+radio is involved.
+
+`EventConstants` is telemetry, not commands. Its `Action` type is a pair of
+`actionName` and `shouldSendTelemetry`, and the list mixes `StartRecipe`,
+`Rinsing` and `Descaling` with `NTC Broken`, `No water` and `Coffee left
+blocked`. The machine does report those faults, so it plausibly reports a
+recipe starting too, but that is an inference about a telemetry label rather
+than a characteristic anyone has read.
+
 ### Simple Brew (Predefined Recipes)
 
 Brew commands use the `CCommandReq` wire format written to `CHAR_COMMAND_REQ`
