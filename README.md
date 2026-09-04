@@ -720,6 +720,45 @@ Every line is there to tell one kind of nothing from another.
 The same record lands in the diagnostics download as `last_command`, so a brew
 button press reads the same way, minus the extra subscriptions.
 
+### Watching the machine
+
+`nespresso.watch` holds the connection open and records everything that moves:
+every characteristic whose value changes, every notification, each with the
+number of seconds since the watch started. Start it, then walk over and use the
+machine by hand.
+
+It exists because the poll runs once a minute and a brew or a frothing cycle is
+over before the next one. It is also the only way to identify a characteristic
+the official app never mentions, since those all read as zeros while the
+machine is idle and only mean something while it works.
+
+```yaml
+action: nespresso.watch
+data:
+  config_entry_id: <your entry>
+  seconds: 90
+```
+
+The result lists every characteristic with its service and GATT properties, the
+first value seen for each, then the changes and notifications in order:
+
+```yaml
+samples: 28
+changes:
+  - at: 12.4
+    uuid: 06aa3a12-f22a-11e3-9daa-0002a5d5c51b
+    was: "4082010001003f00"
+    now: "4082010004003f00"
+notifications:
+  - at: 12.6
+    uuid: 06aa3a52-f22a-11e3-9daa-0002a5d5c51b
+    value: "0305..."
+```
+
+The auth characteristic is never read. Events are capped, and `truncated` says
+so if the cap was hit. The record is also in the diagnostics download as
+`last_watch`.
+
 ### Collecting diagnostics for an issue
 
 Add this to `configuration.yaml` and restart:

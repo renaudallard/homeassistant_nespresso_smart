@@ -63,12 +63,15 @@ from .ble.parsing import (
 from .ble.protocol import generate_auth_key, get_protocol
 from .ble.recipe import parse_recipe_info
 from .const import (
+    AUTH_CHARS,
     BARISTA_CHAR_STATUS,
     COUNTER_SAVE_DELAY,
     COUNTER_STORAGE_VERSION,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     VERTUO_CHAR_STATUS,
+    WATCH_MAX_EVENTS,
+    WATCH_SAMPLE_PAUSE,
     MachineFamily,
 )
 from .models import NespressoMachineData, RawMachineData
@@ -132,6 +135,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         # unanswered is only evidence once it is known whether the machine
         # could have answered at all.
         self.last_command: dict[str, Any] | None = None
+        self.last_watch: dict[str, Any] | None = None
         # Pairing state as last seen in an advertisement. Kept apart from
         # self.data because it is at its most useful before the first
         # successful poll, when there is no data at all.
@@ -426,6 +430,55 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             _LOGGER.debug("Status read failed: %s", err)
             return None
 
+    async def _acquire_client(self) -> tuple[BleakClient, bool]:
+        """Return a connected, authenticated client, and whether we own it.
+
+        The caller must hold _ble_lock and must disconnect the client if it
+        owns it. A persistent connection is reused as it stands, since the poll
+        that opened it has already authenticated on that session.
+        """
+        client = self._client
+        if client is not None and client.is_connected:
+            _LOGGER.debug("Reusing persistent connection for command")
+            return client, False
+
+        await asyncio.sleep(2)
+        device = bluetooth.async_ble_device_from_address(
+            self.hass, self.address, connectable=True
+        )
+        if device is None:
+            raise BleakError("Machine not found")
+        try:
+            client = await establish_connection(
+                BleakClient, device, self.address, max_attempts=2
+            )
+        except (BleakError, TimeoutError) as err:
+            err_str = str(err).lower()
+            if "already in progress" in err_str:
+                _LOGGER.debug("BLE busy, retrying after delay")
+                await asyncio.sleep(3)
+                client = await establish_connection(
+                    BleakClient, device, self.address, max_attempts=2
+                )
+            elif "connection abort" in err_str:
+                _LOGGER.info("Command connection abort, retrying after a delay")
+                await asyncio.sleep(3)
+                device = bluetooth.async_ble_device_from_address(
+                    self.hass, self.address, connectable=True
+                )
+                if device is None:
+                    raise
+                client = await establish_connection(
+                    BleakClient, device, self.address, max_attempts=2
+                )
+            else:
+                raise
+        if self.auth_key:
+            from .ble.protocol import _authenticate
+
+            await _authenticate(client, self.auth_key, self.family, self.send_tx_level)
+        return client, True
+
     async def async_send_command(
         self,
         cmd_uuid: str,
@@ -447,49 +500,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         rather than whether a known command worked.
         """
         async with self._ble_lock:
-            own_client = False
-            client = self._client
-            if client is not None and client.is_connected:
-                _LOGGER.debug("Reusing persistent connection for command")
-            else:
-                own_client = True
-                await asyncio.sleep(2)
-                device = bluetooth.async_ble_device_from_address(
-                    self.hass, self.address, connectable=True
-                )
-                if device is None:
-                    raise BleakError("Machine not found")
-                try:
-                    client = await establish_connection(
-                        BleakClient, device, self.address, max_attempts=2
-                    )
-                except (BleakError, TimeoutError) as err:
-                    err_str = str(err).lower()
-                    if "already in progress" in err_str:
-                        _LOGGER.debug("BLE busy, retrying after delay")
-                        await asyncio.sleep(3)
-                        client = await establish_connection(
-                            BleakClient, device, self.address, max_attempts=2
-                        )
-                    elif "connection abort" in err_str:
-                        _LOGGER.info("Command connection abort, retrying after a delay")
-                        await asyncio.sleep(3)
-                        device = bluetooth.async_ble_device_from_address(
-                            self.hass, self.address, connectable=True
-                        )
-                        if device is None:
-                            raise
-                        client = await establish_connection(
-                            BleakClient, device, self.address, max_attempts=2
-                        )
-                    else:
-                        raise
-                if self.auth_key:
-                    from .ble.protocol import _authenticate
-
-                    await _authenticate(
-                        client, self.auth_key, self.family, self.send_tx_level
-                    )
+            client, own_client = await self._acquire_client()
 
             try:
                 response: bytearray | None = None
@@ -617,6 +628,131 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             finally:
                 if own_client:
                     await client.disconnect()
+
+    async def async_watch(self, seconds: float) -> dict[str, Any]:
+        """Record everything the machine says and shows for a while.
+
+        The poll reads the machine once a minute, which is longer than a brew
+        or a frothing cycle, so anything interesting is over before the next
+        one. This holds the connection open instead and reads every readable
+        characteristic in a loop, recording only the values that move, with
+        every notification timestamped beside them.
+
+        It is the tool for the characteristics the official app never mentions:
+        they all read as zeros while the machine is idle, so the only way to
+        learn what they are is to watch them while someone uses the machine.
+        """
+        async with self._ble_lock:
+            client, own_client = await self._acquire_client()
+            started = time.monotonic()
+            record: dict[str, Any] = {
+                "seconds": seconds,
+                "samples": 0,
+                "characteristics": {},
+                "changes": [],
+                "notifications": [],
+                "truncated": False,
+            }
+            self.last_watch = record
+
+            def stamp() -> float:
+                return round(time.monotonic() - started, 1)
+
+            def note(bucket: str, entry: dict[str, Any]) -> None:
+                if len(record[bucket]) >= WATCH_MAX_EVENTS:
+                    record["truncated"] = True
+                    return
+                record[bucket].append(entry)
+
+            def handler(uuid: str) -> Callable[[object, bytearray], None]:
+                def on_notify(_sender: object, data: bytearray) -> None:
+                    value = bytes(data).hex()
+                    note("notifications", {"at": stamp(), "uuid": uuid, "value": value})
+                    _LOGGER.debug("Watch %s notified %s", uuid, value)
+
+                return on_notify
+
+            readable: list[str] = []
+            listening: list[str] = []
+            for service in client.services:
+                for char in service.characteristics:
+                    record["characteristics"][char.uuid] = {
+                        "service": service.uuid,
+                        "properties": ",".join(sorted(char.properties)),
+                    }
+                    if (
+                        "read" in char.properties
+                        and char.uuid.lower() not in AUTH_CHARS
+                    ):
+                        readable.append(char.uuid)
+
+            for uuid in self._notifiable_chars(client):
+                # The poll owns this subscription in persistent mode. Taking it
+                # over and handing it back would leave the poll deaf.
+                if not own_client and self.persistent and uuid == self._status_uuid:
+                    continue
+                try:
+                    await client.start_notify(uuid, handler(uuid))
+                    listening.append(uuid)
+                except Exception as err:  # noqa: BLE001
+                    _LOGGER.debug("Watch cannot listen on %s: %s", uuid, err)
+            record["listening"] = listening
+
+            try:
+                previous: dict[str, str] = {}
+                while time.monotonic() - started < seconds:
+                    if not client.is_connected:
+                        record["ended_early"] = "the machine dropped the link"
+                        _LOGGER.debug("Watch ended early, link gone")
+                        break
+                    record["samples"] += 1
+                    for uuid in readable:
+                        try:
+                            value = bytes(await client.read_gatt_char(uuid)).hex()
+                        except Exception as err:  # noqa: BLE001
+                            _LOGGER.debug("Watch read of %s failed: %s", uuid, err)
+                            continue
+                        was = previous.get(uuid)
+                        previous[uuid] = value
+                        if was is None:
+                            record["characteristics"][uuid]["initial"] = value
+                        elif was != value:
+                            note(
+                                "changes",
+                                {
+                                    "at": stamp(),
+                                    "uuid": uuid,
+                                    "was": was,
+                                    "now": value,
+                                },
+                            )
+                            _LOGGER.debug("Watch %s %s -> %s", uuid, was, value)
+                        if time.monotonic() - started >= seconds:
+                            break
+                    # Always yield, even when nothing was readable. Without
+                    # this the loop is a spin that never gives the event loop
+                    # back, and it would also hammer the machine.
+                    await asyncio.sleep(WATCH_SAMPLE_PAUSE)
+            finally:
+                for uuid in listening:
+                    try:
+                        await client.stop_notify(uuid)
+                    except Exception as err:  # noqa: BLE001
+                        _LOGGER.debug(
+                            "Watch cannot stop listening on %s: %s", uuid, err
+                        )
+                if own_client:
+                    await client.disconnect()
+
+            record["elapsed_seconds"] = stamp()
+            _LOGGER.debug(
+                "Watch on %s: %d samples, %d changes, %d notifications",
+                self.address,
+                record["samples"],
+                len(record["changes"]),
+                len(record["notifications"]),
+            )
+            return record
 
     async def async_release_kept_connection(self) -> None:
         """Release the temporary connection kept for brew."""

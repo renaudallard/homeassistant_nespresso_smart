@@ -307,6 +307,20 @@
           "description": "Der zu schreibende Rahmen als Hex. Beispiel 03050704000000000002, ein Vertuo Lungo bei mittlerer Temperatur."
         }
       }
+    },
+    "watch": {
+      "name": "Die Maschine beobachten",
+      "description": "Hält die Verbindung offen und zeichnet alles auf, was sich bewegt: jede Charakteristik, deren Wert sich ändert, und jede Benachrichtigung, mit Zeitstempel. Starten und dann die Maschine von Hand bedienen. So lassen sich die Charakteristiken bestimmen, die die offizielle App nie erwähnt.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maschine",
+          "description": "Die Nespresso-Maschine, auf die sich der Aufruf bezieht."
+        },
+        "seconds": {
+          "name": "Dauer",
+          "description": "Wie lange beobachtet wird, in Sekunden. Lang genug für einen ganzen Zyklus, Bezug oder Aufschäumen."
+        }
+      }
     }
   }
 }

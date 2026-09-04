@@ -307,6 +307,20 @@
           "description": "Het te schrijven frame, als hex. Voorbeeld 03050704000000000002, een Vertuo lungo op middelhoge temperatuur."
         }
       }
+    },
+    "watch": {
+      "name": "De machine observeren",
+      "description": "Houdt de verbinding open en legt alles vast wat verandert: elke karakteristiek waarvan de waarde verspringt en elke notificatie, met tijdstempel. Start dit en bedien de machine daarna met de hand. Zo worden de karakteristieken herkend die de officiële app nooit noemt.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Machine",
+          "description": "De Nespresso-machine waarop dit van toepassing is."
+        },
+        "seconds": {
+          "name": "Duur",
+          "description": "Hoe lang er geobserveerd wordt, in seconden. Lang genoeg voor een volledige cyclus, zetten of opschuimen."
+        }
+      }
     }
   }
 }

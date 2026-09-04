@@ -307,6 +307,20 @@
           "description": "Ramka do zapisania, szesnastkowo. Przykład 03050704000000000002, Vertuo lungo w średniej temperaturze."
         }
       }
+    },
+    "watch": {
+      "name": "Obserwuj urządzenie",
+      "description": "Utrzymuje otwarte połączenie i zapisuje wszystko, co się zmienia: każdą charakterystykę, której wartość drgnie, i każde powiadomienie, ze znacznikiem czasu. Uruchom, a potem obsłuż urządzenie ręcznie. Tak rozpoznaje się charakterystyki, o których oficjalna aplikacja nigdy nie wspomina.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Urządzenie",
+          "description": "Urządzenie Nespresso, którego dotyczy wywołanie."
+        },
+        "seconds": {
+          "name": "Czas trwania",
+          "description": "Jak długo obserwować, w sekundach. Na tyle długo, by objąć cały cykl, parzenie lub spienianie."
+        }
+      }
     }
   }
 }

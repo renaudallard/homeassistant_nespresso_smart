@@ -357,6 +357,16 @@ VERTUO_PLATFORM_NAMES: Final[dict[str, str]] = {
     "CV5": "Vertuo Creatista",
 }
 
+# A watch session records only the values that move, but a machine with a
+# chatty characteristic could still fill memory over a long run. Changes and
+# notifications are capped separately, and the record says when it was cut.
+WATCH_MAX_EVENTS: Final = 500
+
+# Pause between passes of a watch session. A full read of every characteristic
+# takes a couple of seconds over a proxy, so this is a courtesy to the machine
+# rather than the thing that sets the resolution.
+WATCH_SAMPLE_PAUSE: Final = 0.5
+
 # Vertuo platform codes with no BLE brew support. The Nespresso app itself
 # offers no brew button for these models and the machine ignores every known
 # brew command, so exposing a button that silently does nothing is worse than

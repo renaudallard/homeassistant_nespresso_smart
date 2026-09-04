@@ -307,6 +307,20 @@
           "description": "The frame to write, as hex. Example 03050704000000000002, a Vertuo lungo at medium temperature."
         }
       }
+    },
+    "watch": {
+      "name": "Watch the machine",
+      "description": "Hold the connection open and record everything that moves: every characteristic that changes value and every notification, timestamped. Run it, then use the machine by hand. It is how the characteristics the official app never mentions get identified.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Machine",
+          "description": "The Nespresso machine to act on."
+        },
+        "seconds": {
+          "name": "Duration",
+          "description": "How long to watch, in seconds. Long enough to cover a whole cycle, brewing or frothing."
+        }
+      }
     }
   }
 }

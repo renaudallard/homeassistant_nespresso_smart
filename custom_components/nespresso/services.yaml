@@ -63,3 +63,20 @@ send_command:
       example: "03050704000000000002"
       selector:
         text:
+
+watch:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: nespresso
+    seconds:
+      required: false
+      default: 60
+      selector:
+        number:
+          min: 5
+          max: 600
+          unit_of_measurement: s
+          mode: box

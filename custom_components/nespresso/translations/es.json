@@ -307,6 +307,20 @@
           "description": "La trama a escribir, en hexadecimal. Ejemplo 03050704000000000002, un lungo Vertuo a temperatura media."
         }
       }
+    },
+    "watch": {
+      "name": "Observar la máquina",
+      "description": "Mantiene la conexión abierta y registra todo lo que cambia: cada característica cuyo valor se mueve y cada notificación, con marca de tiempo. Ejecútela y luego use la máquina a mano. Así se identifican las características que la aplicación oficial nunca menciona.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Máquina",
+          "description": "La máquina Nespresso sobre la que actuar."
+        },
+        "seconds": {
+          "name": "Duración",
+          "description": "Cuánto tiempo observar, en segundos. Lo bastante para cubrir un ciclo entero, preparación o espumado."
+        }
+      }
     }
   }
 }

@@ -78,6 +78,7 @@ PLATFORMS: list[Platform] = [
 SERVICE_SCAN_WIFI = "scan_wifi"
 SERVICE_CONFIGURE_WIFI = "configure_wifi"
 SERVICE_SEND_COMMAND = "send_command"
+SERVICE_WATCH = "watch"
 
 ATTR_ENTRY_ID = "config_entry_id"
 
@@ -87,6 +88,15 @@ _SEND_COMMAND_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTRY_ID): cv.string,
         vol.Required("payload"): cv.string,
+    }
+)
+
+_WATCH_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTRY_ID): cv.string,
+        vol.Optional("seconds", default=60): vol.All(
+            vol.Coerce(float), vol.Range(min=5, max=600)
+        ),
     }
 )
 
@@ -163,6 +173,18 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN, SERVICE_CONFIGURE_WIFI, _configure, schema=_CONFIGURE_WIFI_SCHEMA
+    )
+
+    async def _watch(call: ServiceCall) -> ServiceResponse:
+        coordinator = _coordinator(hass, call.data[ATTR_ENTRY_ID])
+        return await coordinator.async_watch(call.data["seconds"])
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_WATCH,
+        _watch,
+        schema=_WATCH_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,

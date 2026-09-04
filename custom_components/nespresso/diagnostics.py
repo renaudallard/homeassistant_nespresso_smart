@@ -76,6 +76,9 @@ async def async_get_config_entry_diagnostics(
     if coordinator.last_command is not None:
         diag["last_command"] = coordinator.last_command
 
+    if coordinator.last_watch is not None:
+        diag["last_watch"] = coordinator.last_watch
+
     if coordinator.last_exception is not None:
         diag["last_error"] = str(coordinator.last_exception)
 

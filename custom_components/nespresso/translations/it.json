@@ -307,6 +307,20 @@
           "description": "La trama da scrivere, in esadecimale. Esempio 03050704000000000002, un lungo Vertuo a temperatura media."
         }
       }
+    },
+    "watch": {
+      "name": "Osserva la macchina",
+      "description": "Tiene la connessione aperta e registra tutto ciò che si muove: ogni caratteristica il cui valore cambia e ogni notifica, con marca temporale. Avviala, poi usa la macchina a mano. È così che si identificano le caratteristiche di cui l'app ufficiale non parla mai.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Macchina",
+          "description": "La macchina Nespresso su cui agire."
+        },
+        "seconds": {
+          "name": "Durata",
+          "description": "Per quanto tempo osservare, in secondi. Abbastanza da coprire un ciclo intero, erogazione o montatura."
+        }
+      }
     }
   }
 }
