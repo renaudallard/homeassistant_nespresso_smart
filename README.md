@@ -329,7 +329,6 @@ English ones.
 | Connectivity FW | No | Yes | No | WiFi/connectivity firmware version (diagnostic) |
 | Error code | No | Yes | No | Current active error code (diagnostic) |
 | Error log code | No | Yes | No | Error from error log (diagnostic) |
-| Capsule counter | No | Yes | No | Capsule counter |
 | Milk unit | No | Yes | No | State of the milk system, 16 values from offline to frothing. Only on a Creatista or a Lattissima |
 | IoT market | No | Yes | No | IoT market name (diagnostic) |
 | Recipe slots | Yes | No | No | Maximum recipe slots (diagnostic) |
@@ -367,7 +366,7 @@ English ones.
 | Brew | No | Yes | No | Start brewing (see brewing flow below) |
 | Water hardness | No | Yes | No | Set water hardness level (0-6 slider) |
 | Auto power off | No | Yes | No | Set auto power off time (minutes) |
-| Capsule counter (settable) | No | Yes | No | Correct the machine's own capsule count. Only created on machines that have the counter, which the Pop and the Creatista do not |
+| Capsule counter | No | Yes | No | The machine's own capsule count, and writable so it can be corrected. Only created on machines that have the counter, which the Pop and the Creatista do not |
 | Reset descaling counter | No | Yes | No | Clear the descaling counter after descaling the machine |
 | Check firmware update | No | No | Yes | Trigger firmware update check |
 

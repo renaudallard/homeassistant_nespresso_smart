@@ -97,9 +97,6 @@
       "iot_market_name": {
         "name": "Rynek IoT"
       },
-      "caps_counter": {
-        "name": "Licznik kapsułek"
-      },
       "shadow_data": {
         "name": "Cień urządzenia"
       },
@@ -184,7 +181,7 @@
         "name": "Automatyczne wyłączanie"
       },
       "caps_counter_setting": {
-        "name": "Licznik kapsułek (edytowalny)"
+        "name": "Licznik kapsułek"
       }
     },
     "select": {

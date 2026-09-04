@@ -194,13 +194,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         value_fn=lambda d: d.milk_unit_state,
     ),
     NespressoSensorDescription(
-        key="caps_counter",
-        translation_key="caps_counter",
-        icon="mdi:counter",
-        families=frozenset({MachineFamily.VERTUO_NEXT}),
-        value_fn=lambda d: d.caps_counter,
-    ),
-    NespressoSensorDescription(
         key="shadow_data",
         translation_key="shadow_data",
         icon="mdi:cloud-outline",

@@ -97,9 +97,6 @@
       "iot_market_name": {
         "name": "Marché IoT"
       },
-      "caps_counter": {
-        "name": "Compteur de capsules"
-      },
       "shadow_data": {
         "name": "Ombre de l'appareil"
       },
@@ -184,7 +181,7 @@
         "name": "Extinction automatique"
       },
       "caps_counter_setting": {
-        "name": "Compteur de capsules (modifiable)"
+        "name": "Compteur de capsules"
       }
     },
     "select": {

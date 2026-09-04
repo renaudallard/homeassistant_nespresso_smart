@@ -97,9 +97,6 @@
       "iot_market_name": {
         "name": "IoT market"
       },
-      "caps_counter": {
-        "name": "Capsule counter"
-      },
       "shadow_data": {
         "name": "Device shadow"
       },
@@ -184,7 +181,7 @@
         "name": "Auto power off"
       },
       "caps_counter_setting": {
-        "name": "Capsule counter (settable)"
+        "name": "Capsule counter"
       }
     },
     "select": {

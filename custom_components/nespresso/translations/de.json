@@ -97,9 +97,6 @@
       "iot_market_name": {
         "name": "IoT-Markt"
       },
-      "caps_counter": {
-        "name": "Kapselzähler"
-      },
       "shadow_data": {
         "name": "Geräteschatten"
       },
@@ -184,7 +181,7 @@
         "name": "Automatische Abschaltung"
       },
       "caps_counter_setting": {
-        "name": "Kapselzähler (einstellbar)"
+        "name": "Kapselzähler"
       }
     },
     "select": {
