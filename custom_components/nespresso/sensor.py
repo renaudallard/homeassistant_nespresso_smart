@@ -37,7 +37,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -283,11 +282,7 @@ class NespressoCounterSensor(CoordinatorEntity[NespressoCoordinator], SensorEnti
         self.entity_description = description
         self._address = entry.data["address"]
         self._attr_unique_id = f"{self._address}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._address)},
-            name=entry.data.get("name", "Nespresso"),
-            manufacturer="Nespresso",
-        )
+        self._attr_device_info = machine_device_info(entry, coordinator)
 
     @property
     def available(self) -> bool:
