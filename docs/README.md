@@ -10,6 +10,7 @@ Documentation produced by decompiling the **Nespresso Smart** Android app (v1.2.
 | [API Endpoints](api-endpoints.md) | REST API endpoints, environment URLs, and cloud service integration |
 | [Authentication](authentication.md) | OAuth2/PKCE authentication flow and token management |
 | [AWS IoT](aws-iot.md) | AWS IoT MQTT integration, telemetry, and device shadow |
+| [Firmware Updates](firmware-updates.md) | The FOTA pipeline, manifest format, file encryption, and how firmware could be obtained |
 | [Machine Models](machine-models.md) | Supported machine types, capabilities, and hardware families |
 | [Data Models](data-models.md) | Enums, status codes, error codes, and data structures |
 | [Architecture](architecture.md) | App architecture, dependency injection, and third-party SDKs |

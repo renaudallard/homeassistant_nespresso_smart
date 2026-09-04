@@ -798,9 +798,14 @@ separate connection is ignored by the machine.
 
 Source: `com.sdataway.barista.machine.utils.crypto.impl.CryptoImpl`
 
-- **Algorithm:** AES/ECB/PKCS5Padding
-- **Usage:** Primarily for firmware update (FOTA) validation and IoT configuration decryption
-- BLE characteristic data is protected by application-level auth (CMID), not application-layer encryption
+- **Algorithm:** AES/ECB/PKCS5Padding, with a hardcoded 16 byte key, so AES-128
+  with no IV and nothing per device. The same constant appears in all three
+  SDKs
+- **Usage:** firmware update files, decrypted on the phone before the machine
+  ever sees them. See [Firmware Updates](firmware-updates.md)
+- BLE characteristic data is protected by application-level auth (CMID), not
+  application-layer encryption. Nothing on the wire between Home Assistant and
+  the machine is encrypted at the application layer
 
 ---
 
