@@ -25,7 +25,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import time
 
 from bleak import BleakError
 from homeassistant.components.button import ButtonEntity
@@ -171,8 +173,6 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
 
     async def _do_brew(self) -> None:
         """Internal brew logic."""
-        import asyncio
-
         from .select import VERTUO_BREW_TYPE_VALUES, VERTUO_TEMPERATURE_VALUES
 
         # Tell the coordinator to keep the next poll connection alive
@@ -197,8 +197,6 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
                 },
             )
             _LOGGER.info("Machine is %s, waiting up to 5 min for wake...", state)
-            import time
-
             deadline = time.monotonic() + 300
             while state in waking and time.monotonic() < deadline:
                 await asyncio.sleep(5)

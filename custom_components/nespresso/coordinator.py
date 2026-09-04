@@ -60,7 +60,14 @@ from .ble.parsing import (
     parse_vertuonext_status,
     parse_vmini_fota_status,
 )
-from .ble.protocol import generate_auth_key, get_protocol
+from .ble.protocol import (
+    _authenticate,
+    async_configure_wifi,
+    async_scan_wifi,
+    generate_auth_key,
+    get_protocol,
+    link_is_plain,
+)
 from .ble.recipe import parse_recipe_info
 from .const import (
     AUTH_CHARS,
@@ -284,8 +291,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             )
             try:
                 if self.auth_key:
-                    from .ble.protocol import _authenticate
-
                     await _authenticate(
                         client, self.auth_key, self.family, self.send_tx_level
                     )
@@ -316,13 +321,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             BleakClient, device, self.address, max_attempts=2
         )
         try:
-            if self.auth_key:
-                from .ble.protocol import _authenticate
-
-                if not await _authenticate(
-                    client, self.auth_key, self.family, self.send_tx_level
-                ):
-                    raise BleakError("Machine did not accept the auth token")
+            if self.auth_key and not await _authenticate(
+                client, self.auth_key, self.family, self.send_tx_level
+            ):
+                raise BleakError("Machine did not accept the auth token")
         except Exception:
             await client.disconnect()
             raise
@@ -332,8 +334,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """Return the WiFi networks the machine can see."""
         if self.family is not MachineFamily.VERTUO_NEXT:
             raise BleakError("WiFi setup is only supported on Vertuo machines")
-        from .ble.protocol import async_scan_wifi
-
         async with self._ble_lock:
             client = await self._async_connected()
             try:
@@ -352,8 +352,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """Put the machine on a WiFi network, then refresh so the status shows."""
         if self.family is not MachineFamily.VERTUO_NEXT:
             raise BleakError("WiFi setup is only supported on Vertuo machines")
-        from .ble.protocol import async_configure_wifi
-
         async with self._ble_lock:
             client = await self._async_connected()
             try:
@@ -400,8 +398,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
             try:
                 if self.auth_key:
-                    from .ble.protocol import _authenticate
-
                     await _authenticate(
                         client, self.auth_key, self.family, self.send_tx_level
                     )
@@ -475,8 +471,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             else:
                 raise
         if self.auth_key:
-            from .ble.protocol import _authenticate
-
             await _authenticate(client, self.auth_key, self.family, self.send_tx_level)
         return client, True
 
@@ -1002,8 +996,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             if self.auth_key is None:
                 self.auth_key = generate_auth_key()
                 _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
-
-            from .ble.protocol import _authenticate, link_is_plain
 
             auth_ok = await _authenticate(
                 client, self.auth_key, self.family, self.send_tx_level
