@@ -160,6 +160,9 @@
       },
       "auto_power_off": {
         "name": "Apagado automático"
+      },
+      "caps_counter_setting": {
+        "name": "Contador de cápsulas (ajustable)"
       }
     },
     "select": {

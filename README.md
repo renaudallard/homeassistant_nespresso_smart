@@ -366,6 +366,7 @@ English ones.
 | Brew | No | Yes | No | Start brewing (see brewing flow below) |
 | Water hardness | No | Yes | No | Set water hardness level (0-6 slider) |
 | Auto power off | No | Yes | No | Set auto power off time (minutes) |
+| Capsule counter (settable) | No | Yes | No | Correct the machine's own capsule count. Only created on machines that have the counter, which the Pop and the Creatista do not |
 | Reset descaling counter | No | Yes | No | Clear the descaling counter after descaling the machine |
 | Check firmware update | No | No | Yes | Trigger firmware update check |
 

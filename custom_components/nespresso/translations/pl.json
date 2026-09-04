@@ -160,6 +160,9 @@
       },
       "auto_power_off": {
         "name": "Automatyczne wyłączanie"
+      },
+      "caps_counter_setting": {
+        "name": "Licznik kapsułek (edytowalny)"
       }
     },
     "select": {

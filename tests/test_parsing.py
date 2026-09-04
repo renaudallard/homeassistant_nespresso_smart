@@ -53,9 +53,11 @@ sys.modules.setdefault("bleak_retry_connector", MagicMock())
 
 from custom_components.nespresso.ble.parsing import (
     NESPRESSO_COMPANY_IDS,
+    build_caps_counter,
     nespresso_manufacturer_data,
     parse_barista_machine_info,
     parse_barista_status,
+    parse_caps_counter,
     parse_error_information,
     parse_general_user_settings,
     parse_serial_number,
@@ -617,3 +619,19 @@ class TestVenusAdvertisement:
 
     def test_returns_none_for_missing_payload(self) -> None:
         assert parse_venus_advertisement(None) is None
+
+
+class TestCapsCounter:
+    """The machine keeps this count, and it is two bytes MSB first."""
+
+    def test_round_trip(self) -> None:
+        for value in (0, 1, 255, 256, 300, 4242, 65535):
+            assert parse_caps_counter(build_caps_counter(value)) == value
+
+    def test_byte_order_is_msb_first(self) -> None:
+        assert build_caps_counter(0x0102) == b"\x01\x02"
+
+    def test_rejects_what_two_bytes_cannot_hold(self) -> None:
+        for value in (-1, 65536, 100000):
+            with pytest.raises(ValueError):
+                build_caps_counter(value)

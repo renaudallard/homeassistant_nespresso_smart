@@ -160,6 +160,9 @@
       },
       "auto_power_off": {
         "name": "Spegnimento automatico"
+      },
+      "caps_counter_setting": {
+        "name": "Contatore capsule (modificabile)"
       }
     },
     "select": {

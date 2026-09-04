@@ -34,6 +34,7 @@ from collections.abc import Mapping
 
 from ..const import (
     BARISTA_STATE_NAMES,
+    CAPS_COUNTER_MAX,
     CMID_TYPE_NAMES,
     VERTUO_STATE_NAMES,
     WIFI_SECURITY_NAMES,
@@ -349,6 +350,21 @@ def parse_caps_counter(data: bytes) -> int:
     if len(data) < 2:
         return data[0] & 0xFF if data else 0
     return _get_2bytes_unsigned_msb(data, 0)
+
+
+def build_caps_counter(value: int) -> bytes:
+    """Encode a capsule counter for CHAR_CAPS_COUNTER.
+
+    The inverse of parse_caps_counter, and the same two bytes MSB first. The
+    machine keeps the count itself, so this exists to correct it rather than to
+    drive it: after a service visit, or a counter that drifted while Home
+    Assistant was not watching.
+    """
+    if not 0 <= value <= CAPS_COUNTER_MAX:
+        raise ValueError(
+            f"Capsule counter must be 0 to {CAPS_COUNTER_MAX}, got {value}"
+        )
+    return value.to_bytes(2, "big")
 
 
 def parse_error_information(data: bytes) -> dict[str, int]:

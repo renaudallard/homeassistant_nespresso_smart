@@ -160,6 +160,9 @@
       },
       "auto_power_off": {
         "name": "Automatisch uitschakelen"
+      },
+      "caps_counter_setting": {
+        "name": "Capsuleteller (instelbaar)"
       }
     },
     "select": {

@@ -30,12 +30,16 @@ import logging
 from bleak import BleakError
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .ble.parsing import build_caps_counter
 from .const import (
+    CAPS_COUNTER_MAX,
     DOMAIN,
+    VERTUO_CHAR_CAPS_COUNTER,
     VERTUO_CHAR_USER_SETTINGS,
     MachineFamily,
 )
@@ -59,7 +63,61 @@ async def async_setup_entry(
     if family == MachineFamily.VERTUO_NEXT:
         entities.append(NespressoWaterHardness(coordinator, entry))
         entities.append(NespressoAutoPowerOff(coordinator, entry))
+        # Not every Venus machine has the counter. A Vertuo Pop does not, and
+        # neither does a Creatista, so offering the control would mean offering
+        # a write that lands nowhere.
+        if coordinator.data is not None and coordinator.data.caps_counter is not None:
+            entities.append(NespressoCapsuleCounter(coordinator, entry))
     async_add_entities(entities)
+
+
+class NespressoCapsuleCounter(CoordinatorEntity[NespressoCoordinator], NumberEntity):
+    """The machine's own capsule counter, which it keeps and we can correct.
+
+    Unlike the derived counters this integration maintains, this one lives on
+    the machine. Writing it is for putting it back where it belongs after a
+    service visit or a replacement brewing unit, not for driving it.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "caps_counter_setting"
+    _attr_icon = "mdi:counter"
+    _attr_native_min_value = 0
+    _attr_native_max_value = CAPS_COUNTER_MAX
+    _attr_native_step = 1
+    _attr_mode = NumberMode.BOX
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self,
+        coordinator: NespressoCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        super().__init__(coordinator)
+        self._address = entry.data["address"]
+        self._attr_unique_id = f"{self._address}_caps_counter_setting"
+        self._attr_device_info = machine_device_info(entry, coordinator)
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the count the machine last reported."""
+        if self.coordinator.data is None:
+            return None
+        caps = self.coordinator.data.caps_counter
+        return float(caps) if caps is not None else None
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Write the counter to CHAR_CAPS_COUNTER, two bytes MSB first."""
+        count = int(value)
+        _LOGGER.debug("Writing capsule counter: %d", count)
+        try:
+            await self.coordinator.async_write_char(
+                VERTUO_CHAR_CAPS_COUNTER, build_caps_counter(count)
+            )
+            _LOGGER.info("Capsule counter set to %d", count)
+            await self.coordinator.async_request_refresh()
+        except (BleakError, TimeoutError) as err:
+            _LOGGER.error("Failed to set the capsule counter: %s", err)
 
 
 class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEntity):

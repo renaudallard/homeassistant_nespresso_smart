@@ -360,6 +360,10 @@ VERTUO_PLATFORM_NAMES: Final[dict[str, str]] = {
 # A watch session records only the values that move, but a machine with a
 # chatty characteristic could still fill memory over a long run. Changes and
 # notifications are capped separately, and the record says when it was cut.
+# The capsule counter is two bytes on the wire, so this is the widest value the
+# machine can hold, not a policy of ours.
+CAPS_COUNTER_MAX: Final = 0xFFFF
+
 WATCH_MAX_EVENTS: Final = 500
 
 # Pause between passes of a watch session. A full read of every characteristic

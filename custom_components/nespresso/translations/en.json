@@ -160,6 +160,9 @@
       },
       "auto_power_off": {
         "name": "Auto power off"
+      },
+      "caps_counter_setting": {
+        "name": "Capsule counter (settable)"
       }
     },
     "select": {

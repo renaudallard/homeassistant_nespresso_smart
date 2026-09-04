@@ -160,6 +160,9 @@
       },
       "auto_power_off": {
         "name": "Automatische Abschaltung"
+      },
+      "caps_counter_setting": {
+        "name": "Kapselzähler (einstellbar)"
       }
     },
     "select": {
