@@ -138,7 +138,7 @@ Capture the auth token from the Nespresso app using Android's BLE logging:
 3. Open the Nespresso app and let it connect to the machine
 4. Disable Bluetooth HCI snoop log
 5. Pull the log: `adb pull /data/misc/bluetooth/logs/btsnoop_hci.log` (or find it at the path shown in Developer Options)
-6. Open in **Wireshark**, filter: `btatt.handle` and look for a Write Request to the auth characteristic (UUID `06aa3a41` for Vertuo Next, `65243a41` for Barista)
+6. Open in **Wireshark** and filter on write requests with `btatt.opcode.method == 0x12`, or narrow to the machine with `bluetooth.addr == AA:BB:CC:DD:EE:FF`. Look for the write to the auth characteristic (UUID `06aa3a41` for Vertuo Next, `65243a41` for Barista)
 7. The 8-byte value written is the auth token. Convert to 16 hex characters and enter it during setup. It will start with `8`, which is the marker the app puts on every token it writes.
 
 This method is not available on iOS.
