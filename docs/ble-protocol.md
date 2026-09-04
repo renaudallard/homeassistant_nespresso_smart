@@ -347,7 +347,7 @@ Source: `com.sdataway.vertuonext.sdk.models.MachineStatus`
 ```
 Byte 0:
   Bit 0:   waterTankEmpty
-  Bit 1:   cleaningNeeded
+  Bit 1:   cleaningNeeded (brewing side only, see the milk nibble below)
   Bit 2:   descalingNeeded
   Bit 3:   ledSignalingActive
   Bit 4:   errorPresent

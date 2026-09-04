@@ -329,7 +329,7 @@ English ones.
 | Connectivity FW | No | Yes | No | WiFi/connectivity firmware version (diagnostic) |
 | Error code | No | Yes | No | Current active error code (diagnostic) |
 | Error log code | No | Yes | No | Error from error log (diagnostic) |
-| Milk unit | No | Yes | No | State of the milk system, 16 values from offline to frothing. Only on a Creatista or a Lattissima |
+| Milk unit | No | Yes | No | State of the milk system, 16 values from offline to frothing. Reads Cleaning both while a milk cleaning runs and while the machine is asking for one. Only on a Creatista or a Lattissima |
 | IoT market | No | Yes | No | IoT market name (diagnostic) |
 | Recipe slots | Yes | No | No | Maximum recipe slots (diagnostic) |
 | Brewing duration | Yes | Yes | No | Time elapsed since brewing started (seconds) |
@@ -349,7 +349,7 @@ English ones.
 | Induction heater | Yes | No | No | Induction heater is active |
 | Water tank empty | No | Yes | No | Water tank needs refilling |
 | Descaling needed | No | Yes | No | Machine needs descaling |
-| Cleaning needed | No | Yes | No | Machine needs cleaning |
+| Cleaning needed | No | Yes | No | Machine needs cleaning. This is the brewing side only, a machine asking for a milk cleaning says so through the Milk unit sensor instead |
 | Capsule container full | No | Yes | No | Used capsule container is full |
 | Brewing unit | No | Yes | No | Brewing unit head is open |
 | Milk frother | No | Yes | No | Milk frother is running. Only on a Creatista or a Lattissima, and driven by the milk unit state below rather than the documented status bit, which does not fire on a Creatista |
