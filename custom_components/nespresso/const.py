@@ -371,6 +371,37 @@ WATCH_MAX_EVENTS: Final = 500
 # rather than the thing that sets the resolution.
 WATCH_SAMPLE_PAUSE: Final = 0.5
 
+# Milk unit status, the low nibble of status byte 2. Nothing in the APK reads
+# it: MachineStatus takes the high nibble for the machine state and stops. Found
+# by watching a Creatista, where it sat at 1 while warm and held 2 for exactly
+# as long as the frother ran.
+#
+# The names are the cloud's own milkUnitStatus enum, which runs 0 to 15 and so
+# fits the nibble exactly. Only 0, 1 and 2 have been seen on a machine; the rest
+# are the cloud's meanings for values we have not yet observed over Bluetooth.
+MILK_UNIT_STATE_NAMES: Final[dict[int, str]] = {
+    0: "offline",
+    1: "ready",
+    2: "frothing",
+    3: "unknown_3",
+    4: "cleaning",
+    5: "heating",
+    6: "descaling_ready",
+    7: "descaling",
+    8: "rinsing_ready",
+    9: "rinsing",
+    10: "blocked_menu",
+    11: "blocked_cleaning_needed",
+    12: "blocked_descaling_needed",
+    13: "waiting",
+    14: "descaling_paused",
+    15: "rinsing_paused",
+}
+
+# Platform codes with a milk system. The others have no frother, so a milk
+# entity on one would report "offline" for ever.
+MILK_PLATFORM_CODES: Final[tuple[str, ...]] = ("CV5", "DV5")
+
 # Vertuo platform codes with no BLE brew support. The Nespresso app itself
 # offers no brew button for these models and the machine ignores every known
 # brew command, so exposing a button that silently does nothing is worse than

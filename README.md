@@ -330,6 +330,7 @@ English ones.
 | Error code | No | Yes | No | Current active error code (diagnostic) |
 | Error log code | No | Yes | No | Error from error log (diagnostic) |
 | Capsule counter | No | Yes | No | Capsule counter |
+| Milk unit | No | Yes | No | State of the milk system, 16 values from offline to frothing. Only on a Creatista or a Lattissima |
 | IoT market | No | Yes | No | IoT market name (diagnostic) |
 | Recipe slots | Yes | No | No | Maximum recipe slots (diagnostic) |
 | Brewing duration | Yes | Yes | No | Time elapsed since brewing started (seconds) |
@@ -352,7 +353,7 @@ English ones.
 | Cleaning needed | No | Yes | No | Machine needs cleaning |
 | Capsule container full | No | Yes | No | Used capsule container is full |
 | Brewing unit | No | Yes | No | Brewing unit head is open |
-| Milk frother | No | Yes | No | Milk frother is running |
+| Milk frother | No | Yes | No | Milk frother is running. Only on a Creatista or a Lattissima, and driven by the milk unit state below rather than the documented status bit, which does not fire on a Creatista |
 | LED signaling | No | Yes | No | LED signaling is active |
 
 ### Controls

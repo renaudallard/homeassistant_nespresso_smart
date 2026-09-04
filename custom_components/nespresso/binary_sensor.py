@@ -40,7 +40,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MachineFamily
 from .coordinator import NespressoCoordinator
-from .entity import machine_device_info
+from .entity import has_milk_unit, machine_device_info
 from .models import NespressoMachineData
 
 
@@ -49,6 +49,7 @@ class NespressoBinarySensorDescription(BinarySensorEntityDescription):
     """Binary sensor description with machine family filter."""
 
     families: frozenset[MachineFamily] = frozenset(MachineFamily)
+    milk_only: bool = False
     value_fn: Callable[[NespressoMachineData], bool | None] = lambda _: None
 
 
@@ -118,6 +119,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         icon="mdi:blender",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
+        milk_only=True,
         value_fn=lambda d: d.milk_frother_running,
     ),
     NespressoBinarySensorDescription(
@@ -140,10 +142,11 @@ async def async_setup_entry(
     coordinator: NespressoCoordinator = data["coordinator"]
     family = MachineFamily(entry.data["family"])
 
+    milk = has_milk_unit(entry, coordinator)
     entities = [
         NespressoBinarySensor(coordinator, entry, desc)
         for desc in BINARY_SENSOR_DESCRIPTIONS
-        if family in desc.families
+        if family in desc.families and (milk or not desc.milk_only)
     ]
     async_add_entities(entities)
 

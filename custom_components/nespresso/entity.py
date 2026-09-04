@@ -34,6 +34,7 @@ from .const import (
     CONF_FORCE_BREW_BUTTON,
     DOMAIN,
     MACHINE_FAMILY_NAMES,
+    MILK_PLATFORM_CODES,
     NO_BREW_PLATFORM_CODES,
     VERTUO_PLATFORM_NAMES,
     MachineFamily,
@@ -92,6 +93,16 @@ def supports_brewing(entry: ConfigEntry, coordinator: NespressoCoordinator) -> b
     if entry.options.get(CONF_FORCE_BREW_BUTTON, False):
         return True
     return platform_code(entry, coordinator) not in NO_BREW_PLATFORM_CODES
+
+
+def has_milk_unit(entry: ConfigEntry, coordinator: NespressoCoordinator) -> bool:
+    """Whether this machine has a milk system.
+
+    Only the Creatista and the Lattissima do. On anything else the milk nibble
+    would read "offline" for ever, and an entity that can only say no is worse
+    than no entity.
+    """
+    return platform_code(entry, coordinator) in MILK_PLATFORM_CODES
 
 
 def machine_device_info(

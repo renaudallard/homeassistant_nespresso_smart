@@ -94,6 +94,7 @@ _VERTUO_STATUS_FIELDS: tuple[str, ...] = (
     "capsule_container_full",
     "brewing_unit_closed",
     "milk_frother_running",
+    "milk_unit_state",
     "led_signaling",
     "cup_length_prog",
 )
@@ -1161,6 +1162,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             capsule_container_full=bool(status.get("capsule_container_full", False)),
             brewing_unit_closed=bool(status.get("brewing_unit_closed", False)),
             milk_frother_running=bool(status.get("milk_frother_running", False)),
+            milk_unit_state=str(status["milk_unit_state"])
+            if status.get("milk_unit_state")
+            else None,
             led_signaling=bool(status.get("led_signaling", False)),
             cup_length_prog=bool(status.get("cup_length_prog", False)),
             water_hardness=water_hardness,

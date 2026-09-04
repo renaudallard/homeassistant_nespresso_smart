@@ -382,6 +382,35 @@ Read from `CHAR_PAIRING_STATUS`:
 
 ---
 
+### Milk unit status, byte 2 bits 0-3
+
+Not in the APK. `MachineStatus` takes `(byte[1] & 0x0F) + (byte[2] & 0xF0)` for
+the machine state and never touches the low nibble of byte 2.
+
+Found by watching a Vertuo Creatista through a coffee and a frothing cycle. It
+read 0 from cold, 1 once the machine was warm, and held 2 for exactly as long
+as the frother ran, which are positions 0, 1 and 2 of the `milkUnitStatus` enum
+the cloud reports for the same machine. That enum runs 0 to 15, and a nibble
+holds 0 to 15, so the names below are the cloud's for the values nobody has
+seen over Bluetooth yet.
+
+| Value | Meaning | Seen over BLE |
+|-------|---------|---------------|
+| 0 | offline | yes |
+| 1 | ready | yes |
+| 2 | frothing | yes |
+| 4 | cleaning | no |
+| 5 | heating | no |
+| 6, 7, 14 | descaling ready, active, paused | no |
+| 8, 9, 15 | rinsing ready, active, paused | no |
+| 10, 11, 12 | blocked: menu, cleaning needed, descaling needed | no |
+| 13 | waiting | no |
+
+On that same machine `byte[1]` bit 4, which the SDK calls
+`milkFrotherRunning`, stayed clear through 68 seconds of frothing. The bit may
+work on machines we have not seen, so the integration keeps it and ORs the
+nibble in.
+
 ## Machine Info Format
 
 Source: `com.sdataway.barista.sdk.characteristics.CharacMachineInfo`

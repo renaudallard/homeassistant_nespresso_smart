@@ -44,12 +44,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     BARISTA_STATE_NAMES,
     DOMAIN,
+    MILK_UNIT_STATE_NAMES,
     VERTUO_STATE_NAMES,
     WIFI_STATUS_NAMES,
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator
-from .entity import machine_device_info
+from .entity import has_milk_unit, machine_device_info
 from .models import NespressoMachineData
 from .timer_sensor import NespressoBrewingDuration
 
@@ -63,6 +64,7 @@ class NespressoSensorDescription(SensorEntityDescription):
     """Sensor description with machine family filter."""
 
     families: frozenset[MachineFamily] = frozenset(MachineFamily)
+    milk_only: bool = False
     value_fn: Callable[[NespressoMachineData], str | int | None] = lambda _: None
 
 
@@ -180,6 +182,16 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.iot_market_name,
+    ),
+    NespressoSensorDescription(
+        key="milk_unit_state",
+        translation_key="milk_unit_state",
+        icon="mdi:blender",
+        device_class=SensorDeviceClass.ENUM,
+        options=sorted(set(MILK_UNIT_STATE_NAMES.values())),
+        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        milk_only=True,
+        value_fn=lambda d: d.milk_unit_state,
     ),
     NespressoSensorDescription(
         key="caps_counter",
@@ -310,10 +322,11 @@ async def async_setup_entry(
     coordinator: NespressoCoordinator = data["coordinator"]
     family = MachineFamily(entry.data["family"])
 
+    milk = has_milk_unit(entry, coordinator)
     entities: list[SensorEntity] = [
         NespressoSensor(coordinator, entry, desc)
         for desc in SENSOR_DESCRIPTIONS
-        if family in desc.families
+        if family in desc.families and (milk or not desc.milk_only)
     ]
 
     # Real-time brewing duration sensor

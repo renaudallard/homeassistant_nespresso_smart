@@ -123,6 +123,28 @@
       },
       "brewing_duration": {
         "name": "Brewing duration"
+      },
+      "milk_unit_state": {
+        "name": "Milk unit",
+        "state": {
+          "offline": "Offline",
+          "ready": "Ready",
+          "frothing": "Frothing",
+          "cleaning": "Cleaning",
+          "heating": "Heating up",
+          "descaling_ready": "Descaling ready",
+          "descaling": "Descaling",
+          "descaling_paused": "Descaling paused",
+          "rinsing_ready": "Rinsing ready",
+          "rinsing": "Rinsing",
+          "rinsing_paused": "Rinsing paused",
+          "blocked_menu": "Blocked, menu open",
+          "blocked_cleaning_needed": "Blocked, needs cleaning",
+          "blocked_descaling_needed": "Blocked, needs descaling",
+          "waiting": "Waiting",
+          "unknown_3": "Unknown (3)",
+          "unknown": "Unknown"
+        }
       }
     },
     "binary_sensor": {

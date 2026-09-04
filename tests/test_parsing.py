@@ -53,6 +53,7 @@ sys.modules.setdefault("bleak_retry_connector", MagicMock())
 
 from custom_components.nespresso.ble.parsing import (
     NESPRESSO_COMPANY_IDS,
+    _get_bit,
     build_caps_counter,
     nespresso_manufacturer_data,
     parse_barista_machine_info,
@@ -635,3 +636,47 @@ class TestCapsCounter:
         for value in (-1, 65536, 100000):
             with pytest.raises(ValueError):
                 build_caps_counter(value)
+
+
+class TestMilkUnitState:
+    """The low nibble of status byte 2, which the vendor SDK never reads.
+
+    Every payload here is from a Vertuo Creatista, captured by watching the
+    machine while a coffee and then a milk froth were made by hand.
+    """
+
+    def test_the_frother_run(self) -> None:
+        """1 while warm, 2 for exactly as long as the frother ran."""
+        assert _milk("4083210001003f00") == "ready"
+        assert _milk("4083220001003f00") == "frothing"
+        assert _milk("4083210001003f00") == "ready"
+
+    def test_the_coffee_run(self) -> None:
+        """Offline from cold, and still not frothing through a whole brew."""
+        for payload in (
+            "4002000001003f00",  # ready, head open
+            "4081100001003f00",  # reading the capsule
+            "4084000001003f00",  # brewing
+            "4082000001003f00",  # ready again
+        ):
+            assert _milk(payload) == "offline"
+        assert _milk("4082010001003f00") == "ready"
+
+    def test_the_documented_bit_stayed_clear(self) -> None:
+        """Byte 1 bit 4 is what the SDK calls milkFrotherRunning.
+
+        It never fired on this machine, so the frother flag has to come from
+        the nibble or it would have read False for the whole 68 seconds.
+        """
+        frothing = bytes.fromhex("4083220001003f00")
+        assert not _get_bit(frothing[1], 4)
+        assert parse_vertuonext_status(frothing)["milk_frother_running"] is True
+
+    def test_the_whole_nibble_is_named(self) -> None:
+        for value in range(16):
+            payload = bytes([0x40, 0x83, 0x20 | value, 0, 1, 0, 0x3F, 0])
+            assert parse_vertuonext_status(payload)["milk_unit_state"] != "unknown"
+
+
+def _milk(payload: str) -> str:
+    return str(parse_vertuonext_status(bytes.fromhex(payload))["milk_unit_state"])

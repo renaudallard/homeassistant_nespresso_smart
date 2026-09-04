@@ -123,6 +123,28 @@
       },
       "brewing_duration": {
         "name": "Durée de préparation"
+      },
+      "milk_unit_state": {
+        "name": "Unité à lait",
+        "state": {
+          "offline": "Hors ligne",
+          "ready": "Prête",
+          "frothing": "Émulsion",
+          "cleaning": "Nettoyage",
+          "heating": "Chauffage",
+          "descaling_ready": "Détartrage prêt",
+          "descaling": "Détartrage",
+          "descaling_paused": "Détartrage en pause",
+          "rinsing_ready": "Rinçage prêt",
+          "rinsing": "Rinçage",
+          "rinsing_paused": "Rinçage en pause",
+          "blocked_menu": "Bloquée, menu ouvert",
+          "blocked_cleaning_needed": "Bloquée, nettoyage requis",
+          "blocked_descaling_needed": "Bloquée, détartrage requis",
+          "waiting": "En attente",
+          "unknown_3": "Inconnu (3)",
+          "unknown": "Inconnu"
+        }
       }
     },
     "binary_sensor": {

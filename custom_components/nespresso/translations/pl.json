@@ -123,6 +123,28 @@
       },
       "brewing_duration": {
         "name": "Czas parzenia"
+      },
+      "milk_unit_state": {
+        "name": "Moduł mleczny",
+        "state": {
+          "offline": "Wyłączony",
+          "ready": "Gotowy",
+          "frothing": "Spienianie",
+          "cleaning": "Czyszczenie",
+          "heating": "Nagrzewanie",
+          "descaling_ready": "Odkamienianie gotowe",
+          "descaling": "Odkamienianie",
+          "descaling_paused": "Odkamienianie wstrzymane",
+          "rinsing_ready": "Płukanie gotowe",
+          "rinsing": "Płukanie",
+          "rinsing_paused": "Płukanie wstrzymane",
+          "blocked_menu": "Zablokowany, otwarte menu",
+          "blocked_cleaning_needed": "Zablokowany, wymaga czyszczenia",
+          "blocked_descaling_needed": "Zablokowany, wymaga odkamieniania",
+          "waiting": "Oczekiwanie",
+          "unknown_3": "Nieznany (3)",
+          "unknown": "Nieznany"
+        }
       }
     },
     "binary_sensor": {

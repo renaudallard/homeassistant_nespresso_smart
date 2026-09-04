@@ -36,6 +36,7 @@ from ..const import (
     BARISTA_STATE_NAMES,
     CAPS_COUNTER_MAX,
     CMID_TYPE_NAMES,
+    MILK_UNIT_STATE_NAMES,
     VERTUO_STATE_NAMES,
     WIFI_SECURITY_NAMES,
     WIFI_STATUS_NAMES,
@@ -181,6 +182,19 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
       byte[1] bit7: brewingUnitClosed
       byte[1] bit6: capsuleContainerFull
       machineState = (byte[1] & 0x0F) + (byte[2] & 0xF0)
+      byte[2] bits0-3: milk unit status, see below
+
+    The low nibble of byte 2 is not in the APK. MachineStatus reads byte 2 for
+    the state's high nibble and nothing else, so the app never sees it. It was
+    found by watching a Vertuo Creatista: 0 at rest, 1 once warm, and 2 for
+    exactly as long as the frother ran, which are positions 0, 1 and 2 of the
+    milkUnitStatus enum the cloud reports for the same machine. That enum runs
+    0 to 15 and a nibble holds 0 to 15.
+
+    On the same machine byte[1] bit4, which the SDK calls milkFrotherRunning,
+    stayed clear through 68 seconds of frothing. The bit is kept because it is
+    what the vendor documents and it may work on machines we have not seen, but
+    the nibble is what actually moved.
     """
     if len(data) < 3:
         raise ValueError(f"Vertuo Next status requires >= 3 bytes, got {len(data)}")
@@ -189,9 +203,11 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
     b1 = data[1]
     b2 = data[2]
     state_val = (b1 & 0x0F) + (b2 & 0xF0)
+    milk = MILK_UNIT_STATE_NAMES.get(b2 & 0x0F, "unknown")
 
     return {
         "machine_state": VERTUO_STATE_NAMES.get(state_val, "unknown"),
+        "milk_unit_state": milk,
         "pairing_key_state": _pairing_key_state(b0),
         "water_tank_empty": _get_bit(b0, 0),
         "cleaning_needed": _get_bit(b0, 1),
@@ -199,7 +215,7 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
         "led_signaling": _get_bit(b0, 3),
         "error_present": _get_bit(b0, 4),
         "bootloader_active": _get_bit(b0, 7),
-        "milk_frother_running": _get_bit(b1, 4),
+        "milk_frother_running": _get_bit(b1, 4) or milk == "frothing",
         "cup_length_prog": _get_bit(b1, 5),
         "capsule_container_full": _get_bit(b1, 6),
         "brewing_unit_closed": _get_bit(b1, 7),

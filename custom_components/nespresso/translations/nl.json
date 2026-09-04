@@ -123,6 +123,28 @@
       },
       "brewing_duration": {
         "name": "Zetduur"
+      },
+      "milk_unit_state": {
+        "name": "Melkeenheid",
+        "state": {
+          "offline": "Offline",
+          "ready": "Gereed",
+          "frothing": "Opschuimen",
+          "cleaning": "Reiniging",
+          "heating": "Opwarmen",
+          "descaling_ready": "Ontkalking gereed",
+          "descaling": "Ontkalken",
+          "descaling_paused": "Ontkalken gepauzeerd",
+          "rinsing_ready": "Spoelen gereed",
+          "rinsing": "Spoelen",
+          "rinsing_paused": "Spoelen gepauzeerd",
+          "blocked_menu": "Geblokkeerd, menu open",
+          "blocked_cleaning_needed": "Geblokkeerd, reiniging nodig",
+          "blocked_descaling_needed": "Geblokkeerd, ontkalking nodig",
+          "waiting": "Wachten",
+          "unknown_3": "Onbekend (3)",
+          "unknown": "Onbekend"
+        }
       }
     },
     "binary_sensor": {

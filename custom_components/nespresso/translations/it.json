@@ -123,6 +123,28 @@
       },
       "brewing_duration": {
         "name": "Durata dell'erogazione"
+      },
+      "milk_unit_state": {
+        "name": "Unità latte",
+        "state": {
+          "offline": "Offline",
+          "ready": "Pronta",
+          "frothing": "Montatura",
+          "cleaning": "Pulizia",
+          "heating": "Riscaldamento",
+          "descaling_ready": "Decalcificazione pronta",
+          "descaling": "Decalcificazione",
+          "descaling_paused": "Decalcificazione in pausa",
+          "rinsing_ready": "Risciacquo pronto",
+          "rinsing": "Risciacquo",
+          "rinsing_paused": "Risciacquo in pausa",
+          "blocked_menu": "Bloccata, menu aperto",
+          "blocked_cleaning_needed": "Bloccata, serve pulizia",
+          "blocked_descaling_needed": "Bloccata, serve decalcificazione",
+          "waiting": "In attesa",
+          "unknown_3": "Sconosciuto (3)",
+          "unknown": "Sconosciuto"
+        }
       }
     },
     "binary_sensor": {
