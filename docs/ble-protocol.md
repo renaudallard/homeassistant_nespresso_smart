@@ -391,20 +391,29 @@ Found by watching a Vertuo Creatista through a coffee and a frothing cycle. It
 read 0 from cold, 1 once the machine was warm, and held 2 for exactly as long
 as the frother ran, which are positions 0, 1 and 2 of the `milkUnitStatus` enum
 the cloud reports for the same machine. That enum runs 0 to 15, and a nibble
-holds 0 to 15, so the names below are the cloud's for the values nobody has
-seen over Bluetooth yet.
+holds 0 to 15.
+
+Later captures on the same machine added 4 and 10, so five positions are
+measured and every one of them lands where the cloud enum puts it. The names
+for the other eleven are still the cloud's, applied to values nobody has seen
+over Bluetooth yet.
 
 | Value | Meaning | Seen over BLE |
 |-------|---------|---------------|
 | 0 | offline | yes |
 | 1 | ready | yes |
 | 2 | frothing | yes |
-| 4 | cleaning | no |
+| 4 | cleaning | yes |
 | 5 | heating | no |
 | 6, 7, 14 | descaling ready, active, paused | no |
 | 8, 9, 15 | rinsing ready, active, paused | no |
-| 10, 11, 12 | blocked: menu, cleaning needed, descaling needed | no |
+| 10 | blocked: menu | yes |
+| 11, 12 | blocked: cleaning needed, descaling needed | no |
 | 13 | waiting | no |
+
+Value 10 held for the whole of a full cleaning cycle and cleared the instant
+the machine went back to heating, which is what a machine sitting in its own
+menu should look like.
 
 On that same machine `byte[1]` bit 4, which the SDK calls
 `milkFrotherRunning`, stayed clear through 68 seconds of frothing. The bit may
@@ -416,8 +425,9 @@ nibble in.
 The characteristic is eight bytes and nothing reads past byte 2, not this
 integration and not `MachineStatus` in the APK.
 
-On a Vertuo Creatista they held `00 01 00 3f 00` across all seven distinct
-payloads captured through a coffee cycle and a frothing cycle, including the
+On a Vertuo Creatista they held `00 01 00 3f 00` across all fourteen distinct
+payloads captured so far, through a coffee cycle, a frothing cycle, a full
+cleaning cycle, the machine's own menu and an open brewing unit, including the
 transitions through capsule reading, brewing and back to ready. So byte 4 at
 `0x01` and byte 6 at `0x3F` are constants of unknown meaning rather than
 padding, and the other three were zero throughout.

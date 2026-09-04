@@ -192,6 +192,16 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
     milkUnitStatus enum the cloud reports for the same machine. That enum runs
     0 to 15 and a nibble holds 0 to 15.
 
+    Later captures on the same machine added 4 through a milk cleaning and 10
+    through the menu the machine sits in during a full cleaning cycle, so five
+    of the sixteen positions are measured and all five land where the cloud
+    enum puts them. The remaining eleven names are still the cloud's.
+
+    4 means wanted or under way, not just running: the machine went to 4 the
+    moment it started asking for a milk cleaning and stayed there at rest until
+    the cleaning was done. Nothing in byte 0 moves for it, so a machine asking
+    for a milk cleaning shows up here and in no other bit we read.
+
     On the same machine byte[1] bit4, which the SDK calls milkFrotherRunning,
     stayed clear through 68 seconds of frothing. The bit is kept because it is
     what the vendor documents and it may work on machines we have not seen, but
@@ -199,9 +209,9 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
 
     The characteristic is eight bytes and nothing reads past byte 2, here or in
     the APK. On a Creatista bytes 3 to 7 held 00 01 00 3f 00 across every one of
-    the seven distinct payloads captured through a coffee and a frothing cycle,
-    so byte 4 and byte 6 are non-zero constants of unknown meaning rather than
-    padding. They are worth watching on a machine doing something we have not
+    the fourteen distinct payloads captured so far, spanning a coffee, frothing,
+    a cleaning cycle, the machine's own menu and an open brewing unit, so byte 4
+    and byte 6 are non-zero constants of unknown meaning rather than padding. They are worth watching on a machine doing something we have not
     tried, since the milk unit was found in an ignored nibble of byte 2.
     """
     if len(data) < 3:
