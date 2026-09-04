@@ -155,7 +155,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
             raise ValueError("payload is empty")
 
         cmd_uuid, rsp_uuid = channel
-        await coordinator.async_send_command(cmd_uuid, rsp_uuid, payload)
+        await coordinator.async_send_command(cmd_uuid, rsp_uuid, payload, probe=True)
         # async_send_command returns the answer, but the record says more: what
         # the two characteristics offer, and whether anything could have come
         # back at all. That distinction is the whole point of asking.

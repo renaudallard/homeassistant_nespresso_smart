@@ -685,17 +685,35 @@ command_properties: [write]
 response_characteristic: 06aa3a52-f22a-11e3-9daa-0002a5d5c51b
 response_properties: [notify, read]
 subscribed: true
-attempts: 1
+listening: [06aa3a12-..., 06aa3a52-...]
+write: accepted
+attempts: 3
+waited_seconds: 18.0
+notifications: {}
 response: null
+status_before: "89020c"
+status_after: "89020c"
+status_changed: false
 ```
 
-Read it from the bottom. A `response` says the machine answered and what it
-said. A null response only means something once `subscribed` is true: that is
-the machine offering `notify` and staying silent anyway, which is a refusal.
-With `subscribed` false, or `response_properties` null, the machine had no way
-to answer and its silence says nothing at all. The same record is in the
-diagnostics download as `last_command`, so a brew button press can be read the
-same way.
+Every line is there to tell one kind of nothing from another.
+
+- `write` says whether the machine took the frame. A refusal names the GATT
+  error, which is the machine rejecting the command rather than ignoring it
+- `subscribed` says whether an answer could have arrived at all. A null
+  `response` means a refusal only when this is true: that is the machine
+  offering `notify` and staying silent anyway. When it is false, or
+  `response_properties` is null, the silence says nothing
+- `listening` and `notifications` cover the answer arriving somewhere else.
+  The action subscribes to every characteristic that can notify, so an empty
+  `notifications` means the machine said nothing anywhere, not merely nothing
+  where it was expected
+- `status_before`, `status_after` and `status_changed` cover the machine acting
+  without saying so. A machine that starts brewing changes its status byte
+  whether or not it ever answers
+
+The same record lands in the diagnostics download as `last_command`, so a brew
+button press reads the same way, minus the extra subscriptions.
 
 ### Collecting diagnostics for an issue
 

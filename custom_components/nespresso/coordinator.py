@@ -29,6 +29,7 @@ import asyncio
 import json
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
@@ -405,18 +406,45 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             finally:
                 await client.disconnect()
 
+    @staticmethod
+    def _notifiable_chars(client: BleakClient) -> list[str]:
+        """Every characteristic the machine will push values on."""
+        return [
+            char.uuid
+            for service in client.services
+            for char in service.characteristics
+            if "notify" in char.properties
+        ]
+
+    async def _read_hex(self, client: BleakClient) -> str | None:
+        """Read the status characteristic, or None if that is not possible."""
+        if self._status_uuid is None:
+            return None
+        try:
+            return bytes(await client.read_gatt_char(self._status_uuid)).hex()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Status read failed: %s", err)
+            return None
+
     async def async_send_command(
         self,
         cmd_uuid: str,
         rsp_uuid: str,
         data: bytes,
         retries: int = 3,
+        probe: bool = False,
     ) -> bytes | None:
         """Send a command and wait for the response notification.
 
         Reuses the persistent connection if available (same session as
         the poll that authenticated and read status). Falls back to a
         new connection otherwise.
+
+        Probing listens on every characteristic that can notify rather than
+        only the one the answer is expected on, which costs a subscription per
+        characteristic and is why it is not the default. It is what the
+        send_command action uses, where the question is what the machine does
+        rather than whether a known command worked.
         """
         async with self._ble_lock:
             own_client = False
@@ -465,11 +493,22 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
             try:
                 response: bytearray | None = None
+                notifications: dict[str, str] = {}
 
-                def on_notify(_sender: object, rsp_data: bytearray) -> None:
-                    nonlocal response
-                    response = rsp_data
-                    _LOGGER.debug("Command response: %s", rsp_data.hex())
+                def handler(uuid: str) -> Callable[[object, bytearray], None]:
+                    def on_notify(_sender: object, rsp_data: bytearray) -> None:
+                        nonlocal response
+                        notifications[uuid] = bytes(rsp_data).hex()
+                        if uuid == rsp_uuid:
+                            response = rsp_data
+                        _LOGGER.debug(
+                            "Notification from %s on %s: %s",
+                            self.address,
+                            uuid,
+                            rsp_data.hex(),
+                        )
+
+                    return on_notify
 
                 cmd_char = client.services.get_characteristic(cmd_uuid)
                 rsp_char = client.services.get_characteristic(rsp_uuid)
@@ -484,30 +523,66 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     if rsp_char
                     else None,
                     "subscribed": False,
+                    "listening": [],
+                    "write": None,
                     "attempts": 0,
+                    "waited_seconds": 0.0,
+                    "notifications": notifications,
                     "response": None,
+                    "status_before": None,
+                    "status_after": None,
+                    "status_changed": None,
                 }
                 self.last_command = record
 
-                # Subscribe only where the machine offers it. A machine that
-                # does not have the characteristic at all, or has it without
-                # notify, used to raise here and lose the write with it. The
-                # write is the more interesting half: whether it is accepted
-                # says something even when nothing can come back.
-                if rsp_char is not None and "notify" in rsp_char.properties:
-                    await client.start_notify(rsp_uuid, on_notify)
-                    record["subscribed"] = True
-                else:
+                # Subscribe wherever the machine will let us. Listening only on
+                # the response characteristic assumes the answer arrives where
+                # the app expects it, and a machine that answers somewhere else
+                # would look exactly like one that says nothing.
+                #
+                # A characteristic without notify used to raise here and lose
+                # the write with it. The write is the more interesting half:
+                # whether it is accepted says something even when nothing can
+                # come back.
+                targets = [rsp_uuid] if not probe else self._notifiable_chars(client)
+                # A persistent connection already listens on the status
+                # characteristic. Subscribing again would take the handler over
+                # and unsubscribing afterwards would leave the poll deaf.
+                if not own_client and self.persistent and self._status_uuid in targets:
+                    targets.remove(self._status_uuid)
+                for uuid in targets:
+                    char = client.services.get_characteristic(uuid)
+                    if char is None or "notify" not in char.properties:
+                        continue
+                    try:
+                        await client.start_notify(uuid, handler(uuid))
+                        record["listening"].append(uuid)
+                    except Exception as err:  # noqa: BLE001
+                        _LOGGER.debug("Cannot listen on %s: %s", uuid, err)
+                record["subscribed"] = rsp_uuid in record["listening"]
+                if not record["subscribed"]:
                     _LOGGER.debug(
                         "%s cannot notify on %s, sending the command anyway",
                         self.address,
                         rsp_uuid,
                     )
 
+                # What the machine was doing before the command, so that a
+                # machine which acts on it without answering still says so.
+                record["status_before"] = await self._read_hex(client)
+
+                started = time.monotonic()
                 for attempt in range(retries):
                     response = None
                     record["attempts"] = attempt + 1
-                    await client.write_gatt_char(cmd_uuid, data, response=True)
+                    try:
+                        await client.write_gatt_char(cmd_uuid, data, response=True)
+                        record["write"] = "accepted"
+                    except Exception as err:
+                        record["write"] = f"refused: {err}"
+                        record["waited_seconds"] = round(time.monotonic() - started, 1)
+                        _LOGGER.debug("Command write to %s failed: %s", cmd_uuid, err)
+                        raise
                     _LOGGER.debug(
                         "Command write attempt %d: %s", attempt + 1, data.hex()
                     )
@@ -520,9 +595,21 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     if response is not None:
                         break
                     await asyncio.sleep(1)
+                record["waited_seconds"] = round(time.monotonic() - started, 1)
 
-                if record["subscribed"]:
-                    await client.stop_notify(rsp_uuid)
+                for uuid in record["listening"]:
+                    try:
+                        await client.stop_notify(uuid)
+                    except Exception as err:  # noqa: BLE001
+                        _LOGGER.debug("Cannot stop listening on %s: %s", uuid, err)
+
+                record["status_after"] = await self._read_hex(client)
+                if record["status_before"] and record["status_after"]:
+                    record["status_changed"] = (
+                        record["status_before"] != record["status_after"]
+                    )
+                _LOGGER.debug("Command record for %s: %s", self.address, record)
+
                 if response is None:
                     return None
                 record["response"] = bytes(response).hex()
