@@ -386,7 +386,7 @@ Multiple presses of the Brew button are debounced. Only one brew command is sent
 
 The brew command is sent on the same BLE connection used for status polling (required by the machine). It is known to work on a Vertuo Next only. A Vertuo Pop and a Vertuo Creatista both accept the write and do nothing, and the official app has no Bluetooth brew command for any model, so there is nothing else to send.
 
-**Note:** BLE brewing is experimental. It was reverse-engineered from BLE captures on Vertuo Next models and may not work on all machines.
+**Note:** BLE brewing is experimental, and the command is not a Vertuo command at all. It is the Nespresso Expert's, an Original line machine from 2017 that shares this GATT profile, captured and published years ago. A Vertuo Next accepts it because its firmware kept the handler. Newer machines need not, and the Creatista does not.
 
 **Vertuo Pop and Vertuo Creatista:** Remote brewing over BLE is not supported by these machines. The Nespresso app itself does not offer a brew button for any model, and neither machine responds to a known BLE brew command: both acknowledge the write and stay idle. Only status monitoring and settings like water hardness work over BLE. The brew button and its two settings are therefore not created on a machine whose platform code is `CV2` or `DV2`, which are the Pop, or `CV5`, which is the Creatista.
 
@@ -480,7 +480,7 @@ registered to a Nespresso account through their app as well. See
 
 ## Limitations
 
-- **Vertuo brewing**: Experimental. The brew command was captured from Vertuo Next models and may not work on all machines. The Vertuo Pop and the Vertuo Creatista do not support BLE brewing at all (the Nespresso app itself offers no brew button for any model), so no brew button is created for either. Custom recipes with exact ml volumes are not yet supported.
+- **Vertuo brewing**: Experimental, and inherited rather than discovered. The command is the Nespresso Expert's, and a Vertuo Next happens to accept it, so it may not work on any other machine. The Vertuo Pop and the Vertuo Creatista do not (the Nespresso app itself offers no brew button for any model), so no brew button is created for either. Custom recipes with exact ml volumes are not yet supported.
 - **Maintenance commands**: Descaling, rinsing, emptying command IDs are not in the decompiled code. Needs real hardware testing.
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.

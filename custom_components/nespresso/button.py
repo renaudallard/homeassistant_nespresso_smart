@@ -265,7 +265,8 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         #
         # CharacCommandReq.setValue in the APK allocates 19 bytes and so does
         # the response: three header bytes and a fixed 16-byte data array. This
-        # was 10 bytes, the length of a packet capture from a Vertuo Next, and
+        # was 10 bytes, the length of the Nespresso Expert capture it came
+        # from, and
         # that machine answers a short write anyway. A Creatista does not: it
         # acknowledges the write, says nothing, and does not brew.
         buf = build_command_frame(

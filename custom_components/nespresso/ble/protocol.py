@@ -682,8 +682,8 @@ def build_command_frame(cmd_id: int, sub_cmd_id: int, data: bytes) -> bytes:
     The frame is a fixed width. CharacCommandReq.setValue allocates 19 bytes
     and the machine answers with 19, so the data array is padded out even when
     dataControl says fewer bytes are meaningful. A Vertuo Next tolerates a
-    short write, which is how a 10-byte capture became the whole command for a
-    while; a Creatista acknowledges one and does nothing.
+    short write, which is how the 10-byte Nespresso Expert capture became the
+    whole command for a while; a Creatista acknowledges one and does nothing.
 
     dataControl carries the length in bits 0-4, so a payload longer than 31
     could not be described even if it fitted.

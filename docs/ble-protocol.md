@@ -582,28 +582,58 @@ It never worked on any machine and was removed.
 
 ## Brew Command Protocol
 
-Source: `github.com/bulldog5046/ha_nespresso_integration` (BLE captures), decompiled APK (smali)
+Source: `github.com/fsalomon/nespresso-expert-ble` (the original capture),
+`github.com/bulldog5046/ha_nespresso_integration`, decompiled APK
+
+**Where the command actually comes from.** Not from a Vertuo. It is the
+Nespresso Expert's brew command, an Original line machine from 2017 that shares
+this entire GATT profile: the same `06AA1910` and `06AA1920` services, the same
+`06AA3A41` auth characteristic, and a token beginning `0x8` like every other.
+`fsalomon/nespresso-expert-ble` builds it in one line, from a sniffer capture:
+
+```js
+var command = "0305070400000000";   // + temperature + volume
+// temperature: low 01, medium 00, high 02
+// volume: ristretto 00, espresso 01, lungo 02, hotwater 04, americano 05, recipe 07
+```
+
+That is byte for byte what this integration sends, values included, and it is
+where bulldog's table came from too, which is why bulldog keys brewing to
+`EXPERT`, `PRODIGIO` and `BLUE` rather than to any Vertuo.
+
+So a Vertuo Next brewing over Bluetooth is the anomaly, not the rule: its
+firmware kept a handler from the Original line. A Vertuo Creatista on firmware
+17.3 accepts the write and does nothing, which is what a machine without that
+handler looks like. Expect newer machines to behave the same way.
 
 **Frame width.** `CharacCommandReq.setValue` allocates `0x13` = 19 bytes, and a
 Creatista answers on `CHAR_COMMAND_RSP` with 19 as well: three header bytes and
 a fixed 16-byte data array, padded regardless of what `dataControl` says is
-meaningful. The brew command was sent as 10 bytes for a long time, which is the
-length of the packet capture it came from. A Vertuo Next answers a short write;
-a Creatista acknowledges one and does nothing.
+meaningful. This integration sent 10 bytes for a long time, the width of the
+Expert capture above. A Vertuo Next answers a short write; a Creatista
+acknowledges one and does nothing.
 
-**Important:** The Nespresso APK does NOT send brew commands over BLE. The
-`VertuoNextMachine.configure()` method is an empty stub. The app sends brew
-commands through the IoT/MQTT cloud layer (AWS IoT). However, the machine
-firmware does accept direct BLE brew commands via `CCommandReq`, as discovered
-by the bulldog integration through BLE packet captures.
+**The app does not brew, over Bluetooth or otherwise.** `VertuoNextMachine`
+never asks for a recipe, `configure()` is an empty stub, and the cloud has no
+brew either: the seven remote operations the ECAPI exposes are descaling,
+rinsing, emptying, FOTA, water hardness, keep-alive and cup customization. An
+earlier version of this section claimed the app brews through AWS IoT, and
+nothing supports that.
 
-The `cmdID=3` family is confirmed from the APK: factory reset uses
-`cmdID=3, subCmdID=7` (from `VertuoNextMachine$performFactoryReset$1.smali`).
+**It does write this characteristic, though.** `performFactoryReset` builds a
+`CCommandReq` with `cmdID=3, subCmdID=7` and sends it, so the command channel is
+live on a Vertuo and the machine parses what arrives on it. That matters for the
+Creatista: it is not that the characteristic is dead, it is that no handler
+answers `subCmdID=5`.
+
+That single call is also the whole command vocabulary the APK gives us. Every
+other `VertuoNextMachine` coroutine was decompiled and none of them constructs a
+`CCommandReq`.
 
 ### Simple Brew (Predefined Recipes)
 
 Brew commands use the `CCommandReq` wire format written to `CHAR_COMMAND_REQ`
-(`06AA3A42`). The bulldog integration uses a 10-byte subset:
+(`06AA3A42`). The Expert capture, and bulldog after it, use a 10-byte subset:
 
 ```
 Offset  Value   CCommandReq Field   Description
@@ -618,7 +648,7 @@ Offset  Value   CCommandReq Field   Description
 
 ### Temperature Values
 
-Source: bulldog integration
+Source: the Expert capture, matched by bulldog
 
 | Value | Level |
 |-------|-------|
@@ -630,12 +660,12 @@ Source: bulldog integration
 
 | cmdID | subCmdID | Source | Description |
 |-------|----------|--------|-------------|
-| 3 | 5 | bulldog (BLE capture) | Start brew |
+| 3 | 5 | Expert capture, via bulldog | Start brew |
 | 3 | 7 | APK (smali) | Factory reset |
 
 ### Brew Types
 
-Source: bulldog integration (BLE capture)
+Source: the Expert capture, matched by bulldog
 
 | Value | Type |
 |-------|------|
