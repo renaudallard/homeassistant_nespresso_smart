@@ -123,7 +123,7 @@ class NespressoRecipeSelect(CoordinatorEntity[NespressoCoordinator], SelectEntit
     """Select entity for Barista recipe selection."""
 
     _attr_has_entity_name = True
-    _attr_name = "Recipe"
+    _attr_translation_key = "recipe"
     _attr_icon = "mdi:coffee"
     _attr_options = BARISTA_RECIPES
     _attr_current_option: str | None = None
@@ -162,7 +162,7 @@ class NespressoLanguageSelect(CoordinatorEntity[NespressoCoordinator], SelectEnt
     """Select entity for Barista language setting."""
 
     _attr_has_entity_name = True
-    _attr_name = "Language"
+    _attr_translation_key = "language"
     _attr_icon = "mdi:translate"
     _attr_options = BARISTA_LANGUAGES
     _attr_current_option: str | None = None
@@ -206,7 +206,7 @@ class NespressoVertuoBrewTypeSelect(
     """Select entity for Vertuo Next brew type."""
 
     _attr_has_entity_name = True
-    _attr_name = "Brew type"
+    _attr_translation_key = "brew_type"
     _attr_icon = "mdi:coffee"
     _attr_options = VERTUO_BREW_TYPES
     _attr_current_option = "espresso"
@@ -236,7 +236,7 @@ class NespressoVertuoTemperatureSelect(
     """Select entity for Vertuo Next brew temperature."""
 
     _attr_has_entity_name = True
-    _attr_name = "Brew temperature"
+    _attr_translation_key = "brew_temperature"
     _attr_icon = "mdi:thermometer"
     _attr_options = VERTUO_TEMPERATURES
     _attr_current_option: str | None = "medium"

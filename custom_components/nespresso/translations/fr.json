@@ -63,6 +63,153 @@
       },
       "wifi_ssid": {
         "name": "Réseau WiFi"
+      },
+      "firmware_version": {
+        "name": "Version du micrologiciel"
+      },
+      "hardware_version": {
+        "name": "Version du matériel"
+      },
+      "recipe_count": {
+        "name": "Emplacements de recettes"
+      },
+      "profile_version": {
+        "name": "Version du profil"
+      },
+      "bootloader_version": {
+        "name": "Version du bootloader"
+      },
+      "bluetooth_version": {
+        "name": "Version Bluetooth"
+      },
+      "recipe_db_version": {
+        "name": "Version de la base de recettes"
+      },
+      "connectivity_fw_version": {
+        "name": "Micrologiciel de connectivité"
+      },
+      "error_code": {
+        "name": "Code d'erreur"
+      },
+      "error_list_code": {
+        "name": "Code du journal d'erreurs"
+      },
+      "iot_market_name": {
+        "name": "Marché IoT"
+      },
+      "caps_counter": {
+        "name": "Compteur de capsules"
+      },
+      "shadow_data": {
+        "name": "Ombre de l'appareil"
+      },
+      "fota_status": {
+        "name": "État de la mise à jour"
+      },
+      "fota_progress": {
+        "name": "Progression de la mise à jour"
+      },
+      "brew_total": {
+        "name": "Total des cafés"
+      },
+      "brews_since_descaling": {
+        "name": "Cafés depuis le détartrage"
+      },
+      "brews_until_descaling": {
+        "name": "Cafés avant détartrage"
+      },
+      "days_until_descaling": {
+        "name": "Jours avant détartrage"
+      },
+      "brewing_duration": {
+        "name": "Durée de préparation"
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Erreur"
+      },
+      "water_tank_empty": {
+        "name": "Réservoir d'eau vide"
+      },
+      "descaling_needed": {
+        "name": "Détartrage nécessaire"
+      },
+      "cleaning_needed": {
+        "name": "Nettoyage nécessaire"
+      },
+      "capsule_container_full": {
+        "name": "Bac à capsules plein"
+      },
+      "brewing_unit_open": {
+        "name": "Unité de préparation"
+      },
+      "induction_heating": {
+        "name": "Chauffage à induction"
+      },
+      "milk_frother_running": {
+        "name": "Mousseur à lait"
+      },
+      "led_signaling": {
+        "name": "Signalisation LED"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Dureté de l'eau"
+      },
+      "auto_power_off": {
+        "name": "Extinction automatique"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Recette",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Personnalisé"
+        }
+      },
+      "language": {
+        "name": "Langue"
+      },
+      "brew_type": {
+        "name": "Type de café",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Eau chaude",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Température de préparation",
+        "state": {
+          "low": "Basse",
+          "medium": "Moyenne",
+          "high": "Haute"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Réinitialiser le compteur de détartrage"
+      },
+      "fota_check": {
+        "name": "Rechercher une mise à jour"
+      },
+      "brew": {
+        "name": "Préparer"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Changement d'état"
       }
     }
   },

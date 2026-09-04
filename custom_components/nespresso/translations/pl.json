@@ -63,6 +63,153 @@
       },
       "wifi_ssid": {
         "name": "Sieć WiFi"
+      },
+      "firmware_version": {
+        "name": "Wersja oprogramowania"
+      },
+      "hardware_version": {
+        "name": "Wersja sprzętu"
+      },
+      "recipe_count": {
+        "name": "Miejsca na przepisy"
+      },
+      "profile_version": {
+        "name": "Wersja profilu"
+      },
+      "bootloader_version": {
+        "name": "Wersja bootloadera"
+      },
+      "bluetooth_version": {
+        "name": "Wersja Bluetooth"
+      },
+      "recipe_db_version": {
+        "name": "Wersja bazy przepisów"
+      },
+      "connectivity_fw_version": {
+        "name": "Oprogramowanie łączności"
+      },
+      "error_code": {
+        "name": "Kod błędu"
+      },
+      "error_list_code": {
+        "name": "Kod dziennika błędów"
+      },
+      "iot_market_name": {
+        "name": "Rynek IoT"
+      },
+      "caps_counter": {
+        "name": "Licznik kapsułek"
+      },
+      "shadow_data": {
+        "name": "Cień urządzenia"
+      },
+      "fota_status": {
+        "name": "Stan aktualizacji oprogramowania"
+      },
+      "fota_progress": {
+        "name": "Postęp aktualizacji oprogramowania"
+      },
+      "brew_total": {
+        "name": "Łączna liczba parzeń"
+      },
+      "brews_since_descaling": {
+        "name": "Parzenia od odkamieniania"
+      },
+      "brews_until_descaling": {
+        "name": "Parzenia do odkamieniania"
+      },
+      "days_until_descaling": {
+        "name": "Dni do odkamieniania"
+      },
+      "brewing_duration": {
+        "name": "Czas parzenia"
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Błąd"
+      },
+      "water_tank_empty": {
+        "name": "Pusty zbiornik na wodę"
+      },
+      "descaling_needed": {
+        "name": "Wymagane odkamienianie"
+      },
+      "cleaning_needed": {
+        "name": "Wymagane czyszczenie"
+      },
+      "capsule_container_full": {
+        "name": "Pełny pojemnik na kapsułki"
+      },
+      "brewing_unit_open": {
+        "name": "Zaparzacz"
+      },
+      "induction_heating": {
+        "name": "Grzałka indukcyjna"
+      },
+      "milk_frother_running": {
+        "name": "Spieniacz mleka"
+      },
+      "led_signaling": {
+        "name": "Sygnalizacja LED"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Twardość wody"
+      },
+      "auto_power_off": {
+        "name": "Automatyczne wyłączanie"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Przepis",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Własny"
+        }
+      },
+      "language": {
+        "name": "Język"
+      },
+      "brew_type": {
+        "name": "Rodzaj parzenia",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Gorąca woda",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Temperatura parzenia",
+        "state": {
+          "low": "Niska",
+          "medium": "Średnia",
+          "high": "Wysoka"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Zeruj licznik odkamieniania"
+      },
+      "fota_check": {
+        "name": "Sprawdź aktualizację oprogramowania"
+      },
+      "brew": {
+        "name": "Zaparz"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Zmiana stanu"
       }
     }
   },

@@ -63,6 +63,153 @@
       },
       "wifi_ssid": {
         "name": "Wifi-netwerk"
+      },
+      "firmware_version": {
+        "name": "Firmwareversie"
+      },
+      "hardware_version": {
+        "name": "Hardwareversie"
+      },
+      "recipe_count": {
+        "name": "Receptplaatsen"
+      },
+      "profile_version": {
+        "name": "Profielversie"
+      },
+      "bootloader_version": {
+        "name": "Bootloaderversie"
+      },
+      "bluetooth_version": {
+        "name": "Bluetoothversie"
+      },
+      "recipe_db_version": {
+        "name": "Versie receptendatabase"
+      },
+      "connectivity_fw_version": {
+        "name": "Connectiviteitsfirmware"
+      },
+      "error_code": {
+        "name": "Foutcode"
+      },
+      "error_list_code": {
+        "name": "Foutlogcode"
+      },
+      "iot_market_name": {
+        "name": "IoT-markt"
+      },
+      "caps_counter": {
+        "name": "Capsuleteller"
+      },
+      "shadow_data": {
+        "name": "Apparaatschaduw"
+      },
+      "fota_status": {
+        "name": "Status firmware-update"
+      },
+      "fota_progress": {
+        "name": "Voortgang firmware-update"
+      },
+      "brew_total": {
+        "name": "Totaal aantal koffies"
+      },
+      "brews_since_descaling": {
+        "name": "Koffies sinds ontkalking"
+      },
+      "brews_until_descaling": {
+        "name": "Koffies tot ontkalking"
+      },
+      "days_until_descaling": {
+        "name": "Dagen tot ontkalking"
+      },
+      "brewing_duration": {
+        "name": "Zetduur"
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Fout"
+      },
+      "water_tank_empty": {
+        "name": "Waterreservoir leeg"
+      },
+      "descaling_needed": {
+        "name": "Ontkalking nodig"
+      },
+      "cleaning_needed": {
+        "name": "Reiniging nodig"
+      },
+      "capsule_container_full": {
+        "name": "Capsulebak vol"
+      },
+      "brewing_unit_open": {
+        "name": "Zetgroep"
+      },
+      "induction_heating": {
+        "name": "Inductieverwarming"
+      },
+      "milk_frother_running": {
+        "name": "Melkopschuimer"
+      },
+      "led_signaling": {
+        "name": "Ledsignalering"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Waterhardheid"
+      },
+      "auto_power_off": {
+        "name": "Automatisch uitschakelen"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Recept",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Aangepast"
+        }
+      },
+      "language": {
+        "name": "Taal"
+      },
+      "brew_type": {
+        "name": "Zetsoort",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Heet water",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Zettemperatuur",
+        "state": {
+          "low": "Laag",
+          "medium": "Gemiddeld",
+          "high": "Hoog"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Ontkalkingsteller resetten"
+      },
+      "fota_check": {
+        "name": "Zoek firmware-update"
+      },
+      "brew": {
+        "name": "Zetten"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Statuswijziging"
       }
     }
   },

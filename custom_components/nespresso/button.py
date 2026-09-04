@@ -77,7 +77,7 @@ class NespressoResetDescalingButton(
     """Reset the descaling counter after actually descaling the machine."""
 
     _attr_has_entity_name = True
-    _attr_name = "Reset descaling counter"
+    _attr_translation_key = "reset_descaling"
     _attr_icon = "mdi:restart"
 
     def __init__(self, coordinator: NespressoCoordinator, entry: ConfigEntry) -> None:
@@ -104,7 +104,7 @@ class NespressoFotaCheckButton(CoordinatorEntity[NespressoCoordinator], ButtonEn
     """Button to check for firmware updates on VMini."""
 
     _attr_has_entity_name = True
-    _attr_name = "Check firmware update"
+    _attr_translation_key = "fota_check"
     _attr_icon = "mdi:cellphone-arrow-down"
 
     def __init__(
@@ -138,7 +138,7 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
     """
 
     _attr_has_entity_name = True
-    _attr_name = "Brew"
+    _attr_translation_key = "brew"
     _attr_icon = "mdi:coffee"
 
     def __init__(

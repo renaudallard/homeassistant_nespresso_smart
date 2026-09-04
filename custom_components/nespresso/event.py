@@ -63,7 +63,7 @@ class NespressoStateChangeEvent(CoordinatorEntity[NespressoCoordinator], EventEn
     """Event entity that fires when the machine state changes."""
 
     _attr_has_entity_name = True
-    _attr_name = "State change"
+    _attr_translation_key = "state_change"
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = ALL_EVENT_TYPES
 

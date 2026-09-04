@@ -310,6 +310,11 @@ as `Service Discovery has not been performed yet`.
 
 ## Entities
 
+Entity names, the machine state values and the dropdown options are translated
+into English, French, German, Spanish, Italian, Dutch and Polish, and follow
+the language set in your Home Assistant profile. The names below are the
+English ones.
+
 ### Sensors
 
 | Entity | Barista | Vertuo Next | VMini | Description |

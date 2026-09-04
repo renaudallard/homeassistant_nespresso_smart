@@ -63,6 +63,153 @@
       },
       "wifi_ssid": {
         "name": "WiFi network"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "hardware_version": {
+        "name": "Hardware version"
+      },
+      "recipe_count": {
+        "name": "Recipe slots"
+      },
+      "profile_version": {
+        "name": "Profile version"
+      },
+      "bootloader_version": {
+        "name": "Bootloader version"
+      },
+      "bluetooth_version": {
+        "name": "Bluetooth version"
+      },
+      "recipe_db_version": {
+        "name": "Recipe database version"
+      },
+      "connectivity_fw_version": {
+        "name": "Connectivity firmware"
+      },
+      "error_code": {
+        "name": "Error code"
+      },
+      "error_list_code": {
+        "name": "Error log code"
+      },
+      "iot_market_name": {
+        "name": "IoT market"
+      },
+      "caps_counter": {
+        "name": "Capsule counter"
+      },
+      "shadow_data": {
+        "name": "Device shadow"
+      },
+      "fota_status": {
+        "name": "Firmware update status"
+      },
+      "fota_progress": {
+        "name": "Firmware update progress"
+      },
+      "brew_total": {
+        "name": "Total brews"
+      },
+      "brews_since_descaling": {
+        "name": "Brews since descaling"
+      },
+      "brews_until_descaling": {
+        "name": "Brews until descaling"
+      },
+      "days_until_descaling": {
+        "name": "Days until descaling"
+      },
+      "brewing_duration": {
+        "name": "Brewing duration"
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Error"
+      },
+      "water_tank_empty": {
+        "name": "Water tank empty"
+      },
+      "descaling_needed": {
+        "name": "Descaling needed"
+      },
+      "cleaning_needed": {
+        "name": "Cleaning needed"
+      },
+      "capsule_container_full": {
+        "name": "Capsule container full"
+      },
+      "brewing_unit_open": {
+        "name": "Brewing unit"
+      },
+      "induction_heating": {
+        "name": "Induction heater"
+      },
+      "milk_frother_running": {
+        "name": "Milk frother"
+      },
+      "led_signaling": {
+        "name": "LED signaling"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Water hardness"
+      },
+      "auto_power_off": {
+        "name": "Auto power off"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Recipe",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Custom"
+        }
+      },
+      "language": {
+        "name": "Language"
+      },
+      "brew_type": {
+        "name": "Brew type",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Hot water",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Brew temperature",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Reset descaling counter"
+      },
+      "fota_check": {
+        "name": "Check firmware update"
+      },
+      "brew": {
+        "name": "Brew"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "State change"
       }
     }
   },

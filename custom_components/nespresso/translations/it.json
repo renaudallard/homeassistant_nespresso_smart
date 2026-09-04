@@ -63,6 +63,153 @@
       },
       "wifi_ssid": {
         "name": "Rete WiFi"
+      },
+      "firmware_version": {
+        "name": "Versione del firmware"
+      },
+      "hardware_version": {
+        "name": "Versione dell'hardware"
+      },
+      "recipe_count": {
+        "name": "Slot per ricette"
+      },
+      "profile_version": {
+        "name": "Versione del profilo"
+      },
+      "bootloader_version": {
+        "name": "Versione del bootloader"
+      },
+      "bluetooth_version": {
+        "name": "Versione Bluetooth"
+      },
+      "recipe_db_version": {
+        "name": "Versione del database ricette"
+      },
+      "connectivity_fw_version": {
+        "name": "Firmware di connettività"
+      },
+      "error_code": {
+        "name": "Codice di errore"
+      },
+      "error_list_code": {
+        "name": "Codice del registro errori"
+      },
+      "iot_market_name": {
+        "name": "Mercato IoT"
+      },
+      "caps_counter": {
+        "name": "Contatore capsule"
+      },
+      "shadow_data": {
+        "name": "Ombra del dispositivo"
+      },
+      "fota_status": {
+        "name": "Stato dell'aggiornamento firmware"
+      },
+      "fota_progress": {
+        "name": "Avanzamento dell'aggiornamento firmware"
+      },
+      "brew_total": {
+        "name": "Erogazioni totali"
+      },
+      "brews_since_descaling": {
+        "name": "Erogazioni dalla decalcificazione"
+      },
+      "brews_until_descaling": {
+        "name": "Erogazioni fino alla decalcificazione"
+      },
+      "days_until_descaling": {
+        "name": "Giorni fino alla decalcificazione"
+      },
+      "brewing_duration": {
+        "name": "Durata dell'erogazione"
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Errore"
+      },
+      "water_tank_empty": {
+        "name": "Serbatoio dell'acqua vuoto"
+      },
+      "descaling_needed": {
+        "name": "Decalcificazione necessaria"
+      },
+      "cleaning_needed": {
+        "name": "Pulizia necessaria"
+      },
+      "capsule_container_full": {
+        "name": "Contenitore capsule pieno"
+      },
+      "brewing_unit_open": {
+        "name": "Gruppo di erogazione"
+      },
+      "induction_heating": {
+        "name": "Riscaldamento a induzione"
+      },
+      "milk_frother_running": {
+        "name": "Montalatte"
+      },
+      "led_signaling": {
+        "name": "Segnalazione LED"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Durezza dell'acqua"
+      },
+      "auto_power_off": {
+        "name": "Spegnimento automatico"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Ricetta",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Personalizzato"
+        }
+      },
+      "language": {
+        "name": "Lingua"
+      },
+      "brew_type": {
+        "name": "Tipo di erogazione",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Acqua calda",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Temperatura di erogazione",
+        "state": {
+          "low": "Bassa",
+          "medium": "Media",
+          "high": "Alta"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Azzera il contatore di decalcificazione"
+      },
+      "fota_check": {
+        "name": "Cerca aggiornamenti firmware"
+      },
+      "brew": {
+        "name": "Eroga"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Cambio di stato"
       }
     }
   },

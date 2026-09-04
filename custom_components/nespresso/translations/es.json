@@ -63,6 +63,153 @@
       },
       "wifi_ssid": {
         "name": "Red wifi"
+      },
+      "firmware_version": {
+        "name": "Versión del firmware"
+      },
+      "hardware_version": {
+        "name": "Versión del hardware"
+      },
+      "recipe_count": {
+        "name": "Espacios de recetas"
+      },
+      "profile_version": {
+        "name": "Versión del perfil"
+      },
+      "bootloader_version": {
+        "name": "Versión del gestor de arranque"
+      },
+      "bluetooth_version": {
+        "name": "Versión de Bluetooth"
+      },
+      "recipe_db_version": {
+        "name": "Versión de la base de datos de recetas"
+      },
+      "connectivity_fw_version": {
+        "name": "Firmware de conectividad"
+      },
+      "error_code": {
+        "name": "Código de error"
+      },
+      "error_list_code": {
+        "name": "Código del registro de errores"
+      },
+      "iot_market_name": {
+        "name": "Mercado IoT"
+      },
+      "caps_counter": {
+        "name": "Contador de cápsulas"
+      },
+      "shadow_data": {
+        "name": "Sombra del dispositivo"
+      },
+      "fota_status": {
+        "name": "Estado de la actualización de firmware"
+      },
+      "fota_progress": {
+        "name": "Progreso de la actualización de firmware"
+      },
+      "brew_total": {
+        "name": "Preparaciones totales"
+      },
+      "brews_since_descaling": {
+        "name": "Preparaciones desde la descalcificación"
+      },
+      "brews_until_descaling": {
+        "name": "Preparaciones hasta la descalcificación"
+      },
+      "days_until_descaling": {
+        "name": "Días hasta la descalcificación"
+      },
+      "brewing_duration": {
+        "name": "Duración de la preparación"
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Error"
+      },
+      "water_tank_empty": {
+        "name": "Depósito de agua vacío"
+      },
+      "descaling_needed": {
+        "name": "Descalcificación necesaria"
+      },
+      "cleaning_needed": {
+        "name": "Limpieza necesaria"
+      },
+      "capsule_container_full": {
+        "name": "Contenedor de cápsulas lleno"
+      },
+      "brewing_unit_open": {
+        "name": "Unidad de preparación"
+      },
+      "induction_heating": {
+        "name": "Calentador de inducción"
+      },
+      "milk_frother_running": {
+        "name": "Espumador de leche"
+      },
+      "led_signaling": {
+        "name": "Señalización LED"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Dureza del agua"
+      },
+      "auto_power_off": {
+        "name": "Apagado automático"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Receta",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Personalizado"
+        }
+      },
+      "language": {
+        "name": "Idioma"
+      },
+      "brew_type": {
+        "name": "Tipo de preparación",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Agua caliente",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Temperatura de preparación",
+        "state": {
+          "low": "Baja",
+          "medium": "Media",
+          "high": "Alta"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Restablecer el contador de descalcificación"
+      },
+      "fota_check": {
+        "name": "Buscar actualización de firmware"
+      },
+      "brew": {
+        "name": "Preparar"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Cambio de estado"
       }
     }
   },

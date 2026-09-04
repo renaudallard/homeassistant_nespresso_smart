@@ -63,6 +63,153 @@
       },
       "wifi_ssid": {
         "name": "WLAN-Netzwerk"
+      },
+      "firmware_version": {
+        "name": "Firmware-Version"
+      },
+      "hardware_version": {
+        "name": "Hardware-Version"
+      },
+      "recipe_count": {
+        "name": "Rezeptplätze"
+      },
+      "profile_version": {
+        "name": "Profilversion"
+      },
+      "bootloader_version": {
+        "name": "Bootloader-Version"
+      },
+      "bluetooth_version": {
+        "name": "Bluetooth-Version"
+      },
+      "recipe_db_version": {
+        "name": "Version der Rezeptdatenbank"
+      },
+      "connectivity_fw_version": {
+        "name": "Konnektivitäts-Firmware"
+      },
+      "error_code": {
+        "name": "Fehlercode"
+      },
+      "error_list_code": {
+        "name": "Fehlerprotokollcode"
+      },
+      "iot_market_name": {
+        "name": "IoT-Markt"
+      },
+      "caps_counter": {
+        "name": "Kapselzähler"
+      },
+      "shadow_data": {
+        "name": "Geräteschatten"
+      },
+      "fota_status": {
+        "name": "Status der Firmware-Aktualisierung"
+      },
+      "fota_progress": {
+        "name": "Fortschritt der Firmware-Aktualisierung"
+      },
+      "brew_total": {
+        "name": "Bezüge insgesamt"
+      },
+      "brews_since_descaling": {
+        "name": "Bezüge seit dem Entkalken"
+      },
+      "brews_until_descaling": {
+        "name": "Bezüge bis zum Entkalken"
+      },
+      "days_until_descaling": {
+        "name": "Tage bis zum Entkalken"
+      },
+      "brewing_duration": {
+        "name": "Bezugsdauer"
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Fehler"
+      },
+      "water_tank_empty": {
+        "name": "Wassertank leer"
+      },
+      "descaling_needed": {
+        "name": "Entkalken erforderlich"
+      },
+      "cleaning_needed": {
+        "name": "Reinigung erforderlich"
+      },
+      "capsule_container_full": {
+        "name": "Kapselbehälter voll"
+      },
+      "brewing_unit_open": {
+        "name": "Brüheinheit"
+      },
+      "induction_heating": {
+        "name": "Induktionsheizung"
+      },
+      "milk_frother_running": {
+        "name": "Milchaufschäumer"
+      },
+      "led_signaling": {
+        "name": "LED-Signalisierung"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Wasserhärte"
+      },
+      "auto_power_off": {
+        "name": "Automatische Abschaltung"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Rezept",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Benutzerdefiniert"
+        }
+      },
+      "language": {
+        "name": "Sprache"
+      },
+      "brew_type": {
+        "name": "Bezugsart",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Heißwasser",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Bezugstemperatur",
+        "state": {
+          "low": "Niedrig",
+          "medium": "Mittel",
+          "high": "Hoch"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Entkalkungszähler zurücksetzen"
+      },
+      "fota_check": {
+        "name": "Nach Firmware-Update suchen"
+      },
+      "brew": {
+        "name": "Bezug starten"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Zustandswechsel"
       }
     }
   },

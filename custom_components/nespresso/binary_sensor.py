@@ -56,7 +56,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
     NespressoBinarySensorDescription(
         key="error_present",
         translation_key="error_present",
-        name="Error",
         device_class=BinarySensorDeviceClass.PROBLEM,
         families=frozenset({MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.error_present,
@@ -64,7 +63,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
     NespressoBinarySensorDescription(
         key="water_tank_empty",
         translation_key="water_tank_empty",
-        name="Water tank empty",
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:cup-water",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -73,7 +71,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
     NespressoBinarySensorDescription(
         key="descaling_needed",
         translation_key="descaling_needed",
-        name="Descaling needed",
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:alert-circle-outline",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -82,7 +79,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
     NespressoBinarySensorDescription(
         key="cleaning_needed",
         translation_key="cleaning_needed",
-        name="Cleaning needed",
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:broom",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -91,7 +87,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
     NespressoBinarySensorDescription(
         key="capsule_container_full",
         translation_key="capsule_container_full",
-        name="Capsule container full",
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:delete-variant",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -102,7 +97,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
         # so the value is inverted here rather than in the parser.
         key="brewing_unit_open",
         translation_key="brewing_unit_open",
-        name="Brewing unit",
         device_class=BinarySensorDeviceClass.OPENING,
         icon="mdi:coffee-maker",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -113,7 +107,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
     NespressoBinarySensorDescription(
         key="induction_heating",
         translation_key="induction_heating",
-        name="Induction heater",
         device_class=BinarySensorDeviceClass.RUNNING,
         icon="mdi:radiator",
         families=frozenset({MachineFamily.BARISTA}),
@@ -122,7 +115,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
     NespressoBinarySensorDescription(
         key="milk_frother_running",
         translation_key="milk_frother_running",
-        name="Milk frother",
         device_class=BinarySensorDeviceClass.RUNNING,
         icon="mdi:blender",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -131,7 +123,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
     NespressoBinarySensorDescription(
         key="led_signaling",
         translation_key="led_signaling",
-        name="LED signaling",
         icon="mdi:led-on",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.led_signaling,

@@ -49,7 +49,7 @@ class NespressoBrewingDuration(CoordinatorEntity[NespressoCoordinator], SensorEn
     """Sensor that shows elapsed brewing time, updating every second."""
 
     _attr_has_entity_name = True
-    _attr_name = "Brewing duration"
+    _attr_translation_key = "brewing_duration"
     _attr_icon = "mdi:timer-outline"
     _attr_native_unit_of_measurement = "s"
 

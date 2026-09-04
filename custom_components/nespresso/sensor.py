@@ -70,7 +70,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="machine_state",
         translation_key="machine_state",
-        name="State",
         icon="mdi:coffee-maker",
         device_class=SensorDeviceClass.ENUM,
         options=ALL_STATE_OPTIONS,
@@ -80,7 +79,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="firmware_version",
         translation_key="firmware_version",
-        name="Firmware version",
         icon="mdi:chip",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda d: d.firmware_version,
@@ -88,7 +86,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="hardware_version",
         translation_key="hardware_version",
-        name="Hardware version",
         icon="mdi:chip",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT}),
@@ -97,7 +94,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="recipe_count",
         translation_key="recipe_count",
-        name="Recipe slots",
         icon="mdi:book-open-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.BARISTA}),
@@ -106,7 +102,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="profile_version",
         translation_key="profile_version",
-        name="Profile version",
         icon="mdi:information-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT}),
@@ -115,7 +110,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="bootloader_version",
         translation_key="bootloader_version",
-        name="Bootloader version",
         icon="mdi:chip",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT}),
@@ -124,7 +118,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="bluetooth_version",
         translation_key="bluetooth_version",
-        name="Bluetooth version",
         icon="mdi:bluetooth",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.BARISTA}),
@@ -133,7 +126,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="recipe_db_version",
         translation_key="recipe_db_version",
-        name="Recipe database version",
         icon="mdi:database-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -142,7 +134,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="connectivity_fw_version",
         translation_key="connectivity_fw_version",
-        name="Connectivity firmware",
         icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -151,7 +142,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="error_code",
         translation_key="error_code",
-        name="Error code",
         icon="mdi:alert-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -160,7 +150,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="error_list_code",
         translation_key="error_list_code",
-        name="Error log code",
         icon="mdi:alert-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -169,7 +158,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="wifi_status",
         translation_key="wifi_status",
-        name="WiFi status",
         icon="mdi:wifi",
         device_class=SensorDeviceClass.ENUM,
         options=sorted(set(WIFI_STATUS_NAMES.values())),
@@ -180,7 +168,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="wifi_ssid",
         translation_key="wifi_ssid",
-        name="WiFi network",
         icon="mdi:wifi-cog",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -189,7 +176,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="iot_market_name",
         translation_key="iot_market_name",
-        name="IoT market",
         icon="mdi:earth",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -198,7 +184,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="caps_counter",
         translation_key="caps_counter",
-        name="Capsule counter",
         icon="mdi:counter",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.caps_counter,
@@ -206,7 +191,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="shadow_data",
         translation_key="shadow_data",
-        name="Device shadow",
         icon="mdi:cloud-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VMINI}),
@@ -215,7 +199,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="fota_status",
         translation_key="fota_status",
-        name="Firmware update status",
         icon="mdi:cellphone-arrow-down",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VMINI}),
@@ -224,7 +207,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="fota_progress",
         translation_key="fota_progress",
-        name="Firmware update progress",
         icon="mdi:progress-download",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VMINI}),
@@ -244,7 +226,7 @@ class NespressoCounterDescription(SensorEntityDescription):
 COUNTER_DESCRIPTIONS: tuple[NespressoCounterDescription, ...] = (
     NespressoCounterDescription(
         key="brew_total",
-        name="Total brews",
+        translation_key="brew_total",
         icon="mdi:coffee",
         state_class=SensorStateClass.TOTAL_INCREASING,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -252,7 +234,7 @@ COUNTER_DESCRIPTIONS: tuple[NespressoCounterDescription, ...] = (
     ),
     NespressoCounterDescription(
         key="brews_since_descaling",
-        name="Brews since descaling",
+        translation_key="brews_since_descaling",
         icon="mdi:coffee-outline",
         state_class=SensorStateClass.TOTAL_INCREASING,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
@@ -260,14 +242,14 @@ COUNTER_DESCRIPTIONS: tuple[NespressoCounterDescription, ...] = (
     ),
     NespressoCounterDescription(
         key="brews_until_descaling",
-        name="Brews until descaling",
+        translation_key="brews_until_descaling",
         icon="mdi:coffee-off-outline",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
         value_fn=lambda c: c.brews_until_descaling,
     ),
     NespressoCounterDescription(
         key="days_until_descaling",
-        name="Days until descaling",
+        translation_key="days_until_descaling",
         icon="mdi:calendar-clock",
         native_unit_of_measurement="d",
         families=frozenset({MachineFamily.VERTUO_NEXT}),
