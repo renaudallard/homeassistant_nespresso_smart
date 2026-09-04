@@ -105,5 +105,61 @@
         }
       }
     }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Buscar redes WiFi",
+      "description": "Preguntar a la máquina qué redes WiFi ve. La búsqueda la hace la máquina, no Home Assistant, así que la lista es lo que la máquina puede alcanzar.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Máquina",
+          "description": "La máquina Nespresso sobre la que actuar."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Configurar WiFi",
+      "description": "Conectar la máquina a una red WiFi. La contraseña se envía a la máquina en claro, exactamente como la envía la aplicación oficial de Nespresso. El resultado aparece en el sensor de estado WiFi.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Máquina",
+          "description": "La máquina Nespresso sobre la que actuar."
+        },
+        "market": {
+          "name": "Mercado",
+          "description": "Código de país de dos letras, por ejemplo GB. Sin él la máquina no alcanzará los servidores de Nespresso."
+        },
+        "ssid": {
+          "name": "Nombre de red",
+          "description": "El SSID al que conectarse, 32 bytes como máximo."
+        },
+        "password": {
+          "name": "Contraseña",
+          "description": "64 bytes como máximo. Dejar vacío para una red abierta."
+        },
+        "security": {
+          "name": "Seguridad",
+          "description": "El tipo de seguridad de la red."
+        },
+        "connection_index": {
+          "name": "Índice de conexión",
+          "description": "Repetir el índice de un resultado de búsqueda. Dejar en 255 si se escribe la red a mano."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Enviar un comando en bruto",
+      "description": "Escribe una trama en bruto en la característica de comando de la máquina e informa de la respuesta. Herramienta de diagnóstico: indica qué ofrecen ambas características y si la máquina podía responder, que es lo que distingue un comando rechazado de uno que la máquina no puede confirmar.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Máquina",
+          "description": "La máquina Nespresso sobre la que actuar."
+        },
+        "payload": {
+          "name": "Trama",
+          "description": "La trama a escribir, en hexadecimal. Ejemplo 03050704000000000002, un lungo Vertuo a temperatura media."
+        }
+      }
+    }
   }
 }

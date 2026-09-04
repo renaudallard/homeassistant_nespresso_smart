@@ -105,5 +105,61 @@
         }
       }
     }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Wyszukaj sieci WiFi",
+      "description": "Zapytaj urządzenie, jakie sieci WiFi widzi. Skanuje urządzenie, a nie Home Assistant, więc lista pokazuje to, co urządzenie może osiągnąć.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Urządzenie",
+          "description": "Urządzenie Nespresso, którego dotyczy wywołanie."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Skonfiguruj WiFi",
+      "description": "Podłącz urządzenie do sieci WiFi. Hasło jest wysyłane do urządzenia otwartym tekstem, dokładnie tak jak wysyła je oficjalna aplikacja Nespresso. Wynik pokazuje sensor stanu WiFi.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Urządzenie",
+          "description": "Urządzenie Nespresso, którego dotyczy wywołanie."
+        },
+        "market": {
+          "name": "Rynek",
+          "description": "Dwuliterowy kod kraju, na przykład GB. Bez niego urządzenie nie połączy się z serwerami Nespresso."
+        },
+        "ssid": {
+          "name": "Nazwa sieci",
+          "description": "SSID sieci, do której dołączyć, najwyżej 32 bajty."
+        },
+        "password": {
+          "name": "Hasło",
+          "description": "Najwyżej 64 bajty. Pozostaw puste dla sieci otwartej."
+        },
+        "security": {
+          "name": "Zabezpieczenia",
+          "description": "Typ zabezpieczeń sieci."
+        },
+        "connection_index": {
+          "name": "Indeks połączenia",
+          "description": "Przepisz indeks z wyniku wyszukiwania. Zostaw 255, jeśli sieć wpisujesz ręcznie."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Wyślij surowe polecenie",
+      "description": "Zapisuje surową ramkę do charakterystyki poleceń urządzenia i zgłasza odpowiedź. Narzędzie diagnostyczne: podaje właściwości obu charakterystyk oraz to, czy urządzenie w ogóle mogło odpowiedzieć, co odróżnia polecenie odrzucone od takiego, którego urządzenie nie potrafi potwierdzić.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Urządzenie",
+          "description": "Urządzenie Nespresso, którego dotyczy wywołanie."
+        },
+        "payload": {
+          "name": "Ramka",
+          "description": "Ramka do zapisania, szesnastkowo. Przykład 03050704000000000002, Vertuo lungo w średniej temperaturze."
+        }
+      }
+    }
   }
 }

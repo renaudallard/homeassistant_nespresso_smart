@@ -105,5 +105,61 @@
         }
       }
     }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "WLAN-Netzwerke suchen",
+      "description": "Die Maschine fragen, welche WLAN-Netzwerke sie sieht. Die Maschine sucht, nicht Home Assistant, die Liste ist also das, was die Maschine erreichen kann.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maschine",
+          "description": "Die Nespresso-Maschine, auf die sich der Aufruf bezieht."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "WLAN einrichten",
+      "description": "Die Maschine in ein WLAN bringen. Das Passwort wird im Klartext an die Maschine gesendet, genau so wie es die offizielle Nespresso-App sendet. Das Ergebnis steht im Sensor WLAN-Status.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maschine",
+          "description": "Die Nespresso-Maschine, auf die sich der Aufruf bezieht."
+        },
+        "market": {
+          "name": "Markt",
+          "description": "Zweibuchstabiger Ländercode, zum Beispiel GB. Ohne ihn erreicht die Maschine die Server von Nespresso nicht."
+        },
+        "ssid": {
+          "name": "Netzwerkname",
+          "description": "Die beizutretende SSID, höchstens 32 Bytes."
+        },
+        "password": {
+          "name": "Passwort",
+          "description": "Höchstens 64 Bytes. Für ein offenes Netzwerk leer lassen."
+        },
+        "security": {
+          "name": "Sicherheit",
+          "description": "Der Sicherheitstyp des Netzwerks."
+        },
+        "connection_index": {
+          "name": "Verbindungsindex",
+          "description": "Den Index aus einem Suchergebnis übernehmen. Bei 255 belassen, wenn das Netzwerk von Hand eingegeben wird."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Rohbefehl senden",
+      "description": "Schreibt einen Rohrahmen auf die Befehlscharakteristik der Maschine und meldet die Antwort. Ein Diagnosewerkzeug: es nennt die Eigenschaften beider Charakteristiken und ob die Maschine überhaupt antworten konnte, was einen abgelehnten Befehl von einem unterscheidet, den die Maschine nicht quittieren kann.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maschine",
+          "description": "Die Nespresso-Maschine, auf die sich der Aufruf bezieht."
+        },
+        "payload": {
+          "name": "Rahmen",
+          "description": "Der zu schreibende Rahmen als Hex. Beispiel 03050704000000000002, ein Vertuo Lungo bei mittlerer Temperatur."
+        }
+      }
+    }
   }
 }

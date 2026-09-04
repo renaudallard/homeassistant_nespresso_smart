@@ -105,5 +105,61 @@
         }
       }
     }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Zoek WiFi-netwerken",
+      "description": "Vraag de machine welke WiFi-netwerken zij ziet. De machine doet het zoeken, niet Home Assistant, dus de lijst is wat de machine kan bereiken.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Machine",
+          "description": "De Nespresso-machine waarop dit van toepassing is."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "WiFi instellen",
+      "description": "Zet de machine op een WiFi-netwerk. Het wachtwoord gaat onversleuteld naar de machine, precies zoals de officiële Nespresso-app het verstuurt. Het resultaat staat in de sensor WiFi-status.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Machine",
+          "description": "De Nespresso-machine waarop dit van toepassing is."
+        },
+        "market": {
+          "name": "Markt",
+          "description": "Landcode van twee letters, bijvoorbeeld GB. Zonder deze bereikt de machine de servers van Nespresso niet."
+        },
+        "ssid": {
+          "name": "Netwerknaam",
+          "description": "De SSID om mee te verbinden, hoogstens 32 bytes."
+        },
+        "password": {
+          "name": "Wachtwoord",
+          "description": "Hoogstens 64 bytes. Laat leeg voor een open netwerk."
+        },
+        "security": {
+          "name": "Beveiliging",
+          "description": "Het beveiligingstype van het netwerk."
+        },
+        "connection_index": {
+          "name": "Verbindingsindex",
+          "description": "Neem de index uit een zoekresultaat over. Laat op 255 staan als je het netwerk met de hand invult."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Een ruw commando sturen",
+      "description": "Schrijft een ruw frame naar de commandokarakteristiek van de machine en meldt wat er terugkwam. Een diagnosehulpmiddel: het noemt wat beide karakteristieken bieden en of de machine überhaupt kon antwoorden, en dat onderscheidt een geweigerd commando van een dat de machine niet kan bevestigen.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Machine",
+          "description": "De Nespresso-machine waarop dit van toepassing is."
+        },
+        "payload": {
+          "name": "Frame",
+          "description": "Het te schrijven frame, als hex. Voorbeeld 03050704000000000002, een Vertuo lungo op middelhoge temperatuur."
+        }
+      }
+    }
   }
 }
