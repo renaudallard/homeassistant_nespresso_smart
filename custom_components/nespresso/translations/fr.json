@@ -245,10 +245,10 @@
           "send_tx_level": "Envoyer la requête de niveau TX lors de l'association",
           "descaling_capsules": "Intervalle de détartrage (capsules)",
           "descaling_days": "Intervalle de détartrage (jours)",
-          "force_brew_button": "Proposer l'infusion sur un modèle qui n'est pas censé la gérer"
+          "force_brew_button": "Activer la préparation sur un modèle non pris en charge"
         },
         "data_description": {
-          "force_brew_button": "Le Vertuo Pop et le Vertuo Creatista acquittent toutes les commandes d'infusion sans rien faire, aucun bouton n'est donc créé pour eux. Activez cette option pour retrouver le bouton et ses deux réglages et essayer quand même."
+          "force_brew_button": "Le Vertuo Pop et le Vertuo Creatista acceptent les commandes de préparation sans les exécuter. Le bouton n'est donc pas proposé par défaut. Activez cette option pour afficher le bouton et ses deux réglages afin de pouvoir effectuer des tests."
         }
       }
     }

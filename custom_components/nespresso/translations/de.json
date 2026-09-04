@@ -245,10 +245,10 @@
           "send_tx_level": "TX-Level-Anforderung beim Onboarding senden",
           "descaling_capsules": "Entkalkungsintervall (Kapseln)",
           "descaling_days": "Entkalkungsintervall (Tage)",
-          "force_brew_button": "Brühen auf einem Modell anbieten, das nicht brüht"
+          "force_brew_button": "Bezug auf einem Modell anbieten, das keinen ausführt"
         },
         "data_description": {
-          "force_brew_button": "Vertuo Pop und Vertuo Creatista quittieren jeden Brühbefehl und bleiben untätig, daher wird für sie keine Brühtaste angelegt. Schalten Sie dies ein, um die Taste und ihre beiden Einstellungen zurückzubekommen und es trotzdem zu versuchen."
+          "force_brew_button": "Vertuo Pop und Vertuo Creatista nehmen jeden Bezugsbefehl an, ohne ihn auszuführen, daher wird für sie keine Taste angelegt. Schalten Sie dies ein, um die Taste und ihre beiden Einstellungen anzuzeigen und es zu testen."
         }
       }
     }
