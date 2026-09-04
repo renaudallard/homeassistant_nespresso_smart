@@ -127,6 +127,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         # Whether onboarding sends the TX level request. See CONF_SEND_TX_LEVEL.
         self.send_tx_level = send_tx_level
         self.auth_key: str | None = None
+        # What the last command write did, for diagnostics. A brew that goes
+        # unanswered is only evidence once it is known whether the machine
+        # could have answered at all.
+        self.last_command: dict[str, Any] | None = None
         # Pairing state as last seen in an advertisement. Kept apart from
         # self.data because it is at its most useful before the first
         # successful poll, when there is no data at all.
@@ -467,14 +471,48 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     response = rsp_data
                     _LOGGER.debug("Command response: %s", rsp_data.hex())
 
-                await client.start_notify(rsp_uuid, on_notify)
+                cmd_char = client.services.get_characteristic(cmd_uuid)
+                rsp_char = client.services.get_characteristic(rsp_uuid)
+                record: dict[str, Any] = {
+                    "request": data.hex(),
+                    "command_characteristic": cmd_uuid,
+                    "command_properties": sorted(cmd_char.properties)
+                    if cmd_char
+                    else None,
+                    "response_characteristic": rsp_uuid,
+                    "response_properties": sorted(rsp_char.properties)
+                    if rsp_char
+                    else None,
+                    "subscribed": False,
+                    "attempts": 0,
+                    "response": None,
+                }
+                self.last_command = record
+
+                # Subscribe only where the machine offers it. A machine that
+                # does not have the characteristic at all, or has it without
+                # notify, used to raise here and lose the write with it. The
+                # write is the more interesting half: whether it is accepted
+                # says something even when nothing can come back.
+                if rsp_char is not None and "notify" in rsp_char.properties:
+                    await client.start_notify(rsp_uuid, on_notify)
+                    record["subscribed"] = True
+                else:
+                    _LOGGER.debug(
+                        "%s cannot notify on %s, sending the command anyway",
+                        self.address,
+                        rsp_uuid,
+                    )
 
                 for attempt in range(retries):
                     response = None
+                    record["attempts"] = attempt + 1
                     await client.write_gatt_char(cmd_uuid, data, response=True)
                     _LOGGER.debug(
                         "Command write attempt %d: %s", attempt + 1, data.hex()
                     )
+                    if not record["subscribed"]:
+                        break
                     for _ in range(5):
                         if response is not None:
                             break
@@ -483,8 +521,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                         break
                     await asyncio.sleep(1)
 
-                await client.stop_notify(rsp_uuid)
-                return bytes(response) if response is not None else None
+                if record["subscribed"]:
+                    await client.stop_notify(rsp_uuid)
+                if response is None:
+                    return None
+                record["response"] = bytes(response).hex()
+                return bytes(response)
             finally:
                 if own_client:
                     await client.disconnect()

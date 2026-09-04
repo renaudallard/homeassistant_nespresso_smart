@@ -142,6 +142,20 @@
           "description": "Reprendre l'index d'un résultat de recherche. Laisser à 255 en saisie manuelle."
         }
       }
+    },
+    "send_command": {
+      "name": "Envoyer une commande brute",
+      "description": "Écrit une trame brute sur la caractéristique de commande de la machine et rapporte la réponse. Outil de diagnostic : il indique ce que proposent les deux caractéristiques et si la machine pouvait répondre, ce qui distingue une commande refusée d'une commande que la machine ne peut pas acquitter.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Machine",
+          "description": "La machine Nespresso concernée."
+        },
+        "payload": {
+          "name": "Trame",
+          "description": "La trame à écrire, en hexadécimal. Exemple 03050704000000000002, un lungo Vertuo à température moyenne."
+        }
+      }
     }
   }
 }

@@ -50,3 +50,16 @@ configure_wifi:
           min: 0
           max: 255
           mode: box
+
+send_command:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: nespresso
+    payload:
+      required: true
+      example: "03050704000000000002"
+      selector:
+        text:

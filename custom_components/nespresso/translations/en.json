@@ -142,6 +142,20 @@
           "description": "Echo the index from a scan result. Leave at 255 when typing the network in by hand."
         }
       }
+    },
+    "send_command": {
+      "name": "Send a raw command",
+      "description": "Write a raw frame to the machine's command characteristic and report what came back. A debugging tool: it says what both characteristics offer and whether the machine could answer at all, which is what tells a refused command apart from one the machine cannot acknowledge.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Machine",
+          "description": "The Nespresso machine to act on."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "The frame to write, as hex. Example 03050704000000000002, a Vertuo lungo at medium temperature."
+        }
+      }
     }
   }
 }

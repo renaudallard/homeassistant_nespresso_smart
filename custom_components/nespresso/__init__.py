@@ -50,6 +50,7 @@ from .config_flow import (
     CONF_SEND_TX_LEVEL,
 )
 from .const import (
+    COMMAND_CHANNELS,
     CONF_DESCALING_CAPSULES,
     CONF_DESCALING_DAYS,
     DEFAULT_DESCALING_CAPSULES,
@@ -76,10 +77,18 @@ PLATFORMS: list[Platform] = [
 
 SERVICE_SCAN_WIFI = "scan_wifi"
 SERVICE_CONFIGURE_WIFI = "configure_wifi"
+SERVICE_SEND_COMMAND = "send_command"
 
 ATTR_ENTRY_ID = "config_entry_id"
 
 _SCAN_WIFI_SCHEMA = vol.Schema({vol.Required(ATTR_ENTRY_ID): cv.string})
+
+_SEND_COMMAND_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTRY_ID): cv.string,
+        vol.Required("payload"): cv.string,
+    }
+)
 
 _CONFIGURE_WIFI_SCHEMA = vol.Schema(
     {
@@ -131,8 +140,36 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         schema=_SCAN_WIFI_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
+
+    async def _send_command(call: ServiceCall) -> ServiceResponse:
+        coordinator = _coordinator(hass, call.data[ATTR_ENTRY_ID])
+        channel = COMMAND_CHANNELS.get(coordinator.family)
+        if channel is None:
+            raise ValueError(f"{coordinator.family.value} has no command channel")
+        text = call.data["payload"].replace(" ", "").replace(":", "")
+        try:
+            payload = bytes.fromhex(text)
+        except ValueError as err:
+            raise ValueError(f"payload is not hex: {call.data['payload']}") from err
+        if not payload:
+            raise ValueError("payload is empty")
+
+        cmd_uuid, rsp_uuid = channel
+        await coordinator.async_send_command(cmd_uuid, rsp_uuid, payload)
+        # async_send_command returns the answer, but the record says more: what
+        # the two characteristics offer, and whether anything could have come
+        # back at all. That distinction is the whole point of asking.
+        return dict(coordinator.last_command or {})
+
     hass.services.async_register(
         DOMAIN, SERVICE_CONFIGURE_WIFI, _configure, schema=_CONFIGURE_WIFI_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_COMMAND,
+        _send_command,
+        schema=_SEND_COMMAND_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
 
 

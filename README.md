@@ -664,6 +664,36 @@ stays readable even while the machine refuses every connected read. Turn on
 debug logging and look for `Pairing key state for ... is now`, or download the
 integration's diagnostics and read `debug_info.pairing_key_state`.
 
+### Sending a raw command
+
+The `nespresso.send_command` action writes a frame of your choosing to the
+machine's command characteristic and returns what happened. It works on every
+machine, including the models that get no brew button, which is the point: it
+is how a machine gets tested rather than assumed about.
+
+From **Developer tools > Actions**, pick the machine and give it a payload in
+hex, for example `03050704000000000002`, a Vertuo lungo at medium temperature.
+The response looks like this:
+
+```yaml
+request: "03050704000000000002"
+command_characteristic: 06aa3a42-f22a-11e3-9daa-0002a5d5c51b
+command_properties: [write]
+response_characteristic: 06aa3a52-f22a-11e3-9daa-0002a5d5c51b
+response_properties: [notify, read]
+subscribed: true
+attempts: 1
+response: null
+```
+
+Read it from the bottom. A `response` says the machine answered and what it
+said. A null response only means something once `subscribed` is true: that is
+the machine offering `notify` and staying silent anyway, which is a refusal.
+With `subscribed` false, or `response_properties` null, the machine had no way
+to answer and its silence says nothing at all. The same record is in the
+diagnostics download as `last_command`, so a brew button press can be read the
+same way.
+
 ### Collecting diagnostics for an issue
 
 Add this to `configuration.yaml` and restart:
