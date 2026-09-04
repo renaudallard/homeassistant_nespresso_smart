@@ -41,6 +41,7 @@ from .ble.protocol import normalize_auth_key
 from .const import (
     CONF_DESCALING_CAPSULES,
     CONF_DESCALING_DAYS,
+    CONF_FORCE_BREW_BUTTON,
     DEFAULT_DESCALING_CAPSULES,
     DEFAULT_DESCALING_DAYS,
     DEFAULT_SCAN_INTERVAL,
@@ -109,6 +110,12 @@ class NespressoOptionsFlow(OptionsFlow):
                             CONF_DESCALING_DAYS, DEFAULT_DESCALING_DAYS
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=1, max=3650)),
+                    vol.Required(
+                        CONF_FORCE_BREW_BUTTON,
+                        default=self.config_entry.options.get(
+                            CONF_FORCE_BREW_BUTTON, False
+                        ),
+                    ): bool,
                 }
             ),
         )

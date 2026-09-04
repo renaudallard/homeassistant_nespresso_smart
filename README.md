@@ -383,7 +383,9 @@ The brew command is sent on the same BLE connection used for status polling (req
 
 **Note:** BLE brewing is experimental. It was reverse-engineered from BLE captures on Vertuo Next models and may not work on all machines.
 
-**Vertuo Pop and Vertuo Creatista:** Remote brewing over BLE is not supported by these machines. The Nespresso app itself does not offer a brew button for any model, and neither machine responds to a known BLE brew command: both acknowledge the write and stay idle. Only status monitoring and settings like water hardness work over BLE. The brew button is therefore not created on a machine whose platform code is `CV2` or `DV2`, which are the Pop, or `CV5`, which is the Creatista.
+**Vertuo Pop and Vertuo Creatista:** Remote brewing over BLE is not supported by these machines. The Nespresso app itself does not offer a brew button for any model, and neither machine responds to a known BLE brew command: both acknowledge the write and stay idle. Only status monitoring and settings like water hardness work over BLE. The brew button and its two settings are therefore not created on a machine whose platform code is `CV2` or `DV2`, which are the Pop, or `CV5`, which is the Creatista.
+
+That verdict rests on a handful of machines, so it is not final. **Offer brewing on a model that is not known to brew** in the options brings the button and both selects back, for anyone who wants to try theirs. `nespresso.send_command` tests the same thing without the option and says more about the result.
 
 ### Events and Triggers
 
@@ -424,6 +426,7 @@ The Vertuo family also gets a **WiFi status** and **WiFi network** sensor, both 
 
 - **Descaling interval (capsules)** (1-10000, default 300): how many brews before descaling is due. Vertuo Next family only.
 - **Descaling interval (days)** (1-3650, default 90): how many days before descaling is due. Vertuo Next family only.
+- **Offer brewing on a model that is not known to brew** (off by default): brings back the brew button and its two selects on a Vertuo Pop or Creatista, which are believed not to brew over Bluetooth. See [Brewing](#brewing).
 
 Nespresso quotes 300 capsules or 3 months for the Vertuo range, whichever comes first. Both limits are configurable because hard water needs more frequent descaling. Brews are counted from machine state transitions, so they are only counted while Home Assistant is running.
 

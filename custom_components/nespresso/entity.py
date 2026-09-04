@@ -31,8 +31,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
+    CONF_FORCE_BREW_BUTTON,
     DOMAIN,
     MACHINE_FAMILY_NAMES,
+    NO_BREW_PLATFORM_CODES,
     VERTUO_PLATFORM_NAMES,
     MachineFamily,
 )
@@ -77,6 +79,19 @@ def machine_model(entry: ConfigEntry, coordinator: NespressoCoordinator) -> str:
         return VERTUO_PLATFORM_NAMES[code]
     family = MachineFamily(entry.data["family"])
     return MACHINE_FAMILY_NAMES.get(family, "Unknown")
+
+
+def supports_brewing(entry: ConfigEntry, coordinator: NespressoCoordinator) -> bool:
+    """Whether to offer brewing on this machine.
+
+    The Pop and the Creatista acknowledge every brew frame we have and stay
+    idle, so a button and its two settings would be furniture. The option
+    overrides that, because "this model does not brew" is a conclusion drawn
+    from a handful of machines and the way to revisit it is to let someone try.
+    """
+    if entry.options.get(CONF_FORCE_BREW_BUTTON, False):
+        return True
+    return platform_code(entry, coordinator) not in NO_BREW_PLATFORM_CODES
 
 
 def machine_device_info(

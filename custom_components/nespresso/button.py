@@ -44,25 +44,9 @@ from .const import (
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator
-from .entity import machine_device_info, platform_code
+from .entity import machine_device_info, supports_brewing
 
 _LOGGER = logging.getLogger(__name__)
-
-# Vertuo platform codes with no BLE brew support. The Nespresso app itself
-# offers no brew button for these models and the machine ignores every known
-# brew command, so exposing a button that silently does nothing is worse than
-# not exposing one. CV2 and DV2 are the Vertuo Pop, CV5 the Vertuo Creatista,
-# which took every frame we have and stayed idle through all of them.
-NO_BREW_PLATFORM_CODES = ("CV2", "DV2", "CV5")
-
-
-def _supports_brewing(coordinator: NespressoCoordinator, entry: ConfigEntry) -> bool:
-    """Return False for Vertuo models known to reject BLE brew commands."""
-    code = platform_code(entry, coordinator)
-    if code in NO_BREW_PLATFORM_CODES:
-        _LOGGER.debug("Brew button skipped: %s does not brew over BLE", code)
-        return False
-    return True
 
 
 async def async_setup_entry(
@@ -78,7 +62,7 @@ async def async_setup_entry(
     entities: list[ButtonEntity] = []
     if family == MachineFamily.VMINI:
         entities.append(NespressoFotaCheckButton(coordinator, entry))
-    if family == MachineFamily.VERTUO_NEXT and _supports_brewing(coordinator, entry):
+    if family == MachineFamily.VERTUO_NEXT and supports_brewing(entry, coordinator):
         entities.append(NespressoVertuoBrewButton(coordinator, entry))
     # Only Vertuo Next: the derived counters this button resets are only
     # created for that family.

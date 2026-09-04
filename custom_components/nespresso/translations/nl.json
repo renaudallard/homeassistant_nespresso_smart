@@ -97,7 +97,11 @@
           "persistent_connection": "Persistente verbinding (realtime updates, blokkeert Nespresso-app)",
           "send_tx_level": "TX-niveauverzoek verzenden bij het koppelen",
           "descaling_capsules": "Ontkalkingsinterval (capsules)",
-          "descaling_days": "Ontkalkingsinterval (dagen)"
+          "descaling_days": "Ontkalkingsinterval (dagen)",
+          "force_brew_button": "Zetten aanbieden op een model dat niet zet"
+        },
+        "data_description": {
+          "force_brew_button": "De Vertuo Pop en de Vertuo Creatista bevestigen elk zetcommando en doen niets, dus voor die machines wordt geen knop aangemaakt. Zet dit aan om de knop en de twee bijbehorende instellingen terug te krijgen en het toch te proberen."
         }
       }
     }

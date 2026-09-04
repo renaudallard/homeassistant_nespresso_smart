@@ -97,7 +97,11 @@
           "persistent_connection": "Persistent connection (real-time updates, blocks Nespresso app)",
           "send_tx_level": "Send the TX level request when onboarding",
           "descaling_capsules": "Descaling interval (capsules)",
-          "descaling_days": "Descaling interval (days)"
+          "descaling_days": "Descaling interval (days)",
+          "force_brew_button": "Offer brewing on a model that is not known to brew"
+        },
+        "data_description": {
+          "force_brew_button": "The Vertuo Pop and the Vertuo Creatista acknowledge every brew command and stay idle, so no brew button is created for them. Turn this on to get the button and its two settings back and try anyway."
         }
       }
     }

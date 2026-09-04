@@ -41,7 +41,7 @@ from .const import (
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator
-from .entity import machine_device_info
+from .entity import machine_device_info, supports_brewing
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +111,9 @@ async def async_setup_entry(
     if family == MachineFamily.BARISTA:
         entities.append(NespressoRecipeSelect(coordinator, entry))
         entities.append(NespressoLanguageSelect(coordinator, entry))
-    if family == MachineFamily.VERTUO_NEXT:
+    # These two only configure the brew button, so they follow it. A machine
+    # with no way to brew has nothing to set.
+    if family == MachineFamily.VERTUO_NEXT and supports_brewing(entry, coordinator):
         entities.append(NespressoVertuoBrewTypeSelect(coordinator, entry))
         entities.append(NespressoVertuoTemperatureSelect(coordinator, entry))
     async_add_entities(entities)

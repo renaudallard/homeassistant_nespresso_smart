@@ -97,7 +97,11 @@
           "persistent_connection": "Trwałe połączenie (aktualizacje w czasie rzeczywistym, blokuje aplikację Nespresso)",
           "send_tx_level": "Wyślij żądanie poziomu TX podczas parowania",
           "descaling_capsules": "Interwał odkamieniania (kapsułki)",
-          "descaling_days": "Interwał odkamieniania (dni)"
+          "descaling_days": "Interwał odkamieniania (dni)",
+          "force_brew_button": "Udostępnij parzenie w modelu, który go nie obsługuje"
+        },
+        "data_description": {
+          "force_brew_button": "Vertuo Pop i Vertuo Creatista potwierdzają każde polecenie parzenia i nic nie robią, więc przycisk nie jest tworzony. Włącz tę opcję, aby odzyskać przycisk wraz z dwoma ustawieniami i mimo wszystko spróbować."
         }
       }
     }

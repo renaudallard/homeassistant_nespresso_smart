@@ -46,6 +46,11 @@ DEFAULT_DESCALING_CAPSULES = 300
 CONF_DESCALING_DAYS = "descaling_days"
 DEFAULT_DESCALING_DAYS = 90
 
+# Offer brewing on a model that is not believed to brew. The belief comes from
+# a handful of machines, and this is how someone gets to test theirs rather
+# than take our word for it.
+CONF_FORCE_BREW_BUTTON = "force_brew_button"
+
 COUNTER_STORAGE_VERSION = 1
 COUNTER_SAVE_DELAY = 15
 
@@ -351,6 +356,13 @@ VERTUO_PLATFORM_NAMES: Final[dict[str, str]] = {
     "DV5": "Vertuo Lattissima",
     "CV5": "Vertuo Creatista",
 }
+
+# Vertuo platform codes with no BLE brew support. The Nespresso app itself
+# offers no brew button for these models and the machine ignores every known
+# brew command, so exposing a button that silently does nothing is worse than
+# not exposing one. CV2 and DV2 are the Vertuo Pop, CV5 the Vertuo Creatista,
+# which took every frame we have and stayed idle through all of them.
+NO_BREW_PLATFORM_CODES: Final[tuple[str, ...]] = ("CV2", "DV2", "CV5")
 
 # Characteristics holding the auth token, redacted out of the GATT dump. A
 # diagnostics download is meant to be pasted into an issue, and this is the one

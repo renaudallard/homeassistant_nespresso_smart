@@ -97,7 +97,11 @@
           "persistent_connection": "Connessione persistente (aggiornamenti in tempo reale, blocca l'app Nespresso)",
           "send_tx_level": "Inviare la richiesta di livello TX durante l'associazione",
           "descaling_capsules": "Intervallo di decalcificazione (capsule)",
-          "descaling_days": "Intervallo di decalcificazione (giorni)"
+          "descaling_days": "Intervallo di decalcificazione (giorni)",
+          "force_brew_button": "Offrire l'erogazione su un modello che non la supporta"
+        },
+        "data_description": {
+          "force_brew_button": "La Vertuo Pop e la Vertuo Creatista confermano ogni comando di erogazione e restano ferme, quindi non viene creato alcun pulsante. Attiva questa opzione per riavere il pulsante e le sue due impostazioni e provare comunque."
         }
       }
     }
