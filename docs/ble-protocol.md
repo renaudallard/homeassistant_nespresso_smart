@@ -411,6 +411,22 @@ On that same machine `byte[1]` bit 4, which the SDK calls
 work on machines we have not seen, so the integration keeps it and ORs the
 nibble in.
 
+### Bytes 3 to 7, unread
+
+The characteristic is eight bytes and nothing reads past byte 2, not this
+integration and not `MachineStatus` in the APK.
+
+On a Vertuo Creatista they held `00 01 00 3f 00` across all seven distinct
+payloads captured through a coffee cycle and a frothing cycle, including the
+transitions through capsule reading, brewing and back to ready. So byte 4 at
+`0x01` and byte 6 at `0x3F` are constants of unknown meaning rather than
+padding, and the other three were zero throughout.
+
+Nothing can be concluded from one machine sitting in ordinary states. They are
+recorded here because the milk unit turned out to be hiding in an ignored
+nibble of byte 2, and these are the next ignored bytes. A `nespresso.watch`
+capture across a descaling or cleaning cycle would be the way to find out.
+
 ## Machine Info Format
 
 Source: `com.sdataway.barista.sdk.characteristics.CharacMachineInfo`

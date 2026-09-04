@@ -183,6 +183,7 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
       byte[1] bit6: capsuleContainerFull
       machineState = (byte[1] & 0x0F) + (byte[2] & 0xF0)
       byte[2] bits0-3: milk unit status, see below
+      bytes[3..7]: not decoded by anyone, see below
 
     The low nibble of byte 2 is not in the APK. MachineStatus reads byte 2 for
     the state's high nibble and nothing else, so the app never sees it. It was
@@ -195,6 +196,13 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
     stayed clear through 68 seconds of frothing. The bit is kept because it is
     what the vendor documents and it may work on machines we have not seen, but
     the nibble is what actually moved.
+
+    The characteristic is eight bytes and nothing reads past byte 2, here or in
+    the APK. On a Creatista bytes 3 to 7 held 00 01 00 3f 00 across every one of
+    the seven distinct payloads captured through a coffee and a frothing cycle,
+    so byte 4 and byte 6 are non-zero constants of unknown meaning rather than
+    padding. They are worth watching on a machine doing something we have not
+    tried, since the milk unit was found in an ignored nibble of byte 2.
     """
     if len(data) < 3:
         raise ValueError(f"Vertuo Next status requires >= 3 bytes, got {len(data)}")
