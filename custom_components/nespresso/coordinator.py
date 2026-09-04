@@ -664,6 +664,14 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     value = bytes(data).hex()
                     note("notifications", {"at": stamp(), "uuid": uuid, "value": value})
                     _LOGGER.debug("Watch %s notified %s", uuid, value)
+                    # The poll waits on _ble_lock for the whole watch, so
+                    # without this the entities keep the values they had when
+                    # it started and whoever is standing at the machine using
+                    # it sees nothing move. In persistent mode the poll owns
+                    # this subscription and is already fed, and the loop above
+                    # left it alone.
+                    if uuid == self._status_uuid:
+                        self._on_status_notification(_sender, data)
 
                 return on_notify
 
