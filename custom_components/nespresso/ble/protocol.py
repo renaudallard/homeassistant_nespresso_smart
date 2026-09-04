@@ -43,6 +43,7 @@ from typing import TypeVar
 from bleak import BleakClient, BleakError
 
 from ..const import (
+    AUTH_CHARS,
     BARISTA_CHAR_AUTH,
     BARISTA_CHAR_INFO,
     BARISTA_CHAR_MACHINE_PARAMS,
@@ -1077,18 +1078,33 @@ async def _authenticate_vmini(client: BleakClient, auth_key: str) -> bool:
         return False
 
 
-async def _dump_all_characteristics(client: BleakClient) -> dict[str, str]:
-    """Read and log every readable characteristic on the device.
+async def _dump_all_characteristics(client: BleakClient) -> dict[str, dict[str, str]]:
+    """Describe and read every characteristic on the device.
 
     This is the primary debugging tool for reverse engineering unknown
     command IDs, WiFi byte formats, and other undocumented protocol data.
     Results are included in diagnostics downloads.
+
+    The properties are recorded for every characteristic, not only the ones
+    that refuse a read. Whether a machine offers `notify` on its command
+    response decides what silence after a command write means, and that
+    question cannot be answered from the value alone.
+
+    Auth characteristics are redacted. A diagnostics download is something
+    people paste into an issue, and the token is the credential that controls
+    the machine. The serial number is not redacted: it is printed on the
+    machine, and it carries the platform code that names the model.
     """
-    dump: dict[str, str] = {}
+    dump: dict[str, dict[str, str]] = {}
     for service in client.services:
         for char in service.characteristics:
+            entry = {"properties": ",".join(sorted(char.properties))}
+            dump[char.uuid] = entry
+            if char.uuid.lower() in AUTH_CHARS:
+                entry["value"] = "**REDACTED**"
+                continue
             if "read" not in char.properties:
-                dump[char.uuid] = f"<not readable, props={char.properties}>"
+                entry["value"] = "<not readable>"
                 continue
             try:
                 value = await _read(client, char.uuid)
@@ -1097,16 +1113,17 @@ async def _dump_all_characteristics(client: BleakClient) -> dict[str, str]:
                     text = bytes(value).decode("utf-8", errors="replace")
                 except Exception:  # noqa: BLE001
                     text = ""
-                dump[char.uuid] = raw_hex
+                entry["value"] = raw_hex
                 _LOGGER.debug(
-                    "GATT %s [%s] = %s (text=%r)",
+                    "GATT %s [%s] props=%s = %s (text=%r)",
                     service.uuid,
                     char.uuid,
+                    entry["properties"],
                     raw_hex,
                     text,
                 )
             except Exception as err:  # noqa: BLE001
-                dump[char.uuid] = f"<read error: {err}>"
+                entry["value"] = f"<read error: {err}>"
                 _LOGGER.debug(
                     "GATT %s [%s] read error: %s",
                     service.uuid,

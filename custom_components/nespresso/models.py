@@ -75,7 +75,7 @@ class NespressoMachineData:
     fota_progress: int | None = None
 
     # Debug: full GATT characteristic dump
-    gatt_dump: dict[str, str] | None = None
+    gatt_dump: dict[str, dict[str, str]] | None = None
 
 
 @dataclass(slots=True)
@@ -103,4 +103,4 @@ class RawMachineData:
     shadow_header: str | None = None
     fota_status_bytes: bytes | None = None
     wifi_current_bytes: bytes | None = None
-    gatt_dump: dict[str, str] | None = None
+    gatt_dump: dict[str, dict[str, str]] | None = None

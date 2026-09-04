@@ -351,3 +351,23 @@ VERTUO_PLATFORM_NAMES: Final[dict[str, str]] = {
     "DV5": "Vertuo Lattissima",
     "CV5": "Vertuo Creatista",
 }
+
+# Characteristics holding the auth token, redacted out of the GATT dump. A
+# diagnostics download is meant to be pasted into an issue, and this is the one
+# value on the machine that is a credential rather than a fact about it.
+AUTH_CHARS: Final[frozenset[str]] = frozenset(
+    {
+        BARISTA_CHAR_AUTH,
+        VERTUO_CHAR_AUTH,
+        VMINI_CHAR_PAIRING,
+        VMINI_CHAR_MACHINE_TOKEN,
+    }
+)
+
+# The command channel of each family: what a request is written to, and what
+# the machine answers on.
+COMMAND_CHANNELS: Final[dict[MachineFamily, tuple[str, str]]] = {
+    MachineFamily.BARISTA: (BARISTA_CHAR_RECIPE_COMMAND, BARISTA_CHAR_RECIPE_RESPONSE),
+    MachineFamily.VERTUO_NEXT: (VERTUO_CHAR_COMMAND_REQ, VERTUO_CHAR_COMMAND_RSP),
+    MachineFamily.VMINI: (VMINI_CHAR_FOTA_COMMAND, VMINI_CHAR_FOTA_STATUS),
+}

@@ -664,6 +664,26 @@ stays readable even while the machine refuses every connected read. Turn on
 debug logging and look for `Pairing key state for ... is now`, or download the
 integration's diagnostics and read `debug_info.pairing_key_state`.
 
+### Collecting diagnostics for an issue
+
+Add this to `configuration.yaml` and restart:
+
+```yaml
+logger:
+  logs:
+    custom_components.nespresso: debug
+```
+
+Then let one poll go by, and download the diagnostics from the device page,
+three dot menu, **Download diagnostics**.
+
+Debug logging is what produces `gatt_characteristic_dump`, a list of every
+service and characteristic the machine exposes, each with its GATT properties
+and its value. It is the most useful single artefact for anything protocol
+related, because it says what the machine actually offers rather than what the
+app expects. The auth token is redacted from it. The serial number is not: it
+is printed on the machine, and its platform code is what names the model.
+
 ## Support
 
 If you find this integration useful, you can support its development:
