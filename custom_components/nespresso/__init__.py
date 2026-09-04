@@ -95,7 +95,7 @@ _WATCH_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTRY_ID): cv.string,
         vol.Optional("seconds", default=60): vol.All(
-            vol.Coerce(float), vol.Range(min=5, max=600)
+            vol.Coerce(float), vol.Range(min=5, max=1800)
         ),
     }
 )

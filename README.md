@@ -760,10 +760,11 @@ The auth characteristic is never read. Events are capped, and `truncated` says
 so if the cap was hit. The record is also in the diagnostics download as
 `last_watch`.
 
-A watch holds the machine for as long as it runs, so the poll cannot get a turn
-until it ends. The status notifications still reach the sensors, which covers
-the machine state, the milk unit and the rest of the status flags, but anything
-else the poll reads keeps the value it had when the watch started.
+A watch runs for 5 to 1800 seconds, which is long enough for a descaling cycle
+in one go. It holds the machine for that whole time, so the poll cannot get a
+turn until it ends. The status notifications still reach the sensors, which
+covers the machine state, the milk unit and the rest of the status flags, but
+anything else the poll reads keeps the value it had when the watch started.
 
 ### Collecting diagnostics for an issue
 
