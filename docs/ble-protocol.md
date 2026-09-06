@@ -425,16 +425,19 @@ nibble in.
 The characteristic is eight bytes and nothing reads past byte 2, not this
 integration and not `MachineStatus` in the APK.
 
-On a Vertuo Creatista they held `00 01 00 3f 00` across all fourteen distinct
-payloads captured so far, through a coffee cycle, a frothing cycle, a full
-cleaning cycle, the machine's own menu and an open brewing unit, including the
-transitions through capsule reading, brewing and back to ready. So byte 4 at
-`0x01` and byte 6 at `0x3F` are constants of unknown meaning rather than
-padding, and the other three were zero throughout.
+Across the seventeen distinct payloads captured on a Vertuo Creatista, through
+a coffee cycle, a frothing cycle, a full cleaning cycle, the machine's own menu,
+an open brewing unit, standby and power save, byte 6 held `0x3F` and bytes 3, 5
+and 7 held zero.
 
-Nothing can be concluded from one machine sitting in ordinary states. They are
-recorded here because the milk unit turned out to be hiding in an ignored
-nibble of byte 2, and these are the next ignored bytes. A `nespresso.watch`
+Byte 4 is not a constant. It read `0x00` in every power save sample and `0x01`
+everywhere else, going to `0x01` when the machine woke and back to `0x00` when
+it returned to power save. Standby keeps it at `0x01`, so it is not simply
+awake or asleep, and it is the only one of these five bytes seen to move.
+
+One machine is not enough to name byte 4, let alone the four that have not
+moved. They are recorded here because the milk unit turned out to be hiding in
+an ignored nibble of byte 2, and these are the next ignored bytes. A `nespresso.watch`
 capture across a descaling or cleaning cycle would be the way to find out.
 
 ## Machine Info Format

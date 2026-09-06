@@ -208,11 +208,17 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
     the nibble is what actually moved.
 
     The characteristic is eight bytes and nothing reads past byte 2, here or in
-    the APK. On a Creatista bytes 3 to 7 held 00 01 00 3f 00 across every one of
-    the fourteen distinct payloads captured so far, spanning a coffee, frothing,
-    a cleaning cycle, the machine's own menu and an open brewing unit, so byte 4
-    and byte 6 are non-zero constants of unknown meaning rather than padding. They are worth watching on a machine doing something we have not
-    tried, since the milk unit was found in an ignored nibble of byte 2.
+    the APK. Across the seventeen distinct payloads captured on a Creatista,
+    spanning a coffee, frothing, a cleaning cycle, the machine's own menu, an
+    open brewing unit, standby and power save, byte 6 held 0x3F and bytes 3, 5
+    and 7 held zero.
+
+    Byte 4 is not a constant. It read 0x00 in every power save sample and 0x01
+    everywhere else, going to 0x01 when the machine woke and back to 0x00 when
+    it returned to power save. Standby keeps it at 0x01, so it is not simply
+    awake or asleep. The rest are worth watching on a machine doing something
+    we have not tried, since the milk unit was found in an ignored nibble of
+    byte 2.
     """
     if len(data) < 3:
         raise ValueError(f"Vertuo Next status requires >= 3 bytes, got {len(data)}")
