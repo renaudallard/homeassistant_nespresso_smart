@@ -72,6 +72,7 @@ from .ble.recipe import parse_recipe_info
 from .const import (
     AUTH_CHARS,
     BARISTA_CHAR_STATUS,
+    COMMAND_RESPONSE_WAIT,
     COUNTER_SAVE_DELAY,
     COUNTER_STORAGE_VERSION,
     DEFAULT_SCAN_INTERVAL,
@@ -480,10 +481,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         cmd_uuid: str,
         rsp_uuid: str,
         data: bytes,
-        retries: int = 3,
         probe: bool = False,
     ) -> bytes | None:
-        """Send a command and wait for the response notification.
+        """Send a command once and wait for the response notification.
 
         Reuses the persistent connection if available (same session as
         the poll that authenticated and read status). Falls back to a
@@ -532,7 +532,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     "subscribed": False,
                     "listening": [],
                     "write": None,
-                    "attempts": 0,
                     "waited_seconds": 0.0,
                     "notifications": notifications,
                     "response": None,
@@ -578,30 +577,27 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 # machine which acts on it without answering still says so.
                 record["status_before"] = await self._read_hex(client)
 
+                # Written once. The write is a request, so the machine has
+                # acknowledged it by the time this returns, and a command that
+                # makes coffee must not go out again because the answer was
+                # slow. A Pop and a Creatista take the frame and say nothing,
+                # and a machine that did the same but acted on it would have
+                # been asked three times over.
                 started = time.monotonic()
-                for attempt in range(retries):
-                    response = None
-                    record["attempts"] = attempt + 1
-                    try:
-                        await client.write_gatt_char(cmd_uuid, data, response=True)
-                        record["write"] = "accepted"
-                    except Exception as err:
-                        record["write"] = f"refused: {err}"
-                        record["waited_seconds"] = round(time.monotonic() - started, 1)
-                        _LOGGER.debug("Command write to %s failed: %s", cmd_uuid, err)
-                        raise
-                    _LOGGER.debug(
-                        "Command write attempt %d: %s", attempt + 1, data.hex()
-                    )
-                    if not record["subscribed"]:
-                        break
-                    for _ in range(5):
+                try:
+                    await client.write_gatt_char(cmd_uuid, data, response=True)
+                    record["write"] = "accepted"
+                except Exception as err:
+                    record["write"] = f"refused: {err}"
+                    record["waited_seconds"] = round(time.monotonic() - started, 1)
+                    _LOGGER.debug("Command write to %s failed: %s", cmd_uuid, err)
+                    raise
+                _LOGGER.debug("Command written: %s", data.hex())
+                if record["subscribed"]:
+                    for _ in range(COMMAND_RESPONSE_WAIT):
                         if response is not None:
                             break
                         await asyncio.sleep(1)
-                    if response is not None:
-                        break
-                    await asyncio.sleep(1)
                 record["waited_seconds"] = round(time.monotonic() - started, 1)
 
                 for uuid in record["listening"]:

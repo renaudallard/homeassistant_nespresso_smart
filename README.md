@@ -696,8 +696,7 @@ response_properties: [notify, read]
 subscribed: true
 listening: [06aa3a12-..., 06aa3a52-...]
 write: accepted
-attempts: 3
-waited_seconds: 18.0
+waited_seconds: 10.0
 notifications: {}
 response: null
 status_before: "89020c"
@@ -705,7 +704,9 @@ status_after: "89020c"
 status_changed: false
 ```
 
-Every line is there to tell one kind of nothing from another.
+The frame is written once, whatever comes back. A command that makes coffee
+cannot be repeated because the answer was slow, so the action waits ten seconds
+for one and stops. Every line is there to tell one kind of nothing from another.
 
 - `write` says whether the machine took the frame. A refusal names the GATT
   error, which is the machine rejecting the command rather than ignoring it

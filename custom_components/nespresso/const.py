@@ -366,6 +366,13 @@ CAPS_COUNTER_MAX: Final = 0xFFFF
 
 WATCH_MAX_EVENTS: Final = 500
 
+# How long a command waits for the machine's answer on the response
+# characteristic, in seconds. The frame is written once and never repeated, so
+# this is the whole budget. The loop this replaces allowed three writes with
+# five seconds behind each, which repeated a brew request on any machine that
+# took the frame without answering.
+COMMAND_RESPONSE_WAIT: Final = 10
+
 # Pause between passes of a watch session. A full read of every characteristic
 # takes a couple of seconds over a proxy, so this is a courtesy to the machine
 # rather than the thing that sets the resolution.
