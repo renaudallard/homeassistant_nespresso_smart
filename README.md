@@ -749,12 +749,21 @@ changes:
   - at: 12.4
     uuid: 06aa3a12-f22a-11e3-9daa-0002a5d5c51b
     was: "4082010001003f00"
-    now: "4082010004003f00"
+    now: "4082040001003f00"
+    decoded: # every status field, the same ones the sensors read
+      machine_state: ready
+      milk_unit_state: cleaning
+      brewing_unit_closed: true
 notifications:
   - at: 12.6
     uuid: 06aa3a52-f22a-11e3-9daa-0002a5d5c51b
     value: "0305..."
 ```
+
+`decoded` is only on the status characteristic, the one whose meaning is
+already known, and it is there on the first value seen as well as on every
+change and notification. Without it a capture has to be turned from bytes into
+meanings by hand before anyone can say what the machine was doing.
 
 The auth characteristic is never read. Events are capped, and `truncated` says
 so if the cap was hit. The record is also in the diagnostics download as

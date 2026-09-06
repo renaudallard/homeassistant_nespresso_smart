@@ -252,25 +252,31 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             keys += _VERTUO_STATUS_FIELDS
         return {key: status[key] for key in keys if key in status}
 
+    def _parse_status(self, data: bytes) -> dict[str, object] | None:
+        """Decode a status payload, or None if this family has no parser.
+
+        The notification path and the watch record both come through here so
+        the choice of parser is made in one place.
+        """
+        try:
+            if self.family == MachineFamily.BARISTA:
+                return parse_barista_status(data)
+            if self.family == MachineFamily.VERTUO_NEXT:
+                return parse_vertuonext_status(data)
+        except (ValueError, IndexError) as err:
+            _LOGGER.debug("Failed to parse status %s: %s", data.hex(), err)
+        return None
+
     def _handle_status_update(self, data: bytes) -> None:
         """Process status notification data on the event loop."""
         current = self.data
-        if current is None:
+        status = self._parse_status(data)
+        if current is None or status is None:
             return
-        try:
-            if self.family == MachineFamily.BARISTA:
-                status = parse_barista_status(data)
-            elif self.family == MachineFamily.VERTUO_NEXT:
-                status = parse_vertuonext_status(data)
-            else:
-                return
-
-            fields = self._status_fields(status)
-            new_state = fields.get("machine_state", current.machine_state)
-            self._async_state_transition(current.machine_state, new_state)
-            self.async_set_updated_data(replace(current, **fields))
-        except (ValueError, IndexError) as err:
-            _LOGGER.debug("Failed to parse notification: %s", err)
+        fields = self._status_fields(status)
+        new_state = fields.get("machine_state", current.machine_state)
+        self._async_state_transition(current.machine_state, new_state)
+        self.async_set_updated_data(replace(current, **fields))
 
     async def async_read_modify_write_char(
         self, char_uuid: str, modify_fn: object
@@ -659,10 +665,27 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     return
                 record[bucket].append(entry)
 
+            def status_of(uuid: str, raw: bytes) -> dict[str, Any]:
+                """Decoded status to merge into an entry, empty for the rest.
+
+                Only the status characteristic gets this. Every capture so far
+                has had its status bytes read out by hand before anyone could
+                say what the machine was doing at that second.
+                """
+                if uuid != self._status_uuid:
+                    return {}
+                status = self._parse_status(raw)
+                return {"decoded": status} if status is not None else {}
+
             def handler(uuid: str) -> Callable[[object, bytearray], None]:
                 def on_notify(_sender: object, data: bytearray) -> None:
-                    value = bytes(data).hex()
-                    note("notifications", {"at": stamp(), "uuid": uuid, "value": value})
+                    raw = bytes(data)
+                    value = raw.hex()
+                    note(
+                        "notifications",
+                        {"at": stamp(), "uuid": uuid, "value": value}
+                        | status_of(uuid, raw),
+                    )
                     _LOGGER.debug("Watch %s notified %s", uuid, value)
                     # The poll waits on _ble_lock for the whole watch, so
                     # without this the entities keep the values they had when
@@ -711,14 +734,16 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     record["samples"] += 1
                     for uuid in readable:
                         try:
-                            value = bytes(await client.read_gatt_char(uuid)).hex()
+                            raw = bytes(await client.read_gatt_char(uuid))
                         except Exception as err:  # noqa: BLE001
                             _LOGGER.debug("Watch read of %s failed: %s", uuid, err)
                             continue
+                        value = raw.hex()
                         was = previous.get(uuid)
                         previous[uuid] = value
                         if was is None:
                             record["characteristics"][uuid]["initial"] = value
+                            record["characteristics"][uuid].update(status_of(uuid, raw))
                         elif was != value:
                             note(
                                 "changes",
@@ -727,7 +752,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                                     "uuid": uuid,
                                     "was": was,
                                     "now": value,
-                                },
+                                }
+                                | status_of(uuid, raw),
                             )
                             _LOGGER.debug("Watch %s %s -> %s", uuid, was, value)
                         if time.monotonic() - started >= seconds:
