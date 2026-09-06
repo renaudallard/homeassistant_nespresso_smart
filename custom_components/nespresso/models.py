@@ -79,6 +79,35 @@ class NespressoMachineData:
     gatt_dump: dict[str, dict[str, str]] | None = None
 
 
+# Status flags that fire a device trigger when the machine raises them. The
+# trigger type is the field name.
+FLAG_TRIGGERS: tuple[str, ...] = ("descaling_needed", "water_tank_empty")
+
+
+def machine_triggers(old: NespressoMachineData, new: NespressoMachineData) -> list[str]:
+    """Name the device triggers that fire when old gives way to new.
+
+    States fire on the way in, and brewing also on the way out. The flags fire
+    when the machine raises them, so a tank that stays empty across several
+    polls fires once, when it emptied. A family whose parser never sets a flag
+    leaves it None, which never fires.
+    """
+    triggers: list[str] = []
+    if new.machine_state != old.machine_state:
+        if new.machine_state == "brewing":
+            triggers.append("brewing_started")
+        if old.machine_state == "brewing":
+            triggers.append("brewing_finished")
+        if new.machine_state == "error":
+            triggers.append("error_occurred")
+        elif new.machine_state in ("ready", "standby"):
+            triggers.append(new.machine_state)
+    for flag in FLAG_TRIGGERS:
+        if getattr(new, flag) and not getattr(old, flag):
+            triggers.append(flag)
+    return triggers
+
+
 @dataclass(slots=True)
 class RawMachineData:
     """Raw bytes read from BLE characteristics before parsing."""

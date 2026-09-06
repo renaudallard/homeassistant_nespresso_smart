@@ -398,10 +398,11 @@ That verdict rests on a handful of machines, so it is not final. **Offer brewing
 Event entity fires on machine state changes (Barista and Vertuo Next).
 
 Device triggers for automations:
-- **brewing_started** / **brewing_finished**
-- **error_occurred**
-- **ready** / **standby**
-- **descaling_needed** / **water_tank_empty**
+- **brewing_started** / **brewing_finished**: the machine entered or left the brewing state
+- **error_occurred**, **ready**, **standby**: the machine entered that state
+- **descaling_needed** / **water_tank_empty**: the machine raised the flag. Each fires once when the flag goes up, not on every poll while it stays up
+
+They fire from whichever path saw the change first: the poll, a notification on a persistent connection, or the advertisement on the Vertuo family.
 
 ### Device Info
 

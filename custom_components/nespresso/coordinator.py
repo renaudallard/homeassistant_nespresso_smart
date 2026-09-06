@@ -81,7 +81,7 @@ from .const import (
     WATCH_SAMPLE_PAUSE,
     MachineFamily,
 )
-from .models import NespressoMachineData, RawMachineData
+from .models import NespressoMachineData, RawMachineData, machine_triggers
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,25 +169,21 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """Set the HA device ID for event firing."""
         self._device_id = device_id
 
-    def _fire_state_triggers(self, old_state: str | None, new_state: str) -> None:
-        """Fire bus events for device triggers on state changes."""
-        if self._device_id is None or old_state is None or old_state == new_state:
+    def _fire_triggers(
+        self, old: NespressoMachineData | None, new: NespressoMachineData
+    ) -> None:
+        """Fire bus events for the device triggers an update sets off.
+
+        No baseline means no triggers: the first dataset after a restart or a
+        reload describes a machine that may have been in that state for hours.
+        """
+        if self._device_id is None or old is None:
             return
-
-        triggers = []
-        if new_state == "brewing":
-            triggers.append("brewing_started")
-        if old_state == "brewing":
-            triggers.append("brewing_finished")
-        if new_state == "error":
-            triggers.append("error_occurred")
-        if new_state == "ready":
-            triggers.append("ready")
-        if new_state == "standby":
-            triggers.append("standby")
-
+        triggers = machine_triggers(old, new)
+        if not triggers:
+            return
         _LOGGER.debug(
-            "State transition: %s -> %s, triggers=%s", old_state, new_state, triggers
+            "Update %s -> %s fires %s", old.machine_state, new.machine_state, triggers
         )
         for trigger_type in triggers:
             self.hass.bus.async_fire(
@@ -195,8 +191,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 {
                     "device_id": self._device_id,
                     "type": trigger_type,
-                    "old_state": old_state,
-                    "new_state": new_state,
+                    "old_state": old.machine_state,
+                    "new_state": new.machine_state,
                 },
             )
 
@@ -273,10 +269,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         status = self._parse_status(data)
         if current is None or status is None:
             return
-        fields = self._status_fields(status)
-        new_state = fields.get("machine_state", current.machine_state)
-        self._async_state_transition(current.machine_state, new_state)
-        self.async_set_updated_data(replace(current, **fields))
+        updated = replace(current, **self._status_fields(status))
+        self._async_note_update(current, updated)
+        self.async_set_updated_data(updated)
 
     async def async_read_modify_write_char(
         self, char_uuid: str, modify_fn: object
@@ -854,15 +849,17 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.async_update_listeners()
 
     @callback
-    def _async_state_transition(self, previous: str | None, current: str) -> None:
-        """Handle a machine state transition seen on any update path.
+    def _async_note_update(
+        self, old: NespressoMachineData | None, new: NespressoMachineData
+    ) -> None:
+        """Handle a new dataset arriving on any update path.
 
-        The poll, the notification and the advertisement all move
-        machine_state, so all three come through here. Whichever sees the
-        transition first updates the data, and the others then see no change.
+        The poll, the notification and the advertisement all produce one, so
+        all three come through here. Whichever sees a change first updates the
+        data, and the others then see no change.
         """
-        self._async_track_brew(previous, current)
-        self._fire_state_triggers(previous, current)
+        self._async_track_brew(old.machine_state if old else None, new.machine_state)
+        self._fire_triggers(old, new)
 
     @callback
     def _async_track_brew(self, previous: str | None, current: str) -> None:
@@ -931,13 +928,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         if all(getattr(current, key) == value for key, value in fields.items()):
             return False
 
-        new_state = fields.get("machine_state", current.machine_state)
-        state_changed = current.machine_state != new_state
-        self._async_state_transition(current.machine_state, new_state)
+        updated = replace(current, **fields)
+        self._async_note_update(current, updated)
         _LOGGER.debug(
             "Passive update for %s: state=%s (was %s)",
             self.address,
-            fields.get("machine_state"),
+            updated.machine_state,
             current.machine_state,
         )
         # Not async_set_updated_data: that would set last_update_success, so a
@@ -945,9 +941,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         # keep its entities available with stale connected data and would stop
         # triggering the recovery refresh. It would also cancel the pending
         # debounced refresh and restart the poll timer on every advertisement.
-        self.data = replace(current, **fields)
+        self.data = updated
         self.async_update_listeners()
-        return state_changed
+        return updated.machine_state != current.machine_state
 
     async def _async_update_data(self) -> NespressoMachineData:
         """Connect, read all characteristics, parse, disconnect."""
@@ -1091,9 +1087,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         try:
             result = self._parse(raw)
-            self._async_state_transition(
-                self.data.machine_state if self.data else None, result.machine_state
-            )
+            self._async_note_update(self.data, result)
             _LOGGER.debug(
                 "Parsed %s: state=%s error=%s fw=%s hw=%s serial=%s",
                 self.family.value,

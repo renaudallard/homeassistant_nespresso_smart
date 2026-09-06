@@ -38,6 +38,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
+# What each one means, and the code that fires it, is machine_triggers in
+# models.py.
 TRIGGER_TYPES = {
     "brewing_started",
     "brewing_finished",
@@ -53,15 +55,6 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
     }
 )
-
-# Map trigger types to machine state transitions
-_TRIGGER_STATE_MAP: dict[str, tuple[str | None, str]] = {
-    "brewing_started": (None, "brewing"),
-    "brewing_finished": ("brewing", None),  # type: ignore[dict-item]
-    "error_occurred": (None, "error"),
-    "ready": (None, "ready"),
-    "standby": (None, "standby"),
-}
 
 
 async def async_get_triggers(
