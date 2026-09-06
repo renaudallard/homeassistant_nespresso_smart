@@ -367,6 +367,15 @@ Byte 2:
 machineStateVenus = (byte[1] & 0x0F) + (byte[2] & 0xF0)
 ```
 
+Bit 7 of byte 1 is the only one of these the machine has been seen to change on
+its own. It does follow the head when someone moves it: on a Vertuo Creatista
+it set at the instant the machine went to capsule reading after a capsule was
+loaded, and read clear while the machine heated with the head open. On the same
+machine it went clear 14 seconds into the milk cleaning the machine had asked
+for and stayed clear for the remaining 167 seconds, and the owner confirmed
+they never touched the head. That has been seen once, so it is not a rule, but
+anything reading the bit has to expect it to move with nobody at the machine.
+
 ### VMini Pairing Status
 
 Source: `com.sdataway.vmini.sdk.models.PairingStatus`

@@ -207,6 +207,15 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
     what the vendor documents and it may work on machines we have not seen, but
     the nibble is what actually moved.
 
+    byte[1] bit7, brewingUnitClosed, does follow the head when someone moves
+    it: on that Creatista it set at the instant the machine went to capsule
+    reading after a capsule was loaded, and read clear while the machine heated
+    with the head open. It also went clear 14 seconds into the milk cleaning
+    the machine had asked for and stayed clear for the remaining 167 seconds,
+    with the owner confirming they never touched the head. Seen once, so it is
+    not a rule, but a consumer of this bit has to expect it to move with nobody
+    standing at the machine.
+
     The characteristic is eight bytes and nothing reads past byte 2, here or in
     the APK. Across the seventeen distinct payloads captured on a Creatista,
     spanning a coffee, frothing, a cleaning cycle, the machine's own menu, an

@@ -678,5 +678,31 @@ class TestMilkUnitState:
             assert parse_vertuonext_status(payload)["milk_unit_state"] != "unknown"
 
 
+class TestBrewingUnit:
+    """Byte 1 bit 7, from the same Vertuo Creatista captures.
+
+    The machine cleared it 14 seconds into a milk cleaning that nobody had
+    touched the head for, so a reader of this bit has to expect it to move
+    with no one at the machine.
+    """
+
+    def test_it_follows_the_head_when_someone_moves_it(self) -> None:
+        """Open while a capsule went in, closed once the machine read it."""
+        assert not _closed("4002000001003f00")
+        assert _closed("4081100001003f00")
+
+    def test_the_machine_can_clear_it_alone(self) -> None:
+        """Ready with a milk cleaning wanted, 18 seconds apart.
+
+        The two payloads differ in nothing but this bit.
+        """
+        assert _closed("4082040001003f00")
+        assert not _closed("4002040001003f00")
+
+
 def _milk(payload: str) -> str:
     return str(parse_vertuonext_status(bytes.fromhex(payload))["milk_unit_state"])
+
+
+def _closed(payload: str) -> bool:
+    return bool(parse_vertuonext_status(bytes.fromhex(payload))["brewing_unit_closed"])

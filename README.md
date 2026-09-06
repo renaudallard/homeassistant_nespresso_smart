@@ -351,7 +351,7 @@ English ones.
 | Descaling needed | No | Yes | No | Machine needs descaling |
 | Cleaning needed | No | Yes | No | Machine needs cleaning. This is the brewing side only, a machine asking for a milk cleaning says so through the Milk unit sensor instead |
 | Capsule container full | No | Yes | No | Used capsule container is full |
-| Brewing unit | No | Yes | No | Brewing unit head is open |
+| Brewing unit | No | Yes | No | Brewing unit head is open. A Creatista has been seen to open it by itself during the milk cleaning it asks for, so this can change with nobody at the machine |
 | Milk frother | No | Yes | No | Milk frother is running. Only on a Creatista or a Lattissima, and driven by the milk unit state below rather than the documented status bit, which does not fire on a Creatista |
 | LED signaling | No | Yes | No | LED signaling is active |
 
