@@ -49,6 +49,13 @@ from .entity import machine_device_info, supports_brewing
 
 _LOGGER = logging.getLogger(__name__)
 
+# How long a brew press waits for the machine, once for the wake and once more
+# for heating or a capsule change, both of which need a hand on the machine.
+# Without a bound the second wait held the connection open, and the Nespresso
+# app out, until the machine's own auto power off ended the state, and that
+# timer can be set to days.
+BREW_WAIT_MINUTES = 5
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -166,6 +173,51 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
             self._brew_pending = False
             await self.coordinator.async_release_kept_connection()
 
+    def _state(self) -> str | None:
+        return self.coordinator.data.machine_state if self.coordinator.data else None
+
+    async def _notify(self, notification_id: str, title: str, message: str) -> None:
+        await self.hass.services.async_call(
+            "persistent_notification",
+            "create",
+            {"notification_id": notification_id, "title": title, "message": message},
+        )
+
+    async def _dismiss(self, notification_id: str) -> None:
+        await self.hass.services.async_call(
+            "persistent_notification", "dismiss", {"notification_id": notification_id}
+        )
+
+    async def _wait_to_leave(self, states: set[str]) -> str | None:
+        """Refresh until the machine leaves one of the states, or time runs out.
+
+        Each refresh keeps the connection open for the brew that follows, so
+        the machine is held, and the Nespresso app kept out, for as long as
+        this runs. That is what the deadline is for.
+        """
+        deadline = time.monotonic() + BREW_WAIT_MINUTES * 60
+        state = self._state()
+        while state in states and time.monotonic() < deadline:
+            await asyncio.sleep(5)
+            await self.coordinator.async_request_refresh()
+            state = self._state()
+        return state
+
+    async def _give_up(self, state: str | None) -> None:
+        """Stop waiting, and say so where the person who pressed the button looks."""
+        _LOGGER.error(
+            "Gave up waiting for %s after %d min, it is still %s",
+            self._address,
+            BREW_WAIT_MINUTES,
+            state,
+        )
+        await self._notify(
+            "nespresso_brew_error",
+            "Nespresso: cannot brew",
+            f"Gave up waiting for the machine after {BREW_WAIT_MINUTES} minutes. "
+            f"It is still '{state}'. Press Brew again once it is ready.",
+        )
+
     async def _do_brew(self) -> None:
         """Internal brew logic."""
         from .select import VERTUO_BREW_TYPE_VALUES, VERTUO_TEMPERATURE_VALUES
@@ -177,79 +229,53 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         waiting = {"heating", "initializing", "ready_old_capsule"}
         waking = {"power_save", "standby"}
 
-        # Wait for machine to be ready
-        state = self.coordinator.data.machine_state if self.coordinator.data else None
+        state = self._state()
         if state in waking:
-            await self.hass.services.async_call(
-                "persistent_notification",
-                "create",
-                {
-                    "message": "The machine is in power save mode. "
-                    "Press the button on the machine to wake it up. "
-                    "Brewing will start automatically when the machine is ready.",
-                    "title": "Nespresso: machine asleep",
-                    "notification_id": "nespresso_power_save",
-                },
+            await self._notify(
+                "nespresso_power_save",
+                "Nespresso: machine asleep",
+                "The machine is in power save mode. "
+                "Press the button on the machine to wake it up. "
+                "Brewing will start automatically when the machine is ready.",
             )
-            _LOGGER.info("Machine is %s, waiting up to 5 min for wake...", state)
-            deadline = time.monotonic() + 300
-            while state in waking and time.monotonic() < deadline:
-                await asyncio.sleep(5)
-                await self.coordinator.async_request_refresh()
-                state = (
-                    self.coordinator.data.machine_state
-                    if self.coordinator.data
-                    else None
-                )
-            await self.hass.services.async_call(
-                "persistent_notification",
-                "dismiss",
-                {"notification_id": "nespresso_power_save"},
+            _LOGGER.info(
+                "Machine is %s, waiting up to %d min for wake...",
+                state,
+                BREW_WAIT_MINUTES,
             )
+            state = await self._wait_to_leave(waking)
+            await self._dismiss("nespresso_power_save")
             if state in waking:
-                _LOGGER.error("Timeout waiting for machine to wake up")
+                await self._give_up(state)
                 return
         if state == "ready_old_capsule":
-            await self.hass.services.async_call(
-                "persistent_notification",
-                "create",
-                {
-                    "message": "Please eject the used capsule and insert a fresh one. "
-                    "Brewing will start automatically when the machine is ready.",
-                    "title": "Nespresso: replace capsule",
-                    "notification_id": "nespresso_capsule",
-                },
+            await self._notify(
+                "nespresso_capsule",
+                "Nespresso: replace capsule",
+                "Please eject the used capsule and insert a fresh one. "
+                "Brewing will start automatically when the machine is ready.",
             )
         if state in waiting:
-            _LOGGER.info("Machine is %s, waiting for ready...", state)
-            while state in waiting:
-                await asyncio.sleep(5)
-                await self.coordinator.async_request_refresh()
-                state = (
-                    self.coordinator.data.machine_state
-                    if self.coordinator.data
-                    else None
-                )
+            _LOGGER.info(
+                "Machine is %s, waiting up to %d min for ready...",
+                state,
+                BREW_WAIT_MINUTES,
+            )
+            state = await self._wait_to_leave(waiting)
+        await self._dismiss("nespresso_capsule")
+        if state in waiting:
+            await self._give_up(state)
+            return
 
         if state != "ready":
             _LOGGER.error("Machine is in state '%s', cannot brew (need: ready)", state)
-            await self.hass.services.async_call(
-                "persistent_notification",
-                "create",
-                {
-                    "message": f"The machine is in state '{state}' and cannot brew. "
-                    "It needs to be in 'ready' state.",
-                    "title": "Nespresso: cannot brew",
-                    "notification_id": "nespresso_brew_error",
-                },
+            await self._notify(
+                "nespresso_brew_error",
+                "Nespresso: cannot brew",
+                f"The machine is in state '{state}' and cannot brew. "
+                "It needs to be in 'ready' state.",
             )
             return
-
-        await self.hass.services.async_call(
-            "persistent_notification",
-            "dismiss",
-            {"notification_id": "nespresso_capsule"},
-        )
 
         brew_type = VERTUO_BREW_TYPE_VALUES.get(self.coordinator.brew_type, 1)
         temp = VERTUO_TEMPERATURE_VALUES.get(self.coordinator.brew_temperature, 0)

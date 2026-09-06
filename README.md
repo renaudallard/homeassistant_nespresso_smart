@@ -383,6 +383,8 @@ The machine cannot be woken up over BLE. To brew from Home Assistant:
 
 If there is a used capsule in the machine, a notification asks you to replace it. Brewing starts automatically once a fresh capsule is inserted and the head is closed.
 
+Each wait gives up after five minutes, the one for the wake and the one for heating or a capsule change. A press that gives up says so in a notification and in the log, and lets go of the machine so the Nespresso app can reach it again. Press Brew again once the machine is ready.
+
 Multiple presses of the Brew button are debounced. Only one brew command is sent.
 
 The brew command is sent on the same BLE connection used for status polling (required by the machine). It is known to work on a Vertuo Next only. A Vertuo Pop and a Vertuo Creatista both accept the write and do nothing, and the official app has no Bluetooth brew command for any model, so there is nothing else to send.
