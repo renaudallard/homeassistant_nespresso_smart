@@ -326,7 +326,7 @@
         },
         "payload": {
           "name": "Payload",
-          "description": "The frame to write, as hex. Example 03050704000000000002, a Vertuo lungo at medium temperature."
+          "description": "The frame to write, as hex. Example 03050704000000000002000000000000000000, a Vertuo lungo at medium temperature."
         }
       }
     },

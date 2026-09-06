@@ -326,7 +326,7 @@
         },
         "payload": {
           "name": "Frame",
-          "description": "Het te schrijven frame, als hex. Voorbeeld 03050704000000000002, een Vertuo lungo op middelhoge temperatuur."
+          "description": "Het te schrijven frame, als hex. Voorbeeld 03050704000000000002000000000000000000, een Vertuo lungo op middelhoge temperatuur."
         }
       }
     },

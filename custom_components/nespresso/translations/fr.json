@@ -326,7 +326,7 @@
         },
         "payload": {
           "name": "Trame",
-          "description": "La trame à écrire, en hexadécimal. Exemple 03050704000000000002, un lungo Vertuo à température moyenne."
+          "description": "La trame à écrire, en hexadécimal. Exemple 03050704000000000002000000000000000000, un lungo Vertuo à température moyenne."
         }
       }
     },

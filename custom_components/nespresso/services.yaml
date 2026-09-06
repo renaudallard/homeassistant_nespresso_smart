@@ -60,7 +60,7 @@ send_command:
           integration: nespresso
     payload:
       required: true
-      example: "03050704000000000002"
+      example: "03050704000000000002000000000000000000"
       selector:
         text:
 

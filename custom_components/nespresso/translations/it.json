@@ -326,7 +326,7 @@
         },
         "payload": {
           "name": "Trama",
-          "description": "La trama da scrivere, in esadecimale. Esempio 03050704000000000002, un lungo Vertuo a temperatura media."
+          "description": "La trama da scrivere, in esadecimale. Esempio 03050704000000000002000000000000000000, un lungo Vertuo a temperatura media."
         }
       }
     },

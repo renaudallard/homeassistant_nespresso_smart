@@ -684,11 +684,14 @@ machine, including the models that get no brew button, which is the point: it
 is how a machine gets tested rather than assumed about.
 
 From **Developer tools > Actions**, pick the machine and give it a payload in
-hex, for example `03050704000000000002`, a Vertuo lungo at medium temperature.
-The response looks like this:
+hex, for example `03050704000000000002000000000000000000`, a Vertuo lungo at
+medium temperature. The frame goes out exactly as typed. A Vertuo command is 19
+bytes, three header bytes and a 16 byte payload, and a Creatista acknowledges a
+shorter frame and ignores it, so pad to the full width. The response looks like
+this:
 
 ```yaml
-request: "03050704000000000002"
+request: "03050704000000000002000000000000000000"
 command_characteristic: 06aa3a42-f22a-11e3-9daa-0002a5d5c51b
 command_properties: [write]
 response_characteristic: 06aa3a52-f22a-11e3-9daa-0002a5d5c51b
