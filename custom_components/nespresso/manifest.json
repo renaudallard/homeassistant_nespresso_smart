@@ -10,6 +10,7 @@
   "config_flow": true,
   "dependencies": ["bluetooth"],
   "documentation": "https://github.com/renaudallard/homeassistant_nespresso_smart",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/renaudallard/homeassistant_nespresso_smart/issues",
   "requirements": ["bleak>=0.22.0", "bleak-retry-connector>=3.0.0"],
