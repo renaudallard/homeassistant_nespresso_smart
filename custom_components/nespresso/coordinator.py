@@ -91,9 +91,11 @@ _VERSION = json.loads((Path(__file__).parent / "manifest.json").read_text()).get
 )
 
 
-# Fields a status parse can refresh on an existing dataset. The notification
-# and the advertisement both carry the same MachineStatus bytes, so both merge
-# exactly this set.
+# Fields a status parse can refresh on an existing dataset, per family. The
+# notification and the advertisement carry the same MachineStatus bytes as the
+# poll, so every field the poll takes from those bytes belongs here: one left
+# out would hold its polled value until the next poll while the state beside it
+# moved, which is what the Barista heater flag did for a long time.
 _COMMON_STATUS_FIELDS: tuple[str, ...] = ("machine_state", "error_present")
 _VERTUO_STATUS_FIELDS: tuple[str, ...] = (
     "water_tank_empty",
@@ -106,6 +108,15 @@ _VERTUO_STATUS_FIELDS: tuple[str, ...] = (
     "led_signaling",
     "cup_length_prog",
 )
+_BARISTA_STATUS_FIELDS: tuple[str, ...] = (
+    "motor_running",
+    "induction_heating",
+    "setup_complete",
+)
+_STATUS_FIELDS: dict[MachineFamily, tuple[str, ...]] = {
+    MachineFamily.BARISTA: _COMMON_STATUS_FIELDS + _BARISTA_STATUS_FIELDS,
+    MachineFamily.VERTUO_NEXT: _COMMON_STATUS_FIELDS + _VERTUO_STATUS_FIELDS,
+}
 
 
 def counter_store(hass: HomeAssistant, address: str) -> Store:
@@ -244,9 +255,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     def _status_fields(self, status: dict[str, object]) -> dict[str, Any]:
         """Pick the fields of a status parse that apply to this family."""
-        keys = _COMMON_STATUS_FIELDS
-        if self.family is MachineFamily.VERTUO_NEXT:
-            keys += _VERTUO_STATUS_FIELDS
+        keys = _STATUS_FIELDS.get(self.family, _COMMON_STATUS_FIELDS)
         return {key: status[key] for key in keys if key in status}
 
     def _parse_status(self, data: bytes) -> dict[str, object] | None:
