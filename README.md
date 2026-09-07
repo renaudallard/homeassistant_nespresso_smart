@@ -801,6 +801,10 @@ and its value. It is the most useful single artefact for anything protocol
 related, because it says what the machine actually offers rather than what the
 app expects. The auth token is redacted from it. The serial number is not: it
 is printed on the machine, and its platform code is what names the model.
+Nothing else in the download is redacted either. The token is the one
+credential the machine holds and it never enters the file, while the address
+and the serial are what an issue needs, and both are in every debug log a
+report carries anyway.
 
 ## Support
 

@@ -34,12 +34,14 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import NespressoCoordinator
 
-REDACT_KEYS = {"address", "serial_number", "auth_key"}
-
-
-def _redact(data: dict[str, Any]) -> dict[str, Any]:
-    """Redact sensitive fields from a dictionary."""
-    return {k: "**REDACTED**" if k in REDACT_KEYS else v for k, v in data.items()}
+# Nothing here is redacted, on purpose. The one credential the machine holds is
+# the auth token, and it never enters the download: the config entry section is
+# built by hand without it, and the GATT dump blanks its characteristic at the
+# source. The address and the serial are what an issue needs, the serial
+# because it carries the platform code that names the model, and both are in
+# every debug log a reporter pastes beside the download anyway. Redacting them
+# in one section while the dump and the watch record carried them in plain hex
+# protected nothing and cost the reader the model.
 
 
 async def async_get_config_entry_diagnostics(
@@ -50,14 +52,12 @@ async def async_get_config_entry_diagnostics(
     coordinator: NespressoCoordinator = data["coordinator"]
 
     diag: dict[str, Any] = {
-        "config_entry": _redact(
-            {
-                "address": entry.data.get("address"),
-                "family": entry.data.get("family"),
-                "name": entry.data.get("name"),
-                "options": dict(entry.options),
-            }
-        ),
+        "config_entry": {
+            "address": entry.data.get("address"),
+            "family": entry.data.get("family"),
+            "name": entry.data.get("name"),
+            "options": dict(entry.options),
+        },
         "coordinator": {
             "last_update_success": coordinator.last_update_success,
             "update_interval_seconds": coordinator.update_interval.total_seconds()
@@ -69,7 +69,7 @@ async def async_get_config_entry_diagnostics(
     if coordinator.data is not None:
         data_dict = asdict(coordinator.data)
         gatt_dump = data_dict.pop("gatt_dump", None)
-        diag["machine_data"] = _redact(data_dict)
+        diag["machine_data"] = data_dict
         if gatt_dump:
             diag["gatt_characteristic_dump"] = gatt_dump
 
