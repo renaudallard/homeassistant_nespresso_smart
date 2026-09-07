@@ -80,14 +80,9 @@ from ..const import (
     VMINI_CHAR_FOTA_STATUS,
     VMINI_CHAR_FW_REV,
     VMINI_CHAR_MACHINE_TOKEN,
-    VMINI_CHAR_MANUFACTURER,
-    VMINI_CHAR_MODEL,
-    VMINI_CHAR_PAIRING,
     VMINI_CHAR_SERIAL,
     VMINI_CHAR_SHADOW_HEADER,
     VMINI_CHAR_SW_REV,
-    VMINI_CHAR_WIFI_CURRENT,
-    VMINI_CHAR_WIFI_MAC,
     MachineFamily,
 )
 from ..models import RawMachineData
@@ -1133,14 +1128,8 @@ async def _dump_all_characteristics(client: BleakClient) -> dict[str, dict[str, 
     return dump
 
 
-async def _read_char(
-    client: BleakClient,
-    char_uuid: str,
-    name: str,
-    auth_key: str | None = None,
-    family: MachineFamily = MachineFamily.VERTUO_NEXT,
-) -> bytearray:
-    """Read a GATT characteristic. Auth is done upfront by the coordinator."""
+async def _read_char(client: BleakClient, char_uuid: str, name: str) -> bytearray:
+    """Read a characteristic the poll cannot do without, naming it in the log."""
     try:
         value = await _read(client, char_uuid)
         _LOGGER.debug("Read %s [%s]: %s", name, char_uuid, value.hex())
@@ -1158,28 +1147,21 @@ class AbstractNespressoProtocol(ABC):
     """Base class for BLE protocol implementations."""
 
     @abstractmethod
-    async def async_read_all(
-        self, client: BleakClient, auth_key: str | None = None
-    ) -> RawMachineData:
+    async def async_read_all(self, client: BleakClient) -> RawMachineData:
         """Read all relevant characteristics in a single session."""
 
 
 class BaristaProtocol(AbstractNespressoProtocol):
     """BLE protocol for Barista (Original Line) machines."""
 
-    async def async_read_all(
-        self, client: BleakClient, auth_key: str | None = None
-    ) -> RawMachineData:
-        f = MachineFamily.BARISTA
-        status = await _read_char(client, BARISTA_CHAR_STATUS, "status", auth_key, f)
-        info = await _read_char(client, BARISTA_CHAR_INFO, "machine_info", auth_key, f)
-        serial = await _read_char(client, BARISTA_CHAR_SERIAL, "serial", auth_key, f)
+    async def async_read_all(self, client: BleakClient) -> RawMachineData:
+        status = await _read_char(client, BARISTA_CHAR_STATUS, "status")
+        info = await _read_char(client, BARISTA_CHAR_INFO, "machine_info")
+        serial = await _read_char(client, BARISTA_CHAR_SERIAL, "serial")
         profile = await _read_char(
-            client, BARISTA_CHAR_PROFILE_VERSION, "profile_version", auth_key, f
+            client, BARISTA_CHAR_PROFILE_VERSION, "profile_version"
         )
-        params = await _read_char(
-            client, BARISTA_CHAR_MACHINE_PARAMS, "machine_params", auth_key, f
-        )
+        params = await _read_char(client, BARISTA_CHAR_MACHINE_PARAMS, "machine_params")
         # Recipe information (optional)
         recipe_info = None
         try:
@@ -1206,31 +1188,22 @@ class BaristaProtocol(AbstractNespressoProtocol):
 class VertuoNextProtocol(AbstractNespressoProtocol):
     """BLE protocol for Vertuo Next (Venus Line) machines."""
 
-    async def async_read_all(
-        self, client: BleakClient, auth_key: str | None = None
-    ) -> RawMachineData:
-        f = MachineFamily.VERTUO_NEXT
-        status = await _read_char(client, VERTUO_CHAR_STATUS, "status", auth_key, f)
-        info = await _read_char(client, VERTUO_CHAR_INFO, "machine_info", auth_key, f)
-        serial = await _read_char(client, VERTUO_CHAR_SERIAL, "serial", auth_key, f)
+    async def async_read_all(self, client: BleakClient) -> RawMachineData:
+        status = await _read_char(client, VERTUO_CHAR_STATUS, "status")
+        info = await _read_char(client, VERTUO_CHAR_INFO, "machine_info")
+        serial = await _read_char(client, VERTUO_CHAR_SERIAL, "serial")
         profile = await _read_char(
-            client, VERTUO_CHAR_PROFILE_VERSION, "profile_version", auth_key, f
+            client, VERTUO_CHAR_PROFILE_VERSION, "profile_version"
         )
-        params = await _read_char(
-            client, VERTUO_CHAR_MACHINE_PARAMS, "machine_params", auth_key, f
-        )
-        settings = await _read_char(
-            client, VERTUO_CHAR_USER_SETTINGS, "user_settings", auth_key, f
-        )
+        params = await _read_char(client, VERTUO_CHAR_MACHINE_PARAMS, "machine_params")
+        settings = await _read_char(client, VERTUO_CHAR_USER_SETTINGS, "user_settings")
         # Select current active error (index 0) then read error info
         try:
             await _write(client, VERTUO_CHAR_ERROR_SELECTION, bytes([0]), response=True)
             _LOGGER.debug("Error selection set to index 0 (current active)")
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Error selection write not available")
-        error_info = await _read_char(
-            client, VERTUO_CHAR_ERROR_INFO, "error_info", auth_key, f
-        )
+        error_info = await _read_char(client, VERTUO_CHAR_ERROR_INFO, "error_info")
 
         # Also read error at index 1 (error present in list) for diagnostics
         error_list_entry = None
@@ -1296,21 +1269,11 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
 class VMiniProtocol(AbstractNespressoProtocol):
     """BLE protocol for VMini (Vertuo Mini) machines."""
 
-    async def async_read_all(
-        self, client: BleakClient, auth_key: str | None = None
-    ) -> RawMachineData:
-        f = MachineFamily.VMINI
-        serial = await _read_char(client, VMINI_CHAR_SERIAL, "serial", auth_key, f)
-        pairing = await _read_char(client, VMINI_CHAR_PAIRING, "pairing", auth_key, f)
-        fw = await _read_char(client, VMINI_CHAR_FW_REV, "firmware_rev", auth_key, f)
-        sw = await _read_char(client, VMINI_CHAR_SW_REV, "software_rev", auth_key, f)
-        model = await _read_char(client, VMINI_CHAR_MODEL, "model", auth_key, f)
-        manufacturer = await _read_char(
-            client, VMINI_CHAR_MANUFACTURER, "manufacturer", auth_key, f
-        )
+    async def async_read_all(self, client: BleakClient) -> RawMachineData:
+        serial = await _read_char(client, VMINI_CHAR_SERIAL, "serial")
+        fw = await _read_char(client, VMINI_CHAR_FW_REV, "firmware_rev")
+        sw = await _read_char(client, VMINI_CHAR_SW_REV, "software_rev")
         # Optional chars that may not be available before WiFi setup
-        wifi_mac = None
-        wifi_current = None
         shadow = None
         fota_status = None
         try:
@@ -1318,29 +1281,14 @@ class VMiniProtocol(AbstractNespressoProtocol):
         except Exception:  # noqa: BLE001
             _LOGGER.debug("VMini FOTA status not available")
         try:
-            wifi_mac = await _read(client, VMINI_CHAR_WIFI_MAC)
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("VMini WiFi MAC not available")
-        try:
-            wifi_current = await _read(client, VMINI_CHAR_WIFI_CURRENT)
-            _LOGGER.debug(
-                "VMini WiFi current setting raw: %s (len=%d, text=%r)",
-                wifi_current.hex(),
-                len(wifi_current),
-                bytes(wifi_current).decode("utf-8", errors="replace"),
-            )
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("VMini WiFi current setting not available")
-        try:
             shadow = await _read(client, VMINI_CHAR_SHADOW_HEADER)
         except Exception:  # noqa: BLE001
             _LOGGER.debug("VMini shadow header not available")
         _LOGGER.debug(
-            "VMini raw: serial=%s pairing=%s fw=%s model=%s shadow=%s",
+            "VMini raw: serial=%s fw=%s sw=%s shadow=%s",
             serial.hex(),
-            pairing.hex(),
             fw.hex(),
-            model.hex(),
+            sw.hex(),
             shadow.hex() if shadow else "N/A",
         )
         # GATT dump only when debug logging is active
@@ -1350,15 +1298,10 @@ class VMiniProtocol(AbstractNespressoProtocol):
 
         return RawMachineData(
             serial_bytes=bytes(serial),
-            pairing_byte=pairing[0] if pairing else None,
             firmware_version=_decode_ble_string(bytes(fw)),
             software_version=_decode_ble_string(bytes(sw)),
-            model_number=_decode_ble_string(bytes(model)),
-            manufacturer=_decode_ble_string(bytes(manufacturer)),
-            wifi_mac=_decode_ble_string(bytes(wifi_mac)) if wifi_mac else None,
             shadow_header=_decode_ble_string(bytes(shadow)) if shadow else None,
             fota_status_bytes=bytes(fota_status) if fota_status else None,
-            wifi_current_bytes=bytes(wifi_current) if wifi_current else None,
             gatt_dump=gatt_dump_result,
         )
 

@@ -387,13 +387,6 @@ def parse_barista_machine_params(data: bytes) -> dict[str, bool]:
     return {"ble_disabled": _get_bit(data[0], 2)}
 
 
-def parse_vertuo_machine_params(data: bytes) -> dict[str, bool]:
-    """Parse Vertuo machine specific params. Byte 0: bit7=bleEnabled."""
-    if not data:
-        return {"ble_enabled": True}
-    return {"ble_enabled": _get_bit(data[0], 7)}
-
-
 def parse_caps_counter(data: bytes) -> int:
     """Parse capsule counter (2-byte unsigned MSB)."""
     if len(data) < 2:

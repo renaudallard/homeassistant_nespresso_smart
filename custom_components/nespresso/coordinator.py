@@ -1020,7 +1020,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 )
 
             protocol = get_protocol(self.family)
-            raw = await protocol.async_read_all(client, self.auth_key)
+            raw = await protocol.async_read_all(client)
 
             # Keep connection alive for persistent mode or pending brew
             if self.persistent and self._status_uuid:

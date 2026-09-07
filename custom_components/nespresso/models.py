@@ -126,10 +126,6 @@ class RawMachineData:
     # VMini uses decoded strings from standard BLE Device Info
     firmware_version: str | None = None
     software_version: str | None = None
-    model_number: str | None = None
-    manufacturer: str | None = None
-    pairing_byte: int | None = None
-    wifi_mac: str | None = None
     shadow_header: str | None = None
     fota_status_bytes: bytes | None = None
     wifi_current_bytes: bytes | None = None
