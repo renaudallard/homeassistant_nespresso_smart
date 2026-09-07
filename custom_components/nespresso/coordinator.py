@@ -29,11 +29,12 @@ import asyncio
 import json
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bleak import BleakClient, BleakError
 from bleak_retry_connector import establish_connection
@@ -83,6 +84,10 @@ from .const import (
     MachineFamily,
 )
 from .models import NespressoMachineData, RawMachineData, machine_triggers
+
+if TYPE_CHECKING:
+    # Only an annotation needs it, and the tests stub bleak as a bare module.
+    from bleak.backends.device import BLEDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -282,53 +287,56 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self._async_publish(current, replace(current, **self._status_fields(status)))
 
     async def async_read_modify_write_char(
-        self, char_uuid: str, modify_fn: object
+        self, char_uuid: str, modify_fn: Callable[[bytearray], None]
     ) -> None:
-        """Read a characteristic, modify it, and write back atomically.
+        """Read a characteristic, let modify_fn change it in place, write it back."""
+        async with self._session() as client:
+            current = await client.read_gatt_char(char_uuid)
+            _LOGGER.debug("Read-modify-write %s current: %s", char_uuid, current.hex())
+            data = bytearray(current)
+            modify_fn(data)
+            _LOGGER.debug("Read-modify-write %s new: %s", char_uuid, data.hex())
+            await client.write_gatt_char(char_uuid, bytes(data), response=True)
 
-        modify_fn receives a bytearray and should mutate it in place.
-        """
-        async with self._ble_lock:
-            device = bluetooth.async_ble_device_from_address(
-                self.hass, self.address, connectable=True
-            )
-            if device is None:
-                raise BleakError("Machine not found")
-
-            client = await establish_connection(
-                BleakClient, device, self.address, max_attempts=2
-            )
-            try:
-                if self.auth_key:
-                    await _authenticate(
-                        client, self.auth_key, self.family, self.send_tx_level
-                    )
-
-                current = await client.read_gatt_char(char_uuid)
-                _LOGGER.debug(
-                    "Read-modify-write %s current: %s", char_uuid, current.hex()
-                )
-                data = bytearray(current)
-                modify_fn(data)  # type: ignore[operator]
-                _LOGGER.debug("Read-modify-write %s new: %s", char_uuid, data.hex())
-                await client.write_gatt_char(char_uuid, bytes(data), response=True)
-            finally:
-                await client.disconnect()
-
-    async def _async_connected(self) -> BleakClient:
-        """Connect and authenticate, for a one-shot operation.
-
-        The caller owns the client and must disconnect it. Kept separate from
-        the poll path, which manages its own connection lifetime.
-        """
+    def _device(self) -> BLEDevice:
+        """The machine as the Bluetooth stack last saw it."""
         device = bluetooth.async_ble_device_from_address(
             self.hass, self.address, connectable=True
         )
         if device is None:
             raise BleakError("Machine not found")
-        client = await establish_connection(
-            BleakClient, device, self.address, max_attempts=2
-        )
+        return device
+
+    async def _async_connected(self) -> BleakClient:
+        """Connect and authenticate, for a one-shot operation.
+
+        The caller holds _ble_lock, owns the client and must disconnect it.
+        Kept separate from the poll, which manages its own connection lifetime
+        and generates the auth key on its way through.
+
+        Two failures earn one more try after a pause. "Operation already in
+        progress" is the adapter still tearing down the poll's connection, and
+        "connection abort" is usually a stale bond on a factory reset machine,
+        which the README covers when the retry does not help either.
+        """
+        device = self._device()
+        try:
+            client = await establish_connection(
+                BleakClient, device, self.address, max_attempts=2
+            )
+        except (BleakError, TimeoutError) as err:
+            text = str(err).lower()
+            if "already in progress" not in text and "connection abort" not in text:
+                raise
+            _LOGGER.info(
+                "Connecting to %s failed with %s, retrying after a delay",
+                self.address,
+                err,
+            )
+            await asyncio.sleep(3)
+            client = await establish_connection(
+                BleakClient, self._device(), self.address, max_attempts=2
+            )
         try:
             if self.auth_key and not await _authenticate(
                 client, self.auth_key, self.family, self.send_tx_level
@@ -339,16 +347,22 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             raise
         return client
 
+    @asynccontextmanager
+    async def _session(self) -> AsyncIterator[BleakClient]:
+        """One connected, authenticated session, held under the BLE lock."""
+        async with self._ble_lock:
+            client = await self._async_connected()
+            try:
+                yield client
+            finally:
+                await client.disconnect()
+
     async def async_scan_wifi(self) -> list[dict[str, object]]:
         """Return the WiFi networks the machine can see."""
         if self.family is not MachineFamily.VERTUO_NEXT:
             raise BleakError("WiFi setup is only supported on Vertuo machines")
-        async with self._ble_lock:
-            client = await self._async_connected()
-            try:
-                return await async_scan_wifi(client)
-            finally:
-                await client.disconnect()
+        async with self._session() as client:
+            return await async_scan_wifi(client)
 
     async def async_configure_wifi(
         self,
@@ -361,60 +375,20 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """Put the machine on a WiFi network, then refresh so the status shows."""
         if self.family is not MachineFamily.VERTUO_NEXT:
             raise BleakError("WiFi setup is only supported on Vertuo machines")
-        async with self._ble_lock:
-            client = await self._async_connected()
-            try:
-                await async_configure_wifi(
-                    client, market, ssid, password, security_type, connection_index
-                )
-            finally:
-                await client.disconnect()
+        async with self._session() as client:
+            await async_configure_wifi(
+                client, market, ssid, password, security_type, connection_index
+            )
 
         # The machine takes a while to join, so the first refresh usually shows
         # connecting rather than connected. The poll cycle catches up.
         await self.async_request_refresh()
 
     async def async_write_char(self, char_uuid: str, data: bytes) -> None:
-        """Write to a BLE characteristic with proper locking and auth.
-
-        Acquires the BLE lock to prevent concurrent connections, connects
-        with auth, writes, disconnects, and refreshes.
-        """
-        async with self._ble_lock:
-            device = bluetooth.async_ble_device_from_address(
-                self.hass, self.address, connectable=True
-            )
-            if device is None:
-                raise BleakError("Machine not found")
-
-            try:
-                client = await establish_connection(
-                    BleakClient, device, self.address, max_attempts=2
-                )
-            except (BleakError, TimeoutError) as err:
-                if "connection abort" not in str(err).lower():
-                    raise
-                _LOGGER.info("Write connection abort, retrying after a delay")
-                await asyncio.sleep(3)
-                device = bluetooth.async_ble_device_from_address(
-                    self.hass, self.address, connectable=True
-                )
-                if device is None:
-                    raise
-                client = await establish_connection(
-                    BleakClient, device, self.address, max_attempts=2
-                )
-
-            try:
-                if self.auth_key:
-                    await _authenticate(
-                        client, self.auth_key, self.family, self.send_tx_level
-                    )
-
-                await client.write_gatt_char(char_uuid, data, response=True)
-                _LOGGER.debug("Write %s: %s", char_uuid, data.hex())
-            finally:
-                await client.disconnect()
+        """Write one characteristic on a fresh authenticated session."""
+        async with self._session() as client:
+            await client.write_gatt_char(char_uuid, data, response=True)
+            _LOGGER.debug("Write %s: %s", char_uuid, data.hex())
 
     @staticmethod
     def _notifiable_chars(client: BleakClient) -> list[str]:
@@ -448,40 +422,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             _LOGGER.debug("Reusing persistent connection for command")
             return client, False
 
+        # The poll that ran for this command disconnected as it finished, and
+        # BlueZ wants a moment between a disconnect and the next connect to the
+        # same address. Without it the connect came back "Operation already in
+        # progress".
         await asyncio.sleep(2)
-        device = bluetooth.async_ble_device_from_address(
-            self.hass, self.address, connectable=True
-        )
-        if device is None:
-            raise BleakError("Machine not found")
-        try:
-            client = await establish_connection(
-                BleakClient, device, self.address, max_attempts=2
-            )
-        except (BleakError, TimeoutError) as err:
-            err_str = str(err).lower()
-            if "already in progress" in err_str:
-                _LOGGER.debug("BLE busy, retrying after delay")
-                await asyncio.sleep(3)
-                client = await establish_connection(
-                    BleakClient, device, self.address, max_attempts=2
-                )
-            elif "connection abort" in err_str:
-                _LOGGER.info("Command connection abort, retrying after a delay")
-                await asyncio.sleep(3)
-                device = bluetooth.async_ble_device_from_address(
-                    self.hass, self.address, connectable=True
-                )
-                if device is None:
-                    raise
-                client = await establish_connection(
-                    BleakClient, device, self.address, max_attempts=2
-                )
-            else:
-                raise
-        if self.auth_key:
-            await _authenticate(client, self.auth_key, self.family, self.send_tx_level)
-        return client, True
+        return await self._async_connected(), True
 
     async def async_send_command(
         self,
