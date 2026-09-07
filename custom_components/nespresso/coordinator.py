@@ -270,9 +270,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         status = self._parse_status(data)
         if current is None or status is None:
             return
-        updated = replace(current, **self._status_fields(status))
-        self._async_note_update(current, updated)
-        self.async_set_updated_data(updated)
+        self._async_publish(current, replace(current, **self._status_fields(status)))
 
     async def async_read_modify_write_char(
         self, char_uuid: str, modify_fn: object
@@ -845,6 +843,24 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.async_update_listeners()
 
     @callback
+    def _async_publish(
+        self, current: NespressoMachineData, updated: NespressoMachineData
+    ) -> None:
+        """Hand a dataset from a fast path to the entities.
+
+        Not async_set_updated_data: that would set last_update_success, so a
+        machine that still advertises but no longer accepts connections would
+        keep its entities available with stale connected data and would stop
+        triggering the recovery refresh. It would also cancel the pending
+        debounced refresh and restart the poll timer on every update, and a
+        persistent connection delivers one every few seconds through a whole
+        cycle, which pushed the poll back for as long as the machine was busy.
+        """
+        self._async_note_update(current, updated)
+        self.data = updated
+        self.async_update_listeners()
+
+    @callback
     def _async_note_update(
         self, old: NespressoMachineData | None, new: NespressoMachineData
     ) -> None:
@@ -925,20 +941,13 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             return False
 
         updated = replace(current, **fields)
-        self._async_note_update(current, updated)
         _LOGGER.debug(
             "Passive update for %s: state=%s (was %s)",
             self.address,
             updated.machine_state,
             current.machine_state,
         )
-        # Not async_set_updated_data: that would set last_update_success, so a
-        # machine that still advertises but no longer accepts connections would
-        # keep its entities available with stale connected data and would stop
-        # triggering the recovery refresh. It would also cancel the pending
-        # debounced refresh and restart the poll timer on every advertisement.
-        self.data = updated
-        self.async_update_listeners()
+        self._async_publish(current, updated)
         return updated.machine_state != current.machine_state
 
     async def _async_update_data(self) -> NespressoMachineData:
