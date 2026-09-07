@@ -25,7 +25,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.event import EventDeviceClass, EventEntity
+from homeassistant.components.event import EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -64,7 +64,6 @@ class NespressoStateChangeEvent(CoordinatorEntity[NespressoCoordinator], EventEn
 
     _attr_has_entity_name = True
     _attr_translation_key = "state_change"
-    _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = ALL_EVENT_TYPES
 
     def __init__(
