@@ -730,9 +730,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     def keep_connection(self) -> None:
         """Ask the next poll to leave its connection open.
 
-        A command has to go out on the session that authenticated, so the brew
-        button sets this before the poll it intends to ride on, and releases it
-        in a finally. The release half was already public and this half was not.
+        The brew button sets this before it waits on the machine, so the poll
+        that ends the wait leaves a connected, authenticated session behind and
+        the command goes out on it, sparing a connect and a pairing request
+        while someone stands at the machine. A press with nothing to wait for
+        gets a fresh session from _async_connected, authenticated the same way.
+        The button releases this in a finally.
         """
         self._keep_connection = True
 

@@ -387,7 +387,7 @@ Each wait gives up after five minutes, the one for the wake and the one for heat
 
 Multiple presses of the Brew button are debounced. Only one brew command is sent.
 
-The brew command is sent on the same BLE connection used for status polling (required by the machine). It is known to work on a Vertuo Next only. A Vertuo Pop and a Vertuo Creatista both accept the write and do nothing, and the official app has no Bluetooth brew command for any model, so there is nothing else to send.
+The brew command goes out on an authenticated connection: the one the last poll left open when the button had to wait for the machine, or a fresh one when it did not. It is known to work on a Vertuo Next only. A Vertuo Pop and a Vertuo Creatista both accept the write and do nothing, and the official app has no Bluetooth brew command for any model, so there is nothing else to send.
 
 **Note:** BLE brewing is experimental, and the command is not a Vertuo command at all. It is the Nespresso Expert's, an Original line machine from 2017 that shares this GATT profile, captured and published years ago. A Vertuo Next accepts it because its firmware kept the handler. Newer machines need not, and the Creatista does not.
 

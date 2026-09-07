@@ -222,8 +222,9 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         """Internal brew logic."""
         from .select import VERTUO_BREW_TYPE_VALUES, VERTUO_TEMPERATURE_VALUES
 
-        # Tell the coordinator to keep the next poll connection alive
-        # so we can send the brew on the same authenticated session
+        # If a wait follows, the poll that ends it leaves its session open and
+        # the command rides on it. With nothing to wait for the command opens
+        # its own, authenticated the same way.
         self.coordinator.keep_connection()
 
         waiting = {"heating", "initializing", "ready_old_capsule"}
