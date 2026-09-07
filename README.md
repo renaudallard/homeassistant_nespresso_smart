@@ -507,6 +507,12 @@ Then restart HA. This is needed after a factory reset of the machine.
 
 The machine is temporarily unreachable via BLE. Ensure it is powered on, within range, and not connected to the Nespresso app. Entities recover automatically on the next successful poll.
 
+### "Capsule counter" is unavailable on a Pop or a Creatista
+
+Up to v0.5.15 the capsule count was a sensor created for every machine in the Vertuo Next family, whether or not the machine answered on the characteristic that holds the count. A Vertuo Pop and a Vertuo Creatista do not have it, so those machines carried a sensor that never held a value. v0.5.16 replaced that sensor with the writable Capsule counter control, which is only created where the count reads back.
+
+The registry entry left by the old sensor survives the upgrade, and Home Assistant gives an entry with no entity behind it the state unavailable. It is removed on the next setup, so restart Home Assistant or reload the integration once and it goes. Brews are counted from state transitions instead, which is what Total brews and Brews since descaling use, and that works on both models.
+
 ### "is onboarded with a different auth token"
 
 Also seen as `NotPermitted` on a local adapter, or GATT error 2 through a proxy.

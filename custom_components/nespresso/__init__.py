@@ -41,6 +41,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 
 from .ble.parsing import nespresso_manufacturer_data
 from .ble.protocol import generate_auth_key
@@ -73,6 +74,18 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.EVENT,
 ]
+
+# Entities an older version created and this one does not. The registry entry
+# outlives the upgrade, and Home Assistant gives an entry with no entity behind
+# it the state unavailable, so they are dropped on the way in.
+#
+# caps_counter was a sensor up to v0.5.15, created for the whole Vertuo Next
+# family whether or not the machine answered on 06AA3A15, so a Pop or a
+# Creatista carried one that never held a value. The writable number took over
+# in v0.5.16 and is only created where the counter reads back.
+REMOVED_ENTITIES: tuple[tuple[Platform, str], ...] = (
+    (Platform.SENSOR, "caps_counter"),
+)
 
 
 SERVICE_SCAN_WIFI = "scan_wifi"
@@ -195,6 +208,18 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     )
 
 
+@callback
+def _async_remove_stale_entities(hass: HomeAssistant, address: str) -> None:
+    """Drop registry entries left behind by entities we no longer create."""
+    registry = er.async_get(hass)
+    for platform, key in REMOVED_ENTITIES:
+        entity_id = registry.async_get_entity_id(platform, DOMAIN, f"{address}_{key}")
+        if entity_id is None:
+            continue
+        _LOGGER.debug("Removing stale entity %s", entity_id)
+        registry.async_remove(entity_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nespresso from a config entry."""
     address: str = entry.data["address"]
@@ -304,6 +329,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_register_services(hass)
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+    _async_remove_stale_entities(hass, address)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _LOGGER.debug("Nespresso %s setup complete, device_id=%s", address, device_entry.id)
     return True
