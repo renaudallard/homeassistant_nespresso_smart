@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest bleak bleak-retry-connector voluptuous
+          pip install -r requirements-dev.txt
 
       - name: Run tests
         run: |
@@ -38,10 +38,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          # The newest of the versions the suite runs on.
+          python-version: "3.14"
 
-      - name: Install ruff
-        run: pip install ruff
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
 
       - name: Ruff check
         run: ruff check custom_components/ tests/
