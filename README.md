@@ -7,6 +7,7 @@
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/renaudallard/homeassistant_nespresso_smart)
 [![Release](https://img.shields.io/github/v/release/renaudallard/homeassistant_nespresso_smart)](https://github.com/renaudallard/homeassistant_nespresso_smart/releases)
 [![Validate](https://github.com/renaudallard/homeassistant_nespresso_smart/actions/workflows/validate.yml/badge.svg)](https://github.com/renaudallard/homeassistant_nespresso_smart/actions/workflows/validate.yml)
+[![Test](https://github.com/renaudallard/homeassistant_nespresso_smart/actions/workflows/test.yml/badge.svg)](https://github.com/renaudallard/homeassistant_nespresso_smart/actions/workflows/test.yml)
 
 A Home Assistant custom integration for Nespresso Smart coffee machines via Bluetooth Low Energy (BLE).
 
