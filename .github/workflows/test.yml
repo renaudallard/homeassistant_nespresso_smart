@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  # Callable, so the release gates on this suite itself rather than on
+  # a copy of it that drifts out of step.
+  workflow_call:
 
 permissions: {}
 
