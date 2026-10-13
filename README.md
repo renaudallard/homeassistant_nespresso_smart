@@ -486,7 +486,7 @@ registered to a Nespresso account through their app as well. See
 ## Limitations
 
 - **Vertuo brewing**: Experimental, and inherited rather than discovered. The command is the Nespresso Expert's, and a Vertuo Next happens to accept it, so it may not work on any other machine. The Vertuo Pop and the Vertuo Creatista do not (the Nespresso app itself offers no brew button for any model), so no brew button is created for either. Custom recipes with exact ml volumes are not yet supported.
-- **Maintenance commands**: Descaling, rinsing, emptying command IDs are not in the decompiled code. Needs real hardware testing.
+- **Maintenance commands**: Descaling, rinsing and emptying are started through Nespresso's cloud, which reaches the machine over its own WiFi, not over Bluetooth. Cleaning and steam wand cleaning send nothing to the machine, the app only shows instructions. None of them can be offered here.
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
