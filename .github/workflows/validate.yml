@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
+  # Callable, so a release is only cut once HACS and hassfest have passed,
+  # which is what the HACS default submission asks for.
+  workflow_call:
 
 permissions: {}
 

@@ -13,9 +13,12 @@ jobs:
   verify:
     uses: ./.github/workflows/test.yml
 
+  validate:
+    uses: ./.github/workflows/validate.yml
+
   release:
     runs-on: ubuntu-latest
-    needs: [verify]
+    needs: [verify, validate]
     permissions:
       contents: write
 
