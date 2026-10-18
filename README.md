@@ -251,6 +251,40 @@ erasing the proxy's bond is the fix, and it is a last resort: a factory reset of
 the proxy drops the bonds for every device it serves, and reflashing it over
 serial takes its WiFi credentials too.
 
+#### A proxy configuration that worked
+
+One reporter's Vertuo Creatista went twelve hours without a failed poll, 649
+out of 649, on a proxy serving it and one other device, with persistent
+connection off. The changes were made together and never tested one at a
+time, so which of them matter is not known:
+
+```yaml
+esp32:
+  framework:
+    type: esp-idf
+    version: 5.5.4
+
+wifi:
+  power_save_mode: none
+
+network:
+  tcp_send_buffer: 16000
+
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+    connection_scan_window: 30ms
+
+bluetooth_proxy:
+  active: true
+  connection_slots: 2
+```
+
+The defaults these replace are ESP-IDF 5.5.5 as of ESPHome 2026.9.1,
+`power_save_mode: light`, a 5760 byte TCP send buffer and three connection
+slots. The same proxy also ran with `api: batch_delay: 100ms`, which is already
+the default, and without `web_server`.
+
 ### Through a local Bluetooth adapter
 
 BlueZ raises the link security itself and then waits for a pairing agent that
