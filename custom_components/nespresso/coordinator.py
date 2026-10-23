@@ -347,10 +347,31 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             raise
         return client
 
+    def _held_link(self) -> BleakClient | None:
+        """The link a persistent connection or a brew holds open, if it is up.
+
+        The link itself is asked, since a persistent client stays set after
+        the machine drops it.
+        """
+        client = self._client
+        if client is not None and client.is_connected:
+            return client
+        return None
+
     @asynccontextmanager
     async def _session(self) -> AsyncIterator[BleakClient]:
-        """One connected, authenticated session, held under the BLE lock."""
+        """One connected, authenticated session, held under the BLE lock.
+
+        A held link is used as it stands and left open. A second connect
+        would not find the machine once the Bluetooth cache has dropped it,
+        and before that it would share the held link, so closing it would
+        close both.
+        """
         async with self._ble_lock:
+            if (held := self._held_link()) is not None:
+                _LOGGER.debug("Reusing the open link to %s", self.address)
+                yield held
+                return
             client = await self._async_connected()
             try:
                 yield client
@@ -417,8 +438,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         owns it. A persistent connection is reused as it stands, since the poll
         that opened it has already authenticated on that session.
         """
-        client = self._client
-        if client is not None and client.is_connected:
+        if (client := self._held_link()) is not None:
             _LOGGER.debug("Reusing persistent connection for command")
             return client, False
 
@@ -816,8 +836,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         asked, not is_connected: a persistent client stays set after the
         machine drops it.
         """
-        client = self._client
-        if (client is not None and client.is_connected) or self._ble_lock.locked():
+        if self._held_link() is not None or self._ble_lock.locked():
             return
         if self._mark_gone():
             self.async_update_listeners()
@@ -989,8 +1008,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         None when no link is open or the read over it failed, and the caller
         then connects afresh.
         """
-        client = self._client
-        if client is None or not client.is_connected:
+        client = self._held_link()
+        if client is None:
             return None
         _LOGGER.debug("Reading over the open link to %s", self.address)
         try:
