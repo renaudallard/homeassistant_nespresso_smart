@@ -296,6 +296,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
+    @callback
+    def _async_on_ble_unavailable(
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+    ) -> None:
+        coordinator.async_machine_gone()
+
+    entry.async_on_unload(
+        bluetooth.async_track_unavailable(
+            hass, _async_on_ble_unavailable, address, connectable=True
+        )
+    )
+
     # Passive fast path. The Venus advertisement carries the same MachineStatus
     # bytes as the connected characteristic, roughly twice a second, so state
     # and flags update almost instantly instead of once per scan interval.

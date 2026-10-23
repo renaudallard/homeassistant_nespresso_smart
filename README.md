@@ -453,6 +453,8 @@ The integration connects to the machine via BLE at a configurable interval (defa
 
 Machine family is detected automatically from the advertised BLE service UUID during discovery. When the machine becomes available after being off or out of range, a BLE advertisement callback triggers an immediate refresh.
 
+When Home Assistant stops seeing the machine's advertisements, which takes a few minutes after it is switched off or goes out of range, the entities become unavailable and the log gets one info line, `... is no longer seen over Bluetooth`. Polls are not logged as errors while it stays away, and Home Assistant logs `Fetching Nespresso ... data recovered` at info once it is back. This works with a persistent connection too, once the machine has dropped the link. If it goes quiet while a link to it is still up or a command is running, the next poll logs one error instead. Connection, pairing and read failures on a machine that is still seen are logged as errors as before.
+
 On the Vertuo Next family the advertisement itself carries the machine status bytes, so state and alarm flags follow the machine within about a second instead of waiting for the next poll. Values that only a connection can read, such as error codes and the capsule counter, still come from the poll.
 
 Authentication is application-level only (CMID write with response), matching the official Nespresso Android app, which does not call `createBond` either. That is separate from link-layer encryption: some characteristics only answer over an encrypted link, and Android negotiates that transparently while neither BlueZ nor a Bluetooth proxy does it unprompted. See [Link encryption](#link-encryption). The auth key is generated once and persisted in the config entry so the same key is reused across restarts. If the machine was previously paired with the Nespresso app, a factory reset is required before the integration can onboard.
@@ -542,7 +544,7 @@ Then restart HA. This is needed after a factory reset of the machine.
 
 ### All entities show "unavailable"
 
-The machine is temporarily unreachable via BLE. Ensure it is powered on, within range, and not connected to the Nespresso app. Entities recover automatically on the next successful poll.
+The machine is temporarily unreachable via BLE. Ensure it is powered on, within range, and not connected to the Nespresso app. Entities recover automatically on the next successful poll. If the log says `is no longer seen over Bluetooth`, no adapter or proxy has heard the machine advertise for several minutes, so look at its power and at the proxy rather than at the integration.
 
 ### "Capsule counter" is unavailable on a Pop or a Creatista
 
