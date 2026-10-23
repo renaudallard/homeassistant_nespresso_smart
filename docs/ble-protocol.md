@@ -921,7 +921,11 @@ rather than what it requires. The auth key is generated once, persisted in the
 config entry, and reused across restarts.
 
 1. **Acquire BLE lock**: Prevent concurrent connections (machine supports one client)
-2. **Disconnect stale client**: Clean up any persistent connection
+2. **Reuse an open link**: If a persistent connection or a pending brew
+   still holds a live link, read over it and skip to step 10. The machine's
+   advertisements do not reach Home Assistant while it is linked, so it
+   drops out of the Bluetooth cache and a reconnect would find nothing.
+   If the read fails, disconnect that client and go on with step 3
 3. **Connect**: `establish_connection()` with 3 retry attempts
 4. **Authenticate**: `_authenticate()` checks onboard status, onboards if needed, writes CMID with response
 5. **Verify**: Read a protected characteristic to confirm auth succeeded

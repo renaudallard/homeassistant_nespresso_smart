@@ -943,7 +943,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         return updated.machine_state != current.machine_state
 
     async def _async_update_data(self) -> NespressoMachineData:
-        """Connect, read all characteristics, parse, disconnect."""
+        """Read all characteristics and parse them."""
         async with self._ble_lock:
             return await self._async_update_data_locked()
 
@@ -956,6 +956,51 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             self.family.value,
             self.persistent,
         )
+        raw = await self._async_read_held_link()
+        if raw is None:
+            raw = await self._async_connect_and_read()
+
+        try:
+            result = self._parse(raw)
+            self._async_note_update(self.data, result)
+            _LOGGER.debug(
+                "Parsed %s: state=%s error=%s fw=%s hw=%s serial=%s",
+                self.family.value,
+                result.machine_state,
+                result.error_present,
+                result.firmware_version,
+                result.hardware_version,
+                result.serial_number,
+            )
+            return result
+        except (IndexError, ValueError, KeyError) as err:
+            _LOGGER.debug("Parse failed: %s (raw=%r)", err, raw)
+            raise UpdateFailed(f"Failed to parse machine data: {err}") from err
+
+    async def _async_read_held_link(self) -> RawMachineData | None:
+        """Read over the link a persistent connection or a brew holds open.
+
+        The machine's advertisements stop reaching Home Assistant while a link
+        to it is open, so after a few minutes it drops the machine from the
+        Bluetooth cache and a fresh connect finds nothing to connect to. The
+        link was authenticated when it was opened, and commands reuse it the
+        same way.
+
+        None when no link is open or the read over it failed, and the caller
+        then connects afresh.
+        """
+        client = self._client
+        if client is None or not client.is_connected:
+            return None
+        _LOGGER.debug("Reading over the open link to %s", self.address)
+        try:
+            return await get_protocol(self.family).async_read_all(client)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Read over the open link failed, reconnecting: %s", err)
+            return None
+
+    async def _async_connect_and_read(self) -> RawMachineData:
+        """Connect, authenticate and read, keeping the link if it is wanted."""
         # Disconnect any stale persistent client before reconnecting
         await self._disconnect()
 
@@ -1087,23 +1132,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         except Exception as err:
             await client.disconnect()
             raise UpdateFailed(f"Unexpected BLE error: {err}") from err
-
-        try:
-            result = self._parse(raw)
-            self._async_note_update(self.data, result)
-            _LOGGER.debug(
-                "Parsed %s: state=%s error=%s fw=%s hw=%s serial=%s",
-                self.family.value,
-                result.machine_state,
-                result.error_present,
-                result.firmware_version,
-                result.hardware_version,
-                result.serial_number,
-            )
-            return result
-        except (IndexError, ValueError, KeyError) as err:
-            _LOGGER.debug("Parse failed: %s (raw=%r)", err, raw)
-            raise UpdateFailed(f"Failed to parse machine data: {err}") from err
+        return raw
 
     def _parse(self, raw: RawMachineData) -> NespressoMachineData:
         """Parse raw BLE data according to the machine family."""
