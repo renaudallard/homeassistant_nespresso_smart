@@ -14,5 +14,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/renaudallard/homeassistant_nespresso_smart/issues",
   "requirements": [],
-  "version": "0.5.23"
+  "version": "0.5.24"
 }
