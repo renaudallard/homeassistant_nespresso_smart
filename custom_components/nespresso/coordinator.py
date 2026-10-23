@@ -804,28 +804,35 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     def async_machine_gone(self) -> None:
         """Mark the machine unavailable once Bluetooth stops seeing it.
 
-        The poll would only notice on its next run and raise UpdateFailed,
-        which the coordinator logs as an error. A machine that is switched off
-        is not an error, so clear last_update_success here instead: the
-        failed polls that follow are then not logged, and the coordinator
+        The poll would only notice on its next run. A machine that is switched
+        off is not an error, so last_update_success is cleared with an info
+        line rather than by an UpdateFailed the coordinator logs as an error:
+        the failed polls that follow are then not logged, and the coordinator
         logs the recovery at info.
 
         Skipped while the machine is in use. A live link or a running
         operation proves it is there whatever the advertisements say, and the
-        poll still reports it if it really went away. The link itself is
+        poll marks it the same way if it really went away. The link itself is
         asked, not is_connected: a persistent client stays set after the
         machine drops it.
         """
         client = self._client
-        if (
-            not self.last_update_success
-            or (client is not None and client.is_connected)
-            or self._ble_lock.locked()
-        ):
+        if (client is not None and client.is_connected) or self._ble_lock.locked():
             return
+        if self._mark_gone():
+            self.async_update_listeners()
+
+    def _mark_gone(self) -> bool:
+        """Clear last_update_success with one info line per outage.
+
+        Returns whether it was set, so the caller knows the entities need
+        telling.
+        """
+        if not self.last_update_success:
+            return False
         _LOGGER.info("%s is no longer seen over Bluetooth", self.address)
         self.last_update_success = False
-        self.async_update_listeners()
+        return True
 
     @callback
     def _async_publish(
@@ -957,6 +964,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         )
         if device is None:
             _LOGGER.debug("Device %s not found in BLE cache", self.address)
+            # The unavailable callback stands aside while a poll holds the
+            # lock, so the cache can lose the machine with last_update_success
+            # still set, and the coordinator would log this as an error. Not
+            # on the first refresh, where nothing was seen yet.
+            if self.data is not None:
+                self._mark_gone()
             raise UpdateFailed("Machine not found; it may be off or out of range")
 
         _LOGGER.debug(
