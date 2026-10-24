@@ -42,6 +42,7 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.service import async_register_admin_service
 
 from .ble.parsing import nespresso_manufacturer_data
 from .ble.protocol import generate_auth_key
@@ -137,7 +138,11 @@ def _coordinator(hass: HomeAssistant, entry_id: str) -> NespressoCoordinator:
 
 
 async def _async_register_services(hass: HomeAssistant) -> None:
-    """Register the WiFi services once, not per config entry."""
+    """Register the services once, not per config entry.
+
+    All of them are admin only: they rewrite the machine's network, write raw
+    frames, hold the machine connected or list the networks around it.
+    """
     if hass.services.has_service(DOMAIN, SERVICE_SCAN_WIFI):
         return
 
@@ -156,7 +161,8 @@ async def _async_register_services(hass: HomeAssistant) -> None:
             call.data["connection_index"],
         )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SCAN_WIFI,
         _scan,
@@ -184,22 +190,24 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         # back at all. That distinction is the whole point of asking.
         return dict(coordinator.last_command or {})
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_CONFIGURE_WIFI, _configure, schema=_CONFIGURE_WIFI_SCHEMA
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_CONFIGURE_WIFI, _configure, schema=_CONFIGURE_WIFI_SCHEMA
     )
 
     async def _watch(call: ServiceCall) -> ServiceResponse:
         coordinator = _coordinator(hass, call.data[ATTR_ENTRY_ID])
         return await coordinator.async_watch(call.data["seconds"])
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_WATCH,
         _watch,
         schema=_WATCH_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SEND_COMMAND,
         _send_command,

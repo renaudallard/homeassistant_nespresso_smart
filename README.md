@@ -481,7 +481,8 @@ Nespresso quotes 300 capsules or 3 months for the Vertuo range, whichever comes 
 ## WiFi setup
 
 Vertuo machines can be put on WiFi over Bluetooth, which is what the official app
-does during onboarding. Two actions do it:
+does during onboarding. Two actions do it, and like every action of this
+integration they need an admin user:
 
 - `nespresso.scan_wifi` returns the networks the machine can see. The machine
   does the scanning, so the list is what the machine can reach, not what Home
@@ -726,7 +727,7 @@ integration's diagnostics and read `debug_info.pairing_key_state`.
 The `nespresso.send_command` action writes a frame of your choosing to the
 machine's command characteristic and returns what happened. It works on every
 machine, including the models that get no brew button, which is the point: it
-is how a machine gets tested rather than assumed about.
+is how a machine gets tested rather than assumed about. It needs an admin user.
 
 From **Developer tools > Actions**, pick the machine and give it a payload in
 hex, for example `03050704000000000002000000000000000000`, a Vertuo lungo at
@@ -778,7 +779,7 @@ button press reads the same way, minus the extra subscriptions.
 `nespresso.watch` holds the connection open and records everything that moves:
 every characteristic whose value changes, every notification, each with the
 number of seconds since the watch started. Start it, then walk over and use the
-machine by hand.
+machine by hand. It needs an admin user.
 
 It exists because the poll runs once a minute and a brew or a frothing cycle is
 over before the next one. It is also the only way to identify a characteristic
