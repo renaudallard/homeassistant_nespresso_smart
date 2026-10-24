@@ -48,15 +48,10 @@ until the first successful read.
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=renaudallard&repository=homeassistant_nespresso_smart&category=integration)
 
-Click the button above to open the repository directly in HACS, or add it manually:
+1. Search for **Nespresso Smart** in HACS, or click the button above, and install it
+2. Restart Home Assistant
 
-1. Open HACS in your Home Assistant instance
-2. Go to **Integrations**
-3. Click the three dots in the top right corner and select **Custom repositories**
-4. Add `https://github.com/renaudallard/homeassistant_nespresso_smart` with category **Integration**
-5. Click **Add**
-6. Search for "Nespresso Smart" in HACS and install it
-7. Restart Home Assistant
+If the search does not find it, add `https://github.com/renaudallard/homeassistant_nespresso_smart` as a custom repository of category **Integration** (HACS three dots menu > **Custom repositories**) and search again.
 
 ### Manual
 
