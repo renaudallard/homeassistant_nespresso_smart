@@ -28,6 +28,8 @@ The key is written to the machine unchanged, so its shape has to match what
 the Nespresso Smart APK v1.2.5 produces in PairingUtils.getBufferFromByteArray.
 """
 
+import asyncio
+import logging
 import random
 import sys
 from unittest.mock import MagicMock
@@ -52,6 +54,7 @@ sys.modules.setdefault("bleak_retry_connector", MagicMock())
 
 from custom_components.nespresso.ble.protocol import (
     CMID_MARKER_NIBBLE,
+    _authenticate_vmini,
     generate_auth_key,
     normalize_auth_key,
 )
@@ -144,3 +147,21 @@ class TestNormalizeAuthKey:
         for _ in range(50):
             key = generate_auth_key()
             assert normalize_auth_key(key) == key
+
+
+class TestTokenNotLogged:
+    def test_vmini_token_is_masked(self, caplog) -> None:
+        """Debug logs get pasted into issues, so four characters at most."""
+
+        class Client:
+            address = "AA:BB:CC:DD:EE:FF"
+
+            async def write_gatt_char(self, *_args, **_kwargs) -> None:
+                return None
+
+        key = "8a1b2c3d4e5f6071"
+        with caplog.at_level(logging.DEBUG):
+            assert asyncio.run(_authenticate_vmini(Client(), key))
+        assert "8a1b****" in caplog.text
+        assert key[:5] not in caplog.text
+        assert key.encode()[:4].hex() not in caplog.text

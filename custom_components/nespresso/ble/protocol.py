@@ -1061,9 +1061,7 @@ async def _authenticate_vmini(client: BleakClient, auth_key: str) -> bool:
     try:
         token = auth_key.encode("utf-8").ljust(36, b"\x00")
         _LOGGER.debug(
-            "Writing VMini machine token for %s: %s...",
-            address,
-            token[:8].hex(),
+            "Writing VMini machine token for %s: %s****", address, auth_key[:4]
         )
         await _write(client, VMINI_CHAR_MACHINE_TOKEN, token, response=True)
         _LOGGER.debug("VMini machine token written successfully")
