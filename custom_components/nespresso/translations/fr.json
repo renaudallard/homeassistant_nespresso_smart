@@ -231,7 +231,45 @@
     },
     "event": {
       "state_change": {
-        "name": "Changement d'état"
+        "name": "Changement d'état",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Veille",
+              "ready": "Prête",
+              "brewing": "Préparation",
+              "local_settings": "Paramètres locaux",
+              "error": "Erreur",
+              "overheated": "Surchauffe",
+              "setup": "Configuration initiale",
+              "paused": "En pause",
+              "factory_reset": "Réinitialisation d'usine",
+              "heating": "Chauffe",
+              "descaling_ready": "Prête pour le détartrage",
+              "cleaning": "Nettoyage",
+              "descaling": "Détartrage",
+              "emptying": "Vidange",
+              "power_save": "Économie d'énergie",
+              "cooldown": "Refroidissement",
+              "service_mode": "Mode maintenance",
+              "updating": "Mise à jour",
+              "rinsing": "Rinçage",
+              "capsule_reading": "Lecture de la capsule",
+              "descale_decoding": "Décodage du détartrage",
+              "tank_empty": "Réservoir vide",
+              "descaling_paused": "Détartrage en pause",
+              "initializing": "Initialisation",
+              "rinsing_ready": "Prête pour le rinçage",
+              "maintenance_menu": "Menu d'entretien",
+              "cleaning_paused": "Nettoyage en pause",
+              "emptying_ready": "Prête pour la vidange",
+              "cleaning_ready": "Prête pour le nettoyage",
+              "ready_old_capsule": "Prête (capsule usagée)",
+              "rinsing_paused": "Rinçage en pause",
+              "unknown": "Inconnu"
+            }
+          }
+        }
       }
     }
   },
@@ -343,6 +381,17 @@
           "description": "Durée d'observation, en secondes. Assez longue pour couvrir un cycle entier, préparation ou émulsion."
         }
       }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Préparation commencée",
+      "brewing_finished": "Préparation terminée",
+      "error_occurred": "Erreur survenue",
+      "ready": "Machine prête",
+      "standby": "Machine en veille",
+      "descaling_needed": "Détartrage nécessaire",
+      "water_tank_empty": "Réservoir d'eau vide"
     }
   }
 }
