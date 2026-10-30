@@ -116,7 +116,7 @@ def machine_device_info(
     data = coordinator.data
     return DeviceInfo(
         identifiers={(DOMAIN, entry.data["address"])},
-        name=entry.data.get("name", "Nespresso"),
+        name=machine_model(entry, coordinator),
         manufacturer="Nespresso",
         model=machine_model(entry, coordinator),
         serial_number=data.serial_number if data else None,
