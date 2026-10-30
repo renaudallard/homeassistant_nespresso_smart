@@ -126,6 +126,7 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
     _attr_has_entity_name = True
     _attr_translation_key = "water_hardness"
     _attr_icon = "mdi:water"
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value = 0
     _attr_native_max_value = 6
     _attr_native_step = 1
@@ -180,6 +181,7 @@ class NespressoAutoPowerOff(CoordinatorEntity[NespressoCoordinator], NumberEntit
     _attr_has_entity_name = True
     _attr_translation_key = "auto_power_off"
     _attr_icon = "mdi:timer-off-outline"
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value = 0
     _attr_native_max_value = 65535
     _attr_native_step = 1
