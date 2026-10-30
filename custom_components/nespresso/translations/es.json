@@ -2,7 +2,6 @@
   "entity": {
     "sensor": {
       "machine_state": {
-        "name": "Estado",
         "state": {
           "standby": "En espera",
           "ready": "Listo",

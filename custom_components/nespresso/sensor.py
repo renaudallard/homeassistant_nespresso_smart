@@ -71,6 +71,7 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     NespressoSensorDescription(
         key="machine_state",
         translation_key="machine_state",
+        name=None,
         icon="mdi:coffee-maker",
         device_class=SensorDeviceClass.ENUM,
         options=ALL_STATE_OPTIONS,
