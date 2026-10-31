@@ -15,7 +15,13 @@ For Nespresso's cloud API, see [piitaya/ha-nespresso-cloud](https://github.com/p
 
 Built by reverse-engineering the Nespresso Smart Android app (v1.2.5).
 
-> **Screenshot wanted:** If you have a Nespresso machine paired with this integration, please submit a screenshot of the HA device page via a [GitHub issue](https://github.com/renaudallard/homeassistant_nespresso_smart/issues).
+<p align="center">
+  <img src="images/vertuo-next-device.png" alt="Vertuo Next device page in Home Assistant" width="640">
+</p>
+
+A Vertuo Next device page, taken before 0.5.30 moved Auto power off, Water hardness and Reset descaling counter to Configuration and LED signaling to Diagnostic.
+
+> **Screenshot wanted:** If you have a Barista or a Vertuo Mini paired with this integration, please submit a screenshot of the HA device page via a [GitHub issue](https://github.com/renaudallard/homeassistant_nespresso_smart/issues).
 
 ---
 
