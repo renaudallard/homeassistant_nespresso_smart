@@ -4,41 +4,41 @@
       "machine_state": {
         "state": {
           "standby": "Veille",
-          "ready": "Prêt",
+          "ready": "Prête",
           "brewing": "Préparation",
           "local_settings": "Paramètres locaux",
           "error": "Erreur",
           "overheated": "Surchauffe",
           "setup": "Configuration initiale",
           "paused": "En pause",
-          "factory_reset": "Réinitialisation usine",
-          "heating": "Chauffage",
-          "descaling_ready": "Détartrage prêt",
+          "factory_reset": "Réinitialisation d'usine",
+          "heating": "Chauffe",
+          "descaling_ready": "Prête pour le détartrage",
           "cleaning": "Nettoyage",
           "descaling": "Détartrage",
           "emptying": "Vidange",
           "power_save": "Économie d'énergie",
           "cooldown": "Refroidissement",
           "service_mode": "Mode maintenance",
-          "updating": "Mise à jour firmware",
+          "updating": "Mise à jour",
           "rinsing": "Rinçage",
-          "capsule_reading": "Lecture capsule",
-          "descale_decoding": "Décodage détartrage",
+          "capsule_reading": "Lecture de la capsule",
+          "descale_decoding": "Décodage du détartrage",
           "tank_empty": "Réservoir vide",
           "descaling_paused": "Détartrage en pause",
           "initializing": "Initialisation",
-          "rinsing_ready": "Rinçage prêt",
-          "maintenance_menu": "Menu maintenance",
+          "rinsing_ready": "Prête pour le rinçage",
+          "maintenance_menu": "Menu d'entretien",
           "cleaning_paused": "Nettoyage en pause",
-          "emptying_ready": "Vidange prête",
-          "cleaning_ready": "Nettoyage prêt",
-          "ready_old_capsule": "Prêt (ancienne capsule)",
+          "emptying_ready": "Prête pour la vidange",
+          "cleaning_ready": "Prête pour le nettoyage",
+          "ready_old_capsule": "Prête (capsule usagée)",
           "rinsing_paused": "Rinçage en pause",
           "unknown": "Inconnu"
         }
       },
       "wifi_status": {
-        "name": "État du WiFi",
+        "name": "État du Wi-Fi",
         "state": {
           "not_connected": "Non connecté",
           "connecting": "Connexion en cours",
@@ -55,13 +55,13 @@
           "firmware_update_failed": "Échec de la mise à jour du micrologiciel",
           "recipe_update_failed": "Échec de la mise à jour des recettes",
           "market_not_set": "Marché non défini",
-          "no_internet": "Pas d'accès internet",
+          "no_internet": "Pas d'accès à Internet",
           "wrong_password": "Mot de passe incorrect",
           "unknown": "Inconnu"
         }
       },
       "wifi_ssid": {
-        "name": "Réseau WiFi"
+        "name": "Réseau Wi-Fi"
       },
       "firmware_version": {
         "name": "Version du micrologiciel"
@@ -97,7 +97,7 @@
         "name": "Marché IoT"
       },
       "shadow_data": {
-        "name": "Ombre de l'appareil"
+        "name": "Shadow de l'appareil"
       },
       "fota_status": {
         "name": "État de la mise à jour"
@@ -121,22 +121,22 @@
         "name": "Durée de préparation"
       },
       "milk_unit_state": {
-        "name": "Unité à lait",
+        "name": "Système à lait",
         "state": {
           "offline": "Hors ligne",
-          "ready": "Prête",
+          "ready": "Prêt",
           "frothing": "Émulsion",
           "cleaning": "Nettoyage",
-          "heating": "Chauffage",
-          "descaling_ready": "Détartrage prêt",
+          "heating": "Chauffe",
+          "descaling_ready": "Prêt pour le détartrage",
           "descaling": "Détartrage",
           "descaling_paused": "Détartrage en pause",
-          "rinsing_ready": "Rinçage prêt",
+          "rinsing_ready": "Prêt pour le rinçage",
           "rinsing": "Rinçage",
           "rinsing_paused": "Rinçage en pause",
-          "blocked_menu": "Bloquée, menu ouvert",
-          "blocked_cleaning_needed": "Bloquée, nettoyage requis",
-          "blocked_descaling_needed": "Bloquée, détartrage requis",
+          "blocked_menu": "Bloqué (menu ouvert)",
+          "blocked_cleaning_needed": "Bloqué (nettoyage nécessaire)",
+          "blocked_descaling_needed": "Bloqué (détartrage nécessaire)",
           "waiting": "En attente",
           "unknown_3": "Inconnu (3)",
           "unknown": "Inconnu"
@@ -192,7 +192,7 @@
           "extra_lungo": "Extra lungo",
           "cappuccino": "Cappuccino",
           "latte_macchiato": "Latte macchiato",
-          "custom": "Personnalisé"
+          "custom": "Personnalisée"
         }
       },
       "language": {
@@ -230,7 +230,45 @@
     },
     "event": {
       "state_change": {
-        "name": "Changement d'état"
+        "name": "Changement d'état",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Veille",
+              "ready": "Prête",
+              "brewing": "Préparation",
+              "local_settings": "Paramètres locaux",
+              "error": "Erreur",
+              "overheated": "Surchauffe",
+              "setup": "Configuration initiale",
+              "paused": "En pause",
+              "factory_reset": "Réinitialisation d'usine",
+              "heating": "Chauffe",
+              "descaling_ready": "Prête pour le détartrage",
+              "cleaning": "Nettoyage",
+              "descaling": "Détartrage",
+              "emptying": "Vidange",
+              "power_save": "Économie d'énergie",
+              "cooldown": "Refroidissement",
+              "service_mode": "Mode maintenance",
+              "updating": "Mise à jour",
+              "rinsing": "Rinçage",
+              "capsule_reading": "Lecture de la capsule",
+              "descale_decoding": "Décodage du détartrage",
+              "tank_empty": "Réservoir vide",
+              "descaling_paused": "Détartrage en pause",
+              "initializing": "Initialisation",
+              "rinsing_ready": "Prête pour le rinçage",
+              "maintenance_menu": "Menu d'entretien",
+              "cleaning_paused": "Nettoyage en pause",
+              "emptying_ready": "Prête pour la vidange",
+              "cleaning_ready": "Prête pour le nettoyage",
+              "ready_old_capsule": "Prête (capsule usagée)",
+              "rinsing_paused": "Rinçage en pause",
+              "unknown": "Inconnu"
+            }
+          }
+        }
       }
     }
   },
@@ -238,7 +276,7 @@
     "step": {
       "bluetooth_confirm": {
         "title": "Confirmer la machine Nespresso",
-        "description": "Machine {name} trouvée. Laissez ce champ vide sur une machine jamais associée, l'intégration génère alors son propre jeton. Si l'application Nespresso a déjà associé cette machine, collez la clé d'association de 32 caractères de votre compte Nespresso pour que les deux continuent de fonctionner, ou le jeton de 16 caractères relevé dans une capture Bluetooth.",
+        "description": "Machine {name} trouvée. Laissez ce champ vide pour une machine qui n'a jamais été associée : l'intégration génère alors son propre jeton. Si l'application Nespresso a déjà associé cette machine, collez la clé d'association de 32 caractères de votre compte Nespresso pour que les deux continuent de fonctionner, ou le jeton de 16 caractères relevé dans une capture Bluetooth.",
         "data": {
           "auth_token": "Jeton ou clé d'association (facultatif)"
         }
@@ -253,7 +291,7 @@
     },
     "abort": {
       "already_configured": "La machine est déjà configurée.",
-      "bluetooth_only": "Cette intégration découvre les machines via Bluetooth automatiquement. Vérifiez que le Bluetooth est activé et que la machine est allumée."
+      "bluetooth_only": "Cette intégration découvre automatiquement les machines via Bluetooth. Vérifiez que le Bluetooth est activé et que la machine est allumée."
     }
   },
   "options": {
@@ -261,23 +299,23 @@
       "init": {
         "title": "Options Nespresso",
         "data": {
-          "scan_interval": "Intervalle de mise à jour (secondes)",
+          "scan_interval": "Intervalle d'interrogation (secondes)",
           "persistent_connection": "Connexion persistante (mises à jour en temps réel, bloque l'application Nespresso)",
-          "send_tx_level": "Envoyer la requête de niveau TX lors de l'association",
+          "send_tx_level": "Envoyer la demande de niveau d'émission (TX) lors de l'association",
           "descaling_capsules": "Intervalle de détartrage (capsules)",
           "descaling_days": "Intervalle de détartrage (jours)",
-          "force_brew_button": "Activer la préparation sur un modèle non pris en charge"
+          "force_brew_button": "Proposer la préparation sur un modèle qui n'est pas censé la prendre en charge"
         },
         "data_description": {
-          "force_brew_button": "Le Vertuo Pop et le Vertuo Creatista acceptent les commandes de préparation sans les exécuter. Le bouton n'est donc pas proposé par défaut. Activez cette option pour afficher le bouton et ses deux réglages afin de pouvoir effectuer des tests."
+          "force_brew_button": "La Vertuo Pop et la Vertuo Creatista acceptent toutes les commandes de préparation sans rien faire, le bouton n'est donc pas créé pour elles. Activez cette option pour retrouver le bouton et ses deux réglages et essayer quand même."
         }
       }
     }
   },
   "services": {
     "scan_wifi": {
-      "name": "Rechercher les réseaux WiFi",
-      "description": "Demander à la machine quels réseaux WiFi elle voit. C'est la machine qui effectue la recherche, pas Home Assistant.",
+      "name": "Rechercher les réseaux Wi-Fi",
+      "description": "Demander à la machine quels réseaux Wi-Fi elle voit. C'est la machine qui effectue la recherche, pas Home Assistant.",
       "fields": {
         "config_entry_id": {
           "name": "Machine",
@@ -286,8 +324,8 @@
       }
     },
     "configure_wifi": {
-      "name": "Configurer le WiFi",
-      "description": "Connecter la machine à un réseau WiFi. La phrase secrète est transmise en clair, exactement comme le fait l'application Nespresso officielle. Le résultat apparaît sur le capteur d'état WiFi.",
+      "name": "Configurer le Wi-Fi",
+      "description": "Connecter la machine à un réseau Wi-Fi. Le mot de passe est transmis en clair, exactement comme le fait l'application Nespresso officielle. Le résultat apparaît sur le capteur État du Wi-Fi.",
       "fields": {
         "config_entry_id": {
           "name": "Machine",
@@ -302,7 +340,7 @@
           "description": "Le SSID à rejoindre, 32 octets au maximum."
         },
         "password": {
-          "name": "Phrase secrète",
+          "name": "Mot de passe",
           "description": "64 octets au maximum. Laisser vide pour un réseau ouvert."
         },
         "security": {
@@ -331,7 +369,7 @@
     },
     "watch": {
       "name": "Observer la machine",
-      "description": "Garde la connexion ouverte et enregistre tout ce qui bouge : chaque caractéristique dont la valeur change et chaque notification, horodatées. Lancez-la, puis utilisez la machine à la main. C'est ainsi que les caractéristiques dont l'application officielle ne parle jamais sont identifiées.",
+      "description": "Garde la connexion ouverte et enregistre tout ce qui change : chaque caractéristique dont la valeur change et chaque notification, horodatées. Lancez-la, puis utilisez la machine à la main. C'est ainsi que les caractéristiques dont l'application officielle ne parle jamais sont identifiées.",
       "fields": {
         "config_entry_id": {
           "name": "Machine",
@@ -342,6 +380,17 @@
           "description": "Durée d'observation, en secondes. Assez longue pour couvrir un cycle entier, préparation ou émulsion."
         }
       }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Préparation commencée",
+      "brewing_finished": "Préparation terminée",
+      "error_occurred": "Erreur survenue",
+      "ready": "Machine prête",
+      "standby": "Machine en veille",
+      "descaling_needed": "Détartrage nécessaire",
+      "water_tank_empty": "Réservoir d'eau vide"
     }
   }
 }

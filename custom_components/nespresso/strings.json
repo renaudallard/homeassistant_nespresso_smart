@@ -230,7 +230,45 @@
     },
     "event": {
       "state_change": {
-        "name": "State change"
+        "name": "State change",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Standby",
+              "ready": "Ready",
+              "brewing": "Brewing",
+              "local_settings": "Local settings",
+              "error": "Error",
+              "overheated": "Overheated",
+              "setup": "Initial setup",
+              "paused": "Paused",
+              "factory_reset": "Factory reset",
+              "heating": "Heating up",
+              "descaling_ready": "Descaling ready",
+              "cleaning": "Cleaning",
+              "descaling": "Descaling",
+              "emptying": "Emptying",
+              "power_save": "Power save",
+              "cooldown": "Cooling down",
+              "service_mode": "Service mode",
+              "updating": "Updating firmware",
+              "rinsing": "Rinsing",
+              "capsule_reading": "Reading capsule",
+              "descale_decoding": "Descale decoding",
+              "tank_empty": "Tank empty",
+              "descaling_paused": "Descaling paused",
+              "initializing": "Initializing",
+              "rinsing_ready": "Rinsing ready",
+              "maintenance_menu": "Maintenance menu",
+              "cleaning_paused": "Cleaning paused",
+              "emptying_ready": "Emptying ready",
+              "cleaning_ready": "Cleaning ready",
+              "ready_old_capsule": "Ready (old capsule)",
+              "rinsing_paused": "Rinsing paused",
+              "unknown": "Unknown"
+            }
+          }
+        }
       }
     }
   },
@@ -342,6 +380,17 @@
           "description": "How long to watch, in seconds. Long enough to cover a whole cycle, brewing or frothing."
         }
       }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Brewing started",
+      "brewing_finished": "Brewing finished",
+      "error_occurred": "Error occurred",
+      "ready": "Machine ready",
+      "standby": "Machine on standby",
+      "descaling_needed": "Descaling needed",
+      "water_tank_empty": "Water tank empty"
     }
   }
 }
