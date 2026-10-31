@@ -230,7 +230,45 @@
     },
     "event": {
       "state_change": {
-        "name": "Statuswijziging"
+        "name": "Statuswijziging",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Stand-by",
+              "ready": "Gereed",
+              "brewing": "Aan het zetten",
+              "local_settings": "Lokale instellingen",
+              "error": "Fout",
+              "overheated": "Oververhit",
+              "setup": "Eerste installatie",
+              "paused": "Gepauzeerd",
+              "factory_reset": "Fabrieksinstellingen",
+              "heating": "Opwarmen",
+              "descaling_ready": "Ontkalking gereed",
+              "cleaning": "Reiniging",
+              "descaling": "Ontkalking",
+              "emptying": "Legen",
+              "power_save": "Energiebesparing",
+              "cooldown": "Afkoelen",
+              "service_mode": "Servicemodus",
+              "updating": "Firmware bijwerken",
+              "rinsing": "Spoelen",
+              "capsule_reading": "Capsule lezen",
+              "descale_decoding": "Ontkalkingsdecodering",
+              "tank_empty": "Reservoir leeg",
+              "descaling_paused": "Ontkalking gepauzeerd",
+              "initializing": "Initialiseren",
+              "rinsing_ready": "Spoelen gereed",
+              "maintenance_menu": "Onderhoudsmenu",
+              "cleaning_paused": "Reiniging gepauzeerd",
+              "emptying_ready": "Legen gereed",
+              "cleaning_ready": "Reiniging gereed",
+              "ready_old_capsule": "Gereed (oude capsule)",
+              "rinsing_paused": "Spoelen gepauzeerd",
+              "unknown": "Onbekend"
+            }
+          }
+        }
       }
     }
   },
@@ -342,6 +380,17 @@
           "description": "Hoe lang er geobserveerd wordt, in seconden. Lang genoeg voor een volledige cyclus, zetten of opschuimen."
         }
       }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Zetten gestart",
+      "brewing_finished": "Zetten voltooid",
+      "error_occurred": "Fout opgetreden",
+      "ready": "Machine gereed",
+      "standby": "Machine in stand-by",
+      "descaling_needed": "Ontkalking nodig",
+      "water_tank_empty": "Waterreservoir leeg"
     }
   }
 }

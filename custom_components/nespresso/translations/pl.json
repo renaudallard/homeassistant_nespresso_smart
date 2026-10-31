@@ -230,7 +230,45 @@
     },
     "event": {
       "state_change": {
-        "name": "Zmiana stanu"
+        "name": "Zmiana stanu",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Czuwanie",
+              "ready": "Gotowy",
+              "brewing": "Parzenie",
+              "local_settings": "Ustawienia lokalne",
+              "error": "Błąd",
+              "overheated": "Przegrzanie",
+              "setup": "Konfiguracja początkowa",
+              "paused": "Wstrzymano",
+              "factory_reset": "Przywracanie ustawień fabrycznych",
+              "heating": "Nagrzewanie",
+              "descaling_ready": "Odkamienianie gotowe",
+              "cleaning": "Czyszczenie",
+              "descaling": "Odkamienianie",
+              "emptying": "Opróżnianie",
+              "power_save": "Oszczędzanie energii",
+              "cooldown": "Schładzanie",
+              "service_mode": "Tryb serwisowy",
+              "updating": "Aktualizacja oprogramowania",
+              "rinsing": "Płukanie",
+              "capsule_reading": "Odczyt kapsułki",
+              "descale_decoding": "Dekodowanie odkamieniania",
+              "tank_empty": "Zbiornik pusty",
+              "descaling_paused": "Odkamienianie wstrzymane",
+              "initializing": "Inicjalizacja",
+              "rinsing_ready": "Płukanie gotowe",
+              "maintenance_menu": "Menu konserwacji",
+              "cleaning_paused": "Czyszczenie wstrzymane",
+              "emptying_ready": "Opróżnianie gotowe",
+              "cleaning_ready": "Czyszczenie gotowe",
+              "ready_old_capsule": "Gotowy (stara kapsułka)",
+              "rinsing_paused": "Płukanie wstrzymane",
+              "unknown": "Nieznany"
+            }
+          }
+        }
       }
     }
   },
@@ -342,6 +380,17 @@
           "description": "Jak długo obserwować, w sekundach. Na tyle długo, by objąć cały cykl, parzenie lub spienianie."
         }
       }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Rozpoczęto parzenie",
+      "brewing_finished": "Zakończono parzenie",
+      "error_occurred": "Wystąpił błąd",
+      "ready": "Ekspres gotowy",
+      "standby": "Ekspres w trybie czuwania",
+      "descaling_needed": "Wymagane odkamienianie",
+      "water_tank_empty": "Pusty zbiornik na wodę"
     }
   }
 }

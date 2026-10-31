@@ -230,7 +230,45 @@
     },
     "event": {
       "state_change": {
-        "name": "Zustandswechsel"
+        "name": "Zustandswechsel",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Standby",
+              "ready": "Bereit",
+              "brewing": "Zubereitung",
+              "local_settings": "Lokale Einstellungen",
+              "error": "Fehler",
+              "overheated": "Überhitzt",
+              "setup": "Ersteinrichtung",
+              "paused": "Pausiert",
+              "factory_reset": "Werkseinstellungen",
+              "heating": "Aufheizen",
+              "descaling_ready": "Entkalkung bereit",
+              "cleaning": "Reinigung",
+              "descaling": "Entkalkung",
+              "emptying": "Entleeren",
+              "power_save": "Energiesparmodus",
+              "cooldown": "Abkühlen",
+              "service_mode": "Servicemodus",
+              "updating": "Firmware-Update",
+              "rinsing": "Spülen",
+              "capsule_reading": "Kapsel lesen",
+              "descale_decoding": "Entkalkungsdecodierung",
+              "tank_empty": "Tank leer",
+              "descaling_paused": "Entkalkung pausiert",
+              "initializing": "Initialisierung",
+              "rinsing_ready": "Spülen bereit",
+              "maintenance_menu": "Wartungsmenü",
+              "cleaning_paused": "Reinigung pausiert",
+              "emptying_ready": "Entleeren bereit",
+              "cleaning_ready": "Reinigung bereit",
+              "ready_old_capsule": "Bereit (alte Kapsel)",
+              "rinsing_paused": "Spülen pausiert",
+              "unknown": "Unbekannt"
+            }
+          }
+        }
       }
     }
   },
@@ -342,6 +380,17 @@
           "description": "Wie lange beobachtet wird, in Sekunden. Lang genug für einen ganzen Zyklus, Bezug oder Aufschäumen."
         }
       }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Zubereitung gestartet",
+      "brewing_finished": "Zubereitung beendet",
+      "error_occurred": "Fehler aufgetreten",
+      "ready": "Maschine bereit",
+      "standby": "Maschine im Standby",
+      "descaling_needed": "Entkalken erforderlich",
+      "water_tank_empty": "Wassertank leer"
     }
   }
 }
