@@ -39,8 +39,8 @@ the serial number and in the BLE name:
 | DV5 | Vertuo Lattissima |
 | CV5 | Vertuo Creatista |
 
-A machine that has not told us its name or serial yet is shown as Vertuo Next
-until the first successful read.
+A machine whose code is in neither is shown as Vertuo Next, the family
+default, and keeps its Bluetooth name as the device name.
 
 ## Installation
 
@@ -351,7 +351,7 @@ English ones.
 
 | Entity | Barista | Vertuo Next | VMini | Description |
 |--------|---------|-------------|-------|-------------|
-| State | Yes | Yes | No | Machine operational state (enum with 32 translated states) |
+| State | Yes | Yes | No | Machine operational state (enum with 32 translated states). It has no name of its own and shows as the device itself |
 | Firmware version | Yes | Yes | Yes | Current firmware version (diagnostic) |
 | Hardware version | Yes | Yes | No | Hardware revision (diagnostic) |
 | Bootloader version | Yes | Yes | No | Bootloader version (diagnostic) |
@@ -441,6 +441,8 @@ They fire from whichever path saw the change first: the poll, a notification on 
 ### Device Info
 
 Each machine is registered as a device with manufacturer, model, serial number, firmware version, and hardware version.
+
+The device is named after its model, like Vertuo Lattissima. A Venus family machine whose platform code is unknown keeps its Bluetooth name instead, since its model is only a guess. Two machines of the same model get the same name, so rename one of them on its device page. A name set there is kept across updates.
 
 ## How It Works
 
