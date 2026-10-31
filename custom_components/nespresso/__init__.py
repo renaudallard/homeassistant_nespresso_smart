@@ -274,7 +274,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, address)},
-        name=entry.data.get("name", "Nespresso"),
+        name=machine_model(entry, coordinator),
         manufacturer="Nespresso",
         model=machine_model(entry, coordinator),
     )
