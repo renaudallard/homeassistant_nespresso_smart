@@ -30,6 +30,7 @@ import logging
 from bleak import BleakError
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -164,6 +165,7 @@ class NespressoLanguageSelect(CoordinatorEntity[NespressoCoordinator], SelectEnt
     _attr_has_entity_name = True
     _attr_translation_key = "language"
     _attr_icon = "mdi:translate"
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_options = BARISTA_LANGUAGES
     _attr_current_option: str | None = None
 

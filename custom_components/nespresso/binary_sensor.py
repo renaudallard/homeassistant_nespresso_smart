@@ -34,6 +34,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -126,6 +127,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
         key="led_signaling",
         translation_key="led_signaling",
         icon="mdi:led-on",
+        entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.led_signaling,
     ),
