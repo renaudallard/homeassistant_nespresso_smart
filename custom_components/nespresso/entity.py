@@ -82,6 +82,21 @@ def machine_model(entry: ConfigEntry, coordinator: NespressoCoordinator) -> str:
     return MACHINE_FAMILY_NAMES.get(family, "Unknown")
 
 
+def device_name(entry: ConfigEntry, coordinator: NespressoCoordinator) -> str:
+    """Name the device after its model, unless the model is only a guess.
+
+    A Venus machine with no platform code anywhere is a Vertuo Next by default
+    only. It may be a model the table does not know or another machine on the
+    same profile, so it keeps the name it advertised.
+    """
+    if (
+        MachineFamily(entry.data["family"]) == MachineFamily.VERTUO_NEXT
+        and platform_code(entry, coordinator) is None
+    ):
+        return entry.data.get("name", "Nespresso")
+    return machine_model(entry, coordinator)
+
+
 def supports_brewing(entry: ConfigEntry, coordinator: NespressoCoordinator) -> bool:
     """Whether to offer brewing on this machine.
 
@@ -116,7 +131,7 @@ def machine_device_info(
     data = coordinator.data
     return DeviceInfo(
         identifiers={(DOMAIN, entry.data["address"])},
-        name=machine_model(entry, coordinator),
+        name=device_name(entry, coordinator),
         manufacturer="Nespresso",
         model=machine_model(entry, coordinator),
         serial_number=data.serial_number if data else None,

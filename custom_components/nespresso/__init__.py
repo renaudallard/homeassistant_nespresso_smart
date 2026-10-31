@@ -63,7 +63,7 @@ from .const import (
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator, counter_store
-from .entity import machine_model
+from .entity import device_name, machine_model
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -274,7 +274,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, address)},
-        name=machine_model(entry, coordinator),
+        name=device_name(entry, coordinator),
         manufacturer="Nespresso",
         model=machine_model(entry, coordinator),
     )

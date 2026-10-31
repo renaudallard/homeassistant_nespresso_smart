@@ -40,7 +40,11 @@ sys.modules.setdefault("homeassistant.helpers", MagicMock())
 sys.modules.setdefault("homeassistant.helpers.device_registry", MagicMock())
 
 from custom_components.nespresso.const import VERTUO_PLATFORM_NAMES
-from custom_components.nespresso.entity import machine_model, platform_code
+from custom_components.nespresso.entity import (
+    device_name,
+    machine_model,
+    platform_code,
+)
 
 
 @dataclass
@@ -65,6 +69,11 @@ def resolve(
     entry = FakeEntry({"family": family, "name": name, "address": "AA:BB:CC:DD:EE:FF"})
     coordinator = FakeCoordinator(FakeMachineData(serial or None, market or None))
     return platform_code(entry, coordinator), machine_model(entry, coordinator)
+
+
+def name_of(name: str = "", serial: str = "", family: str = "vertuo_next") -> str:
+    entry = FakeEntry({"family": family, "name": name, "address": "AA:BB:CC:DD:EE:FF"})
+    return device_name(entry, FakeCoordinator(FakeMachineData(serial or None)))
 
 
 class TestPlatformCode:
@@ -98,6 +107,23 @@ class TestPlatformCode:
             None,
             "Vertuo Mini",
         )
+
+
+class TestDeviceName:
+    def test_names_a_known_model(self) -> None:
+        assert name_of(name="Vertuo_DV5_3CE90EAAAFFE") == "Vertuo Lattissima"
+        assert name_of(name="Nespresso", serial="23222CV5f2001582072") == (
+            "Vertuo Creatista"
+        )
+
+    def test_keeps_the_ble_name_when_the_model_is_a_guess(self) -> None:
+        """Vertuo Next is only the family default, so it names nothing."""
+        assert name_of(name="Venus_001122334455") == "Venus_001122334455"
+
+    def test_names_the_other_families_after_their_model(self) -> None:
+        """Each of them is one model, so their family is not a guess."""
+        assert name_of(name="Barista_001122334455", family="barista") == "Barista"
+        assert name_of(name="VMini_001122334455", family="vmini") == "Vertuo Mini"
 
 
 class TestTable:
