@@ -385,7 +385,7 @@ English ones.
 | Capsule container full | No | Yes | No | Used capsule container is full |
 | Brewing unit | No | Yes | No | Brewing unit head is open. A Creatista has been seen to open it by itself during the milk cleaning it asks for, so this can change with nobody at the machine |
 | Milk frother | No | Yes | No | Milk frother is running. Only on a Creatista or a Lattissima, and driven by the milk unit state below rather than the documented status bit, which does not fire on a Creatista |
-| LED signaling | No | Yes | No | LED signaling is active |
+| LED signaling | No | Yes | No | LED signaling is active (diagnostic) |
 
 ### Controls
 
@@ -401,6 +401,8 @@ English ones.
 | Capsule counter | No | Yes | No | The machine's own capsule count, and writable so it can be corrected. Only created on machines that have the counter, which the Pop and the Creatista do not |
 | Reset descaling counter | No | Yes | No | Clear the descaling counter after descaling the machine |
 | Check firmware update | No | No | Yes | Trigger firmware update check |
+
+Recipe, the brew settings and the Brew button are the only ones the device page lists under Controls. The others are settings or maintenance actions, so it lists them under Configuration.
 
 ### Brewing
 
