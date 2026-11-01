@@ -1,0 +1,393 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "state": {
+          "standby": "Viloläge",
+          "ready": "Redo",
+          "brewing": "Brygger",
+          "local_settings": "Lokala inställningar",
+          "error": "Fel",
+          "overheated": "Överhettad",
+          "setup": "Första konfiguration",
+          "paused": "Pausad",
+          "factory_reset": "Fabriksåterställning",
+          "heating": "Värmer upp",
+          "descaling_ready": "Redo för avkalkning",
+          "cleaning": "Rengöring",
+          "descaling": "Avkalkning",
+          "emptying": "Tömning",
+          "power_save": "Energisparläge",
+          "cooldown": "Svalnar",
+          "service_mode": "Serviceläge",
+          "updating": "Uppdaterar fast programvara",
+          "rinsing": "Sköljning",
+          "capsule_reading": "Läser av kapsel",
+          "descale_decoding": "Avkodning för avkalkning",
+          "tank_empty": "Tom vattentank",
+          "descaling_paused": "Avkalkning pausad",
+          "initializing": "Initierar",
+          "rinsing_ready": "Redo för sköljning",
+          "maintenance_menu": "Underhållsmeny",
+          "cleaning_paused": "Rengöring pausad",
+          "emptying_ready": "Redo för tömning",
+          "cleaning_ready": "Redo för rengöring",
+          "ready_old_capsule": "Redo (gammal kapsel)",
+          "rinsing_paused": "Sköljning pausad",
+          "unknown": "Okänd"
+        }
+      },
+      "wifi_status": {
+        "name": "Wi-Fi-status",
+        "state": {
+          "not_connected": "Inte ansluten",
+          "connecting": "Ansluter",
+          "connected": "Ansluten",
+          "updating_combo_firmware": "Uppdaterar kombomodulens fasta programvara",
+          "updating_firmware": "Uppdaterar fast programvara",
+          "updating_recipes": "Uppdaterar recept",
+          "cloud_onboarding": "Ansluter till molntjänsten",
+          "connection_failed": "Anslutningen misslyckades",
+          "server_unreachable": "Servern kan inte nås",
+          "not_configured": "Inte konfigurerad",
+          "mqtt_init_error": "Fel vid initiering av MQTT",
+          "combo_firmware_update_failed": "Uppdateringen av kombomodulens fasta programvara misslyckades",
+          "firmware_update_failed": "Uppdateringen av den fasta programvaran misslyckades",
+          "recipe_update_failed": "Receptuppdateringen misslyckades",
+          "market_not_set": "Marknad har inte angetts",
+          "no_internet": "Ingen internetanslutning",
+          "wrong_password": "Fel lösenord",
+          "unknown": "Okänd"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi-nätverk"
+      },
+      "firmware_version": {
+        "name": "Version av fast programvara"
+      },
+      "hardware_version": {
+        "name": "Hårdvaruversion"
+      },
+      "recipe_count": {
+        "name": "Receptplatser"
+      },
+      "profile_version": {
+        "name": "Profilversion"
+      },
+      "bootloader_version": {
+        "name": "Starthanterarversion"
+      },
+      "bluetooth_version": {
+        "name": "Bluetooth-version"
+      },
+      "recipe_db_version": {
+        "name": "Receptdatabasversion"
+      },
+      "connectivity_fw_version": {
+        "name": "Anslutningsmodulens fasta programvara"
+      },
+      "error_code": {
+        "name": "Felkod"
+      },
+      "error_list_code": {
+        "name": "Kod i felloggen"
+      },
+      "iot_market_name": {
+        "name": "IoT-marknad"
+      },
+      "shadow_data": {
+        "name": "Enhetsskugga"
+      },
+      "fota_status": {
+        "name": "Status för uppdatering av fast programvara"
+      },
+      "fota_progress": {
+        "name": "Förlopp för uppdatering av fast programvara"
+      },
+      "brew_total": {
+        "name": "Totalt antal bryggningar"
+      },
+      "brews_since_descaling": {
+        "name": "Bryggningar sedan avkalkning"
+      },
+      "brews_until_descaling": {
+        "name": "Bryggningar till avkalkning"
+      },
+      "days_until_descaling": {
+        "name": "Dagar till avkalkning"
+      },
+      "brewing_duration": {
+        "name": "Bryggtid"
+      },
+      "milk_unit_state": {
+        "name": "Mjölkenhet",
+        "state": {
+          "offline": "Frånkopplad",
+          "ready": "Redo",
+          "frothing": "Skummar",
+          "cleaning": "Rengöring",
+          "heating": "Värmer upp",
+          "descaling_ready": "Redo för avkalkning",
+          "descaling": "Avkalkning",
+          "descaling_paused": "Avkalkning pausad",
+          "rinsing_ready": "Redo för sköljning",
+          "rinsing": "Sköljning",
+          "rinsing_paused": "Sköljning pausad",
+          "blocked_menu": "Blockerad, menyn är öppen",
+          "blocked_cleaning_needed": "Blockerad, rengöring behövs",
+          "blocked_descaling_needed": "Blockerad, avkalkning behövs",
+          "waiting": "Väntar",
+          "unknown_3": "Okänd (3)",
+          "unknown": "Okänd"
+        }
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Fel"
+      },
+      "water_tank_empty": {
+        "name": "Tom vattentank"
+      },
+      "descaling_needed": {
+        "name": "Avkalkning behövs"
+      },
+      "cleaning_needed": {
+        "name": "Rengöring behövs"
+      },
+      "capsule_container_full": {
+        "name": "Kapselbehållaren är full"
+      },
+      "brewing_unit_open": {
+        "name": "Bryggenhet"
+      },
+      "induction_heating": {
+        "name": "Induktionsvärmare"
+      },
+      "milk_frother_running": {
+        "name": "Mjölkskummare"
+      },
+      "led_signaling": {
+        "name": "LED-signalering"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Vattenhårdhet"
+      },
+      "caps_counter_setting": {
+        "name": "Kapselräknare"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Recept",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Anpassat"
+        }
+      },
+      "language": {
+        "name": "Språk"
+      },
+      "brew_type": {
+        "name": "Bryggtyp",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Varmvatten",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Bryggtemperatur",
+        "state": {
+          "low": "Låg",
+          "medium": "Medel",
+          "high": "Hög"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Återställ avkalkningsräknaren"
+      },
+      "fota_check": {
+        "name": "Sök efter uppdatering av fast programvara"
+      },
+      "brew": {
+        "name": "Brygg"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Tillståndsändring",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Viloläge",
+              "ready": "Redo",
+              "brewing": "Brygger",
+              "local_settings": "Lokala inställningar",
+              "error": "Fel",
+              "overheated": "Överhettad",
+              "setup": "Första konfiguration",
+              "paused": "Pausad",
+              "factory_reset": "Fabriksåterställning",
+              "heating": "Värmer upp",
+              "descaling_ready": "Redo för avkalkning",
+              "cleaning": "Rengöring",
+              "descaling": "Avkalkning",
+              "emptying": "Tömning",
+              "power_save": "Energisparläge",
+              "cooldown": "Svalnar",
+              "service_mode": "Serviceläge",
+              "updating": "Uppdaterar fast programvara",
+              "rinsing": "Sköljning",
+              "capsule_reading": "Läser av kapsel",
+              "descale_decoding": "Avkodning för avkalkning",
+              "tank_empty": "Tom vattentank",
+              "descaling_paused": "Avkalkning pausad",
+              "initializing": "Initierar",
+              "rinsing_ready": "Redo för sköljning",
+              "maintenance_menu": "Underhållsmeny",
+              "cleaning_paused": "Rengöring pausad",
+              "emptying_ready": "Redo för tömning",
+              "cleaning_ready": "Redo för rengöring",
+              "ready_old_capsule": "Redo (gammal kapsel)",
+              "rinsing_paused": "Sköljning pausad",
+              "unknown": "Okänd"
+            }
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Bekräfta Nespresso-maskin",
+        "description": "Hittade {name}. Lämna fältet tomt om maskinen aldrig har parkopplats, så skapar integrationen en egen autentiseringstoken. Om maskinen redan har parkopplats med Nespresso-appen klistrar du in parkopplingsnyckeln på 32 tecken från ditt Nespresso-konto, så att båda fortsätter fungera, eller autentiseringstoken på 16 tecken från en inspelning av Bluetooth-trafiken.",
+        "data": {
+          "auth_token": "Autentiseringstoken eller parkopplingsnyckel (valfritt)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "Den här integrationen kräver Bluetooth. Maskiner upptäcks automatiskt."
+      }
+    },
+    "error": {
+      "invalid_auth_token": "Det här är varken en parkopplingsnyckel eller en autentiseringstoken. Ange 32 hexadecimala tecken från ditt Nespresso-konto eller 16 från en inspelning av Bluetooth-trafiken."
+    },
+    "abort": {
+      "already_configured": "Maskinen är redan konfigurerad.",
+      "bluetooth_only": "Den här integrationen upptäcker maskiner automatiskt via Bluetooth. Kontrollera att Bluetooth är aktiverat och att maskinen är påslagen."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nespresso-inställningar",
+        "data": {
+          "scan_interval": "Avläsningsintervall (sekunder)",
+          "persistent_connection": "Behåll anslutningen (uppdateringar i realtid, blockerar Nespresso-appen)",
+          "send_tx_level": "Skicka en begäran om sändareffekt (TX) vid konfigurering",
+          "descaling_capsules": "Avkalkningsintervall (kapslar)",
+          "descaling_days": "Avkalkningsintervall (dagar)",
+          "force_brew_button": "Visa bryggknappen för en modell där bryggning inte har bekräftats fungera"
+        },
+        "data_description": {
+          "force_brew_button": "Vertuo Pop och Vertuo Creatista bekräftar alla bryggkommandon utan att börja brygga, så ingen bryggknapp skapas för dem. Aktivera det här alternativet för att visa knappen och dess två inställningar och prova ändå."
+        }
+      }
+    }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Sök efter Wi-Fi-nätverk",
+      "description": "Fråga maskinen vilka Wi-Fi-nätverk den hittar. Sökningen görs av maskinen, så listan visar de nätverk som maskinen kan nå.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maskin",
+          "description": "Nespresso-maskinen som åtgärden ska utföras på."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Konfigurera Wi-Fi",
+      "description": "Anslut maskinen till ett Wi-Fi-nätverk. Lösenfrasen skickas till maskinen i klartext, precis som i den officiella Nespresso-appen. Resultatet visas av sensorn för Wi-Fi-status.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maskin",
+          "description": "Nespresso-maskinen som åtgärden ska utföras på."
+        },
+        "market": {
+          "name": "Marknad",
+          "description": "Landskod med två bokstäver, till exempel SE. Utan den kan maskinen inte nå Nespressos servrar."
+        },
+        "ssid": {
+          "name": "Nätverksnamn",
+          "description": "SSID för nätverket som maskinen ska ansluta till, högst 32 byte."
+        },
+        "password": {
+          "name": "Lösenfras",
+          "description": "Högst 64 byte. Lämna tomt för ett öppet nätverk."
+        },
+        "security": {
+          "name": "Säkerhet",
+          "description": "Nätverkets säkerhetstyp."
+        },
+        "connection_index": {
+          "name": "Anslutningsindex",
+          "description": "Ange samma index som i sökresultatet. Behåll värdet 255 om du anger nätverket manuellt."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Skicka ett råkommando",
+      "description": "Skriv en rå dataram till maskinens kommandokarakteristik och visa svaret. Ett felsökningsverktyg som visar vad de båda karakteristikerna stöder och om maskinen alls kunde svara. Det gör det möjligt att skilja ett avvisat kommando från ett som maskinen inte kan bekräfta.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maskin",
+          "description": "Nespresso-maskinen som åtgärden ska utföras på."
+        },
+        "payload": {
+          "name": "Nyttolast",
+          "description": "Dataramen som ska skrivas, i hexadecimal form. Exempel: 03050704000000000002000000000000000000, en Vertuo-lungo med medelhög temperatur."
+        }
+      }
+    },
+    "watch": {
+      "name": "Övervaka maskinen",
+      "description": "Håll anslutningen öppen och logga varje karakteristik som ändrar värde och varje avisering, med tidsstämplar. Starta övervakningen och använd sedan maskinen manuellt. På så sätt kan karakteristiker som den officiella appen aldrig använder identifieras.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maskin",
+          "description": "Nespresso-maskinen som åtgärden ska utföras på."
+        },
+        "seconds": {
+          "name": "Varaktighet",
+          "description": "Hur länge maskinen ska övervakas, i sekunder. Välj en tid som täcker en hel bryggnings- eller skumningscykel."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Bryggningen startade",
+      "brewing_finished": "Bryggningen avslutades",
+      "error_occurred": "Ett fel uppstod",
+      "ready": "Maskinen är redo",
+      "standby": "Maskinen är i viloläge",
+      "descaling_needed": "Avkalkning behövs",
+      "water_tank_empty": "Tom vattentank"
+    }
+  }
+}
