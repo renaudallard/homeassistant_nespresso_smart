@@ -457,18 +457,16 @@ class TestVertuoNextMachineInfo:
 
 class TestGeneralUserSettings:
     def test_normal(self) -> None:
-        # APO time: 0xE8 0x03 = 1000 (LSB: low byte first)
+        # APO time: 0xE8 0x03, not reported
         # Water hardness: 0x02
         # Active time: 0x0F
         data = b"\xe8\x03\x02\x0f"
         result = parse_general_user_settings(data)
-        assert result["auto_power_off"] == 1000
-        assert result["water_hardness"] == 2
+        assert result == {"water_hardness": 2}
 
     def test_zero_values(self) -> None:
         data = b"\x00\x00\x00\x00"
         result = parse_general_user_settings(data)
-        assert result["auto_power_off"] == 0
         assert result["water_hardness"] == 0
 
     def test_max_water_hardness(self) -> None:

@@ -62,7 +62,6 @@ async def async_setup_entry(
     entities: list[NumberEntity] = []
     if family == MachineFamily.VERTUO_NEXT:
         entities.append(NespressoWaterHardness(coordinator, entry))
-        entities.append(NespressoAutoPowerOff(coordinator, entry))
         # Not every Venus machine has the counter. A Vertuo Pop does not, and
         # neither does a Creatista, so offering the control would mean offering
         # a write that lands nowhere.
@@ -173,60 +172,3 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set water hardness: %s", err)
-
-
-class NespressoAutoPowerOff(CoordinatorEntity[NespressoCoordinator], NumberEntity):
-    """Number entity for Vertuo Next auto power off time."""
-
-    _attr_has_entity_name = True
-    _attr_translation_key = "auto_power_off"
-    _attr_icon = "mdi:timer-off-outline"
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_native_min_value = 0
-    _attr_native_max_value = 65535
-    _attr_native_step = 1
-    _attr_native_unit_of_measurement = "min"
-    _attr_mode = NumberMode.BOX
-
-    def __init__(
-        self,
-        coordinator: NespressoCoordinator,
-        entry: ConfigEntry,
-    ) -> None:
-        super().__init__(coordinator)
-        self._address = entry.data["address"]
-        self._attr_unique_id = f"{self._address}_auto_power_off_setting"
-        self._attr_device_info = machine_device_info(entry, coordinator)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the current auto power off time."""
-        if self.coordinator.data is None:
-            return None
-        apo = self.coordinator.data.auto_power_off
-        return float(apo) if apo is not None else None
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Write auto power off time to machine via BLE.
-
-        Writes all 4 bytes of CHAR_GENERAL_USER_SETTINGS:
-          bytes 0-1: machineAPOTime (LSB, new value)
-          byte 2: waterHardness (preserved)
-          byte 3: activeTime2StandBy (preserved)
-        """
-        _LOGGER.debug("Writing auto power off: value=%d", int(value))
-        int_val = int(value) & 0xFFFF
-
-        def modify(data: bytearray) -> None:
-            if len(data) >= 4:
-                data[0] = int_val & 0xFF
-                data[1] = (int_val >> 8) & 0xFF
-
-        try:
-            await self.coordinator.async_read_modify_write_char(
-                VERTUO_CHAR_USER_SETTINGS, modify
-            )
-            _LOGGER.info("Auto power off set to %d", int(value))
-            await self.coordinator.async_request_refresh()
-        except (BleakError, TimeoutError) as err:
-            _LOGGER.error("Failed to set auto power off: %s", err)

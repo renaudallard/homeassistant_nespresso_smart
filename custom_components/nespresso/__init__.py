@@ -84,8 +84,15 @@ PLATFORMS: list[Platform] = [
 # family whether or not the machine answered on 06AA3A15, so a Pop or a
 # Creatista carried one that never held a value. The writable number took over
 # in v0.5.16 and is only created where the counter reads back.
+#
+# auto_power_off_setting showed bytes 0-1 of 06AA3A44 as minutes. The app
+# never reads that field and writes 0xFFFF there whenever it sets the water
+# hardness. A Vertuo Next and a Creatista both read back 255, the app has no
+# such setting and the Vertuo Next did not power off after that long, so it
+# was a value of unknown meaning offered as a writable timer.
 REMOVED_ENTITIES: tuple[tuple[Platform, str], ...] = (
     (Platform.SENSOR, "caps_counter"),
+    (Platform.NUMBER, "auto_power_off_setting"),
 )
 
 

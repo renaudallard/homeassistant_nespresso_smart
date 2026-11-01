@@ -57,7 +57,6 @@ class NespressoMachineData:
     water_hardness: int | None = None
     wifi_status: str | None = None
     wifi_ssid: str | None = None
-    auto_power_off: int | None = None
     error_code: int | None = None
     caps_counter: int | None = None
     iot_market_name: str | None = None

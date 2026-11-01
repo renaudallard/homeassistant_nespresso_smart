@@ -1203,11 +1203,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         serial = parse_serial_number(raw.serial_bytes) if raw.serial_bytes else None
 
         water_hardness = None
-        auto_power_off = None
         if raw.user_settings_bytes:
             settings = parse_general_user_settings(raw.user_settings_bytes)
             water_hardness = settings.get("water_hardness")
-            auto_power_off = settings.get("auto_power_off")
 
         wifi_status = None
         wifi_ssid = None
@@ -1253,7 +1251,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             led_signaling=bool(status.get("led_signaling", False)),
             cup_length_prog=bool(status.get("cup_length_prog", False)),
             water_hardness=water_hardness,
-            auto_power_off=auto_power_off,
             wifi_status=wifi_status,
             wifi_ssid=wifi_ssid,
             error_code=error_code,

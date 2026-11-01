@@ -468,6 +468,5 @@ def parse_general_user_settings(data: bytes) -> dict[str, int]:
         raise ValueError(f"User settings requires >= 4 bytes, got {len(data)}")
 
     return {
-        "auto_power_off": _get_2bytes_unsigned_lsb(data, 0),
         "water_hardness": data[2] & 0xFF,
     }

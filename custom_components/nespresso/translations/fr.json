@@ -176,9 +176,6 @@
       "water_hardness": {
         "name": "Dureté de l'eau"
       },
-      "auto_power_off": {
-        "name": "Extinction automatique"
-      },
       "caps_counter_setting": {
         "name": "Compteur de capsules"
       }

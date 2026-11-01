@@ -91,6 +91,21 @@ Source: `com.sdataway.vertuonext.sdk.GATTattributes.DeviceGATTAttributes`
 | CHAR_TX_LEVEL_CHANGE_REQUEST | `06AA3A61-F22A-11E3-9DAA-0002A5D5C51B` | Write |
 | CHAR_IOTMARKETNAME | `06AA3A79-F22A-11E3-9DAA-0002A5D5C51B` | Read |
 
+### General User Settings
+
+Source: `CharacGeneralUserSettings`, 4 bytes.
+
+| Bytes | Field | Notes |
+|-------|-------|-------|
+| 0-1 | machineAPOTime (unsigned LSB) | Never read by the app, unit unknown |
+| 2 | waterHardness | Hardness level |
+| 3 | activeTime2StandBy | Never read by the app |
+
+The app only writes this characteristic to set the water hardness, and then
+sends `0xFFFF` in bytes 0-1 and `0xFF` in byte 3. A Vertuo Next and a
+Creatista both read back 255 in bytes 0-1 with no auto power off setting in
+the app, so that value is most likely "not set" rather than a delay.
+
 ---
 
 ## VMini (Vertuo Mini)
@@ -948,7 +963,7 @@ sees anything, so the request never happens there.
 
 ### Write Operation Flow
 
-All write operations (recipe, language, water hardness, APO, FOTA) use the same pattern:
+All write operations (recipe, language, water hardness, FOTA) use the same pattern:
 
 1. **Acquire BLE lock**: Same lock as read, prevents concurrent access
 2. **Connect**: `establish_connection()` with 2 retry attempts

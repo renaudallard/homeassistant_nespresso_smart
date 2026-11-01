@@ -19,7 +19,7 @@ Built by reverse-engineering the Nespresso Smart Android app (v1.2.5).
   <img src="images/vertuo-next-device.png" alt="Vertuo Next device page in Home Assistant" width="640">
 </p>
 
-A Vertuo Next device page, taken before 0.5.30 moved Auto power off, Water hardness and Reset descaling counter to Configuration and LED signaling to Diagnostic.
+A Vertuo Next device page, taken before 0.5.30 moved Auto power off, Water hardness and Reset descaling counter to Configuration and LED signaling to Diagnostic. Auto power off has been removed since, see [Limitations](#limitations).
 
 > **Screenshot wanted:** If you have a Barista or a Vertuo Mini paired with this integration, please submit a screenshot of the HA device page via a [GitHub issue](https://github.com/renaudallard/homeassistant_nespresso_smart/issues).
 
@@ -404,7 +404,6 @@ English ones.
 | Brew temperature | No | Yes | No | Select brew temperature (low, medium, high) |
 | Brew | No | Yes | No | Start brewing (see brewing flow below) |
 | Water hardness | No | Yes | No | Set water hardness level (0-6 slider) |
-| Auto power off | No | Yes | No | Set auto power off time (minutes) |
 | Capsule counter | No | Yes | No | The machine's own capsule count, and writable so it can be corrected. Only created on machines that have the counter, which the Pop and the Creatista do not |
 | Reset descaling counter | No | Yes | No | Clear the descaling counter after descaling the machine |
 | Check firmware update | No | No | Yes | Trigger firmware update check |
@@ -533,6 +532,7 @@ registered to a Nespresso account through their app as well. See
 - **Vertuo brewing**: Experimental, and inherited rather than discovered. The command is the Nespresso Expert's, and a Vertuo Next happens to accept it, so it may not work on any other machine. The Vertuo Pop and the Vertuo Creatista do not (the Nespresso app itself offers no brew button for any model), so no brew button is created for either. Custom recipes with exact ml volumes are not yet supported.
 - **Maintenance commands**: Descaling, rinsing and emptying are started through Nespresso's cloud, which reaches the machine over its own WiFi, not over Bluetooth. Cleaning and steam wand cleaning send nothing to the machine, the app only shows instructions. None of them can be offered here.
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
+- **Auto power off**: Not offered. Earlier versions showed the first two bytes of the user settings characteristic as a delay in minutes, but the app never reads them, writes 0xFFFF there when it sets the water hardness, and has no auto power off setting. A Vertuo Next and a Creatista both read 255 there, and the Vertuo Next did not power off after that long, so the value's meaning is unknown. The old entity is removed from the registry on the next setup.
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
 - **Single client**: Only one BLE client can connect at a time. If the Nespresso app is connected, HA will retry on the next poll.
