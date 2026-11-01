@@ -104,7 +104,9 @@ Source: `CharacGeneralUserSettings`, 4 bytes.
 The app only writes this characteristic to set the water hardness, and then
 sends `0xFFFF` in bytes 0-1 and `0xFF` in byte 3. A Vertuo Next and a
 Creatista both read back 255 in bytes 0-1 with no auto power off setting in
-the app, so that value is most likely "not set" rather than a delay.
+the app, so that value is most likely "not set" rather than a delay. The
+integration writes the water hardness with the same frame, `FF FF <level> FF`,
+and offers the same levels as the app, 0 to 4.
 
 ---
 

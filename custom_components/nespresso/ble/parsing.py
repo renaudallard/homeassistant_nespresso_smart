@@ -38,6 +38,7 @@ from ..const import (
     CMID_TYPE_NAMES,
     MILK_UNIT_STATE_NAMES,
     VERTUO_STATE_NAMES,
+    WATER_HARDNESS_MAX,
     WIFI_SECURITY_NAMES,
     WIFI_STATUS_NAMES,
 )
@@ -470,3 +471,18 @@ def parse_general_user_settings(data: bytes) -> dict[str, int]:
     return {
         "water_hardness": data[2] & 0xFF,
     }
+
+
+def build_water_hardness(level: int) -> bytes:
+    """Encode a water hardness write for CHAR_GENERAL_USER_SETTINGS.
+
+    The same frame the app sends (VertuoNextMachine.setWaterHardnessLevel),
+    without reading the characteristic first. It puts 0xFFFF in the APO time
+    and 0xFF in activeTime2StandBy, fields it never reads or sets, so they
+    are left for the machine to keep.
+    """
+    if not 0 <= level <= WATER_HARDNESS_MAX:
+        raise ValueError(
+            f"Water hardness must be 0 to {WATER_HARDNESS_MAX}, got {level}"
+        )
+    return bytes((0xFF, 0xFF, level, 0xFF))

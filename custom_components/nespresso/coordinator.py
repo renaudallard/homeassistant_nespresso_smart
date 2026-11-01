@@ -286,18 +286,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             return
         self._async_publish(current, replace(current, **self._status_fields(status)))
 
-    async def async_read_modify_write_char(
-        self, char_uuid: str, modify_fn: Callable[[bytearray], None]
-    ) -> None:
-        """Read a characteristic, let modify_fn change it in place, write it back."""
-        async with self._session() as client:
-            current = await client.read_gatt_char(char_uuid)
-            _LOGGER.debug("Read-modify-write %s current: %s", char_uuid, current.hex())
-            data = bytearray(current)
-            modify_fn(data)
-            _LOGGER.debug("Read-modify-write %s new: %s", char_uuid, data.hex())
-            await client.write_gatt_char(char_uuid, bytes(data), response=True)
-
     def _device(self) -> BLEDevice:
         """The machine as the Bluetooth stack last saw it."""
         device = bluetooth.async_ble_device_from_address(

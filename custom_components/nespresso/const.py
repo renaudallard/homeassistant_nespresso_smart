@@ -364,6 +364,10 @@ VERTUO_PLATFORM_NAMES: Final[dict[str, str]] = {
 # machine can hold, not a policy of ours.
 CAPS_COUNTER_MAX: Final = 0xFFFF
 
+# The app offers water hardness levels 0 to 4 on machines it reaches over
+# Bluetooth.
+WATER_HARDNESS_MAX: Final = 4
+
 WATCH_MAX_EVENTS: Final = 500
 
 # How long a command waits for the machine's answer on the response

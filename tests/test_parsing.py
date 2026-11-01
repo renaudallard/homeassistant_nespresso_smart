@@ -55,6 +55,7 @@ from custom_components.nespresso.ble.parsing import (
     NESPRESSO_COMPANY_IDS,
     _get_bit,
     build_caps_counter,
+    build_water_hardness,
     nespresso_manufacturer_data,
     parse_barista_machine_info,
     parse_barista_status,
@@ -468,6 +469,20 @@ class TestGeneralUserSettings:
         data = b"\x00\x00\x00\x00"
         result = parse_general_user_settings(data)
         assert result["water_hardness"] == 0
+
+    def test_write_is_the_app_frame(self) -> None:
+        assert build_water_hardness(0) == b"\xff\xff\x00\xff"
+        assert build_water_hardness(4) == b"\xff\xff\x04\xff"
+
+    def test_write_round_trips_the_level(self) -> None:
+        for level in range(5):
+            data = build_water_hardness(level)
+            assert parse_general_user_settings(data)["water_hardness"] == level
+
+    def test_write_rejects_levels_the_app_never_offers(self) -> None:
+        for level in (-1, 5, 6, 255):
+            with pytest.raises(ValueError):
+                build_water_hardness(level)
 
     def test_max_water_hardness(self) -> None:
         data = b"\x00\x00\xff\x00"

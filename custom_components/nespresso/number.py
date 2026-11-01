@@ -35,12 +35,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .ble.parsing import build_caps_counter
+from .ble.parsing import build_caps_counter, build_water_hardness
 from .const import (
     CAPS_COUNTER_MAX,
     DOMAIN,
     VERTUO_CHAR_CAPS_COUNTER,
     VERTUO_CHAR_USER_SETTINGS,
+    WATER_HARDNESS_MAX,
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator
@@ -126,9 +127,8 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
     _attr_translation_key = "water_hardness"
     _attr_icon = "mdi:water"
     _attr_entity_category = EntityCategory.CONFIG
-    # The app offers levels 0 to 4 on machines it reaches over Bluetooth.
     _attr_native_min_value = 0
-    _attr_native_max_value = 4
+    _attr_native_max_value = WATER_HARDNESS_MAX
     _attr_native_step = 1
     _attr_mode = NumberMode.SLIDER
 
@@ -151,25 +151,14 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
         return float(wh) if wh is not None else None
 
     async def async_set_native_value(self, value: float) -> None:
-        """Write water hardness to machine via BLE.
-
-        Writes all 4 bytes of CHAR_GENERAL_USER_SETTINGS:
-          bytes 0-1: machineAPOTime (LSB, preserved from current)
-          byte 2: waterHardness (new value)
-          byte 3: activeTime2StandBy (preserved from current)
-        """
-        _LOGGER.debug("Writing water hardness: value=%d", int(value))
-        int_val = int(value)
-
-        def modify(data: bytearray) -> None:
-            if len(data) >= 4:
-                data[2] = int_val & 0xFF
-
+        """Write the level to CHAR_GENERAL_USER_SETTINGS the way the app does."""
+        level = int(value)
+        _LOGGER.debug("Writing water hardness: %d", level)
         try:
-            await self.coordinator.async_read_modify_write_char(
-                VERTUO_CHAR_USER_SETTINGS, modify
+            await self.coordinator.async_write_char(
+                VERTUO_CHAR_USER_SETTINGS, build_water_hardness(level)
             )
-            _LOGGER.info("Water hardness set to %d", int_val)
+            _LOGGER.info("Water hardness set to %d", level)
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
             _LOGGER.error("Failed to set water hardness: %s", err)
