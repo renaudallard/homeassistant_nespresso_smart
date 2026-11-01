@@ -403,7 +403,7 @@ English ones.
 | Brew type | No | Yes | No | Select brew type (ristretto, espresso, lungo, hot water, americano) |
 | Brew temperature | No | Yes | No | Select brew temperature (low, medium, high) |
 | Brew | No | Yes | No | Start brewing (see brewing flow below) |
-| Water hardness | No | Yes | No | Set water hardness level (0-6 slider) |
+| Water hardness | No | Yes | No | Set water hardness level (0-4 slider, the levels the Nespresso app offers) |
 | Capsule counter | No | Yes | No | The machine's own capsule count, and writable so it can be corrected. Only created on machines that have the counter, which the Pop and the Creatista do not |
 | Reset descaling counter | No | Yes | No | Clear the descaling counter after descaling the machine |
 | Check firmware update | No | No | Yes | Trigger firmware update check |

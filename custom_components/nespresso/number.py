@@ -126,8 +126,9 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
     _attr_translation_key = "water_hardness"
     _attr_icon = "mdi:water"
     _attr_entity_category = EntityCategory.CONFIG
+    # The app offers levels 0 to 4 on machines it reaches over Bluetooth.
     _attr_native_min_value = 0
-    _attr_native_max_value = 6
+    _attr_native_max_value = 4
     _attr_native_step = 1
     _attr_mode = NumberMode.SLIDER
 
