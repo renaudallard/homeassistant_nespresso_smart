@@ -1,0 +1,393 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "state": {
+          "standby": "สแตนด์บาย",
+          "ready": "พร้อม",
+          "brewing": "กำลังชง",
+          "local_settings": "การตั้งค่าในเครื่อง",
+          "error": "ข้อผิดพลาด",
+          "overheated": "ร้อนเกินไป",
+          "setup": "การตั้งค่าเริ่มต้น",
+          "paused": "หยุดชั่วคราว",
+          "factory_reset": "รีเซ็ตเป็นค่าเริ่มต้นจากโรงงาน",
+          "heating": "กำลังอุ่นเครื่อง",
+          "descaling_ready": "พร้อมล้างตะกรัน",
+          "cleaning": "กำลังทำความสะอาด",
+          "descaling": "กำลังล้างตะกรัน",
+          "emptying": "กำลังถ่ายน้ำออก",
+          "power_save": "ประหยัดพลังงาน",
+          "cooldown": "กำลังเย็นตัวลง",
+          "service_mode": "โหมดบริการ",
+          "updating": "กำลังอัปเดตเฟิร์มแวร์",
+          "rinsing": "กำลังล้าง",
+          "capsule_reading": "กำลังอ่านแคปซูล",
+          "descale_decoding": "กำลังถอดรหัสการล้างตะกรัน",
+          "tank_empty": "ถังน้ำว่างเปล่า",
+          "descaling_paused": "พักการล้างตะกรันแล้ว",
+          "initializing": "กำลังเริ่มต้นระบบ",
+          "rinsing_ready": "พร้อมล้าง",
+          "maintenance_menu": "เมนูบำรุงรักษา",
+          "cleaning_paused": "พักการทำความสะอาดแล้ว",
+          "emptying_ready": "พร้อมถ่ายน้ำออก",
+          "cleaning_ready": "พร้อมทำความสะอาด",
+          "ready_old_capsule": "พร้อม (แคปซูลเก่า)",
+          "rinsing_paused": "พักการล้างแล้ว",
+          "unknown": "ไม่ทราบ"
+        }
+      },
+      "wifi_status": {
+        "name": "สถานะ Wi-Fi",
+        "state": {
+          "not_connected": "ไม่ได้เชื่อมต่อ",
+          "connecting": "กำลังเชื่อมต่อ",
+          "connected": "เชื่อมต่อแล้ว",
+          "updating_combo_firmware": "กำลังอัปเดตเฟิร์มแวร์ของโมดูลคอมโบ",
+          "updating_firmware": "กำลังอัปเดตเฟิร์มแวร์",
+          "updating_recipes": "กำลังอัปเดตสูตร",
+          "cloud_onboarding": "กำลังตั้งค่าคลาวด์",
+          "connection_failed": "การเชื่อมต่อล้มเหลว",
+          "server_unreachable": "ไม่สามารถเข้าถึงเซิร์ฟเวอร์",
+          "not_configured": "ยังไม่ได้กำหนดค่า",
+          "mqtt_init_error": "ข้อผิดพลาดในการเริ่มต้น MQTT",
+          "combo_firmware_update_failed": "การอัปเดตเฟิร์มแวร์ของโมดูลคอมโบล้มเหลว",
+          "firmware_update_failed": "การอัปเดตเฟิร์มแวร์ล้มเหลว",
+          "recipe_update_failed": "การอัปเดตสูตรล้มเหลว",
+          "market_not_set": "ยังไม่ได้ตั้งค่าตลาด",
+          "no_internet": "ไม่มีอินเทอร์เน็ต",
+          "wrong_password": "รหัสผ่านไม่ถูกต้อง",
+          "unknown": "ไม่ทราบ"
+        }
+      },
+      "wifi_ssid": {
+        "name": "เครือข่าย Wi-Fi"
+      },
+      "firmware_version": {
+        "name": "เวอร์ชันเฟิร์มแวร์"
+      },
+      "hardware_version": {
+        "name": "เวอร์ชันฮาร์ดแวร์"
+      },
+      "recipe_count": {
+        "name": "ช่องเก็บสูตร"
+      },
+      "profile_version": {
+        "name": "เวอร์ชันโปรไฟล์"
+      },
+      "bootloader_version": {
+        "name": "เวอร์ชันบูตโหลดเดอร์"
+      },
+      "bluetooth_version": {
+        "name": "เวอร์ชัน Bluetooth"
+      },
+      "recipe_db_version": {
+        "name": "เวอร์ชันฐานข้อมูลสูตร"
+      },
+      "connectivity_fw_version": {
+        "name": "เฟิร์มแวร์โมดูลการเชื่อมต่อ"
+      },
+      "error_code": {
+        "name": "รหัสข้อผิดพลาด"
+      },
+      "error_list_code": {
+        "name": "รหัสในบันทึกข้อผิดพลาด"
+      },
+      "iot_market_name": {
+        "name": "ตลาด IoT"
+      },
+      "shadow_data": {
+        "name": "เงาอุปกรณ์"
+      },
+      "fota_status": {
+        "name": "สถานะการอัปเดตเฟิร์มแวร์"
+      },
+      "fota_progress": {
+        "name": "ความคืบหน้าการอัปเดตเฟิร์มแวร์"
+      },
+      "brew_total": {
+        "name": "จำนวนการชงทั้งหมด"
+      },
+      "brews_since_descaling": {
+        "name": "จำนวนการชงตั้งแต่ล้างตะกรัน"
+      },
+      "brews_until_descaling": {
+        "name": "จำนวนการชงที่เหลือก่อนล้างตะกรัน"
+      },
+      "days_until_descaling": {
+        "name": "จำนวนวันที่เหลือก่อนล้างตะกรัน"
+      },
+      "brewing_duration": {
+        "name": "ระยะเวลาการชง"
+      },
+      "milk_unit_state": {
+        "name": "โมดูลนม",
+        "state": {
+          "offline": "ออฟไลน์",
+          "ready": "พร้อม",
+          "frothing": "กำลังทำฟองนม",
+          "cleaning": "กำลังทำความสะอาด",
+          "heating": "กำลังอุ่น",
+          "descaling_ready": "พร้อมล้างตะกรัน",
+          "descaling": "กำลังล้างตะกรัน",
+          "descaling_paused": "พักการล้างตะกรันแล้ว",
+          "rinsing_ready": "พร้อมล้าง",
+          "rinsing": "กำลังล้าง",
+          "rinsing_paused": "พักการล้างแล้ว",
+          "blocked_menu": "ถูกบล็อก เมนูเปิดอยู่",
+          "blocked_cleaning_needed": "ถูกบล็อก ต้องทำความสะอาด",
+          "blocked_descaling_needed": "ถูกบล็อก ต้องล้างตะกรัน",
+          "waiting": "กำลังรอ",
+          "unknown_3": "ไม่ทราบ (3)",
+          "unknown": "ไม่ทราบ"
+        }
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "ข้อผิดพลาด"
+      },
+      "water_tank_empty": {
+        "name": "ถังน้ำว่างเปล่า"
+      },
+      "descaling_needed": {
+        "name": "ต้องล้างตะกรัน"
+      },
+      "cleaning_needed": {
+        "name": "ต้องทำความสะอาด"
+      },
+      "capsule_container_full": {
+        "name": "ภาชนะเก็บแคปซูลเต็ม"
+      },
+      "brewing_unit_open": {
+        "name": "ชุดชง"
+      },
+      "induction_heating": {
+        "name": "ตัวทำความร้อนแบบเหนี่ยวนำ"
+      },
+      "milk_frother_running": {
+        "name": "เครื่องทำฟองนม"
+      },
+      "led_signaling": {
+        "name": "สัญญาณไฟ LED"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "ความกระด้างของน้ำ"
+      },
+      "caps_counter_setting": {
+        "name": "ตัวนับแคปซูล"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "สูตร",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "กำหนดเอง"
+        }
+      },
+      "language": {
+        "name": "ภาษา"
+      },
+      "brew_type": {
+        "name": "ประเภทการชง",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "น้ำร้อน",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "อุณหภูมิการชง",
+        "state": {
+          "low": "ต่ำ",
+          "medium": "ปานกลาง",
+          "high": "สูง"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "รีเซ็ตตัวนับการล้างตะกรัน"
+      },
+      "fota_check": {
+        "name": "ตรวจสอบการอัปเดตเฟิร์มแวร์"
+      },
+      "brew": {
+        "name": "ชง"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "การเปลี่ยนสถานะ",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "สแตนด์บาย",
+              "ready": "พร้อม",
+              "brewing": "กำลังชง",
+              "local_settings": "การตั้งค่าในเครื่อง",
+              "error": "ข้อผิดพลาด",
+              "overheated": "ร้อนเกินไป",
+              "setup": "การตั้งค่าเริ่มต้น",
+              "paused": "หยุดชั่วคราว",
+              "factory_reset": "รีเซ็ตเป็นค่าเริ่มต้นจากโรงงาน",
+              "heating": "กำลังอุ่นเครื่อง",
+              "descaling_ready": "พร้อมล้างตะกรัน",
+              "cleaning": "กำลังทำความสะอาด",
+              "descaling": "กำลังล้างตะกรัน",
+              "emptying": "กำลังถ่ายน้ำออก",
+              "power_save": "ประหยัดพลังงาน",
+              "cooldown": "กำลังเย็นตัวลง",
+              "service_mode": "โหมดบริการ",
+              "updating": "กำลังอัปเดตเฟิร์มแวร์",
+              "rinsing": "กำลังล้าง",
+              "capsule_reading": "กำลังอ่านแคปซูล",
+              "descale_decoding": "กำลังถอดรหัสการล้างตะกรัน",
+              "tank_empty": "ถังน้ำว่างเปล่า",
+              "descaling_paused": "พักการล้างตะกรันแล้ว",
+              "initializing": "กำลังเริ่มต้นระบบ",
+              "rinsing_ready": "พร้อมล้าง",
+              "maintenance_menu": "เมนูบำรุงรักษา",
+              "cleaning_paused": "พักการทำความสะอาดแล้ว",
+              "emptying_ready": "พร้อมถ่ายน้ำออก",
+              "cleaning_ready": "พร้อมทำความสะอาด",
+              "ready_old_capsule": "พร้อม (แคปซูลเก่า)",
+              "rinsing_paused": "พักการล้างแล้ว",
+              "unknown": "ไม่ทราบ"
+            }
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "ยืนยันเครื่อง Nespresso",
+        "description": "พบ {name} หากเครื่องนี้ไม่เคยจับคู่มาก่อน ให้เว้นช่องนี้ว่างไว้ แล้วการผสานรวมจะสร้างโทเค็นของตัวเอง หากแอป Nespresso จับคู่เครื่องนี้ไว้แล้ว ให้วางคีย์จับคู่ 32 อักขระจากบัญชี Nespresso ของคุณเพื่อให้ทั้งสองฝั่งยังทำงานได้ต่อไป หรือวางโทเค็นยืนยันตัวตน 16 อักขระจากการดักจับข้อมูล Bluetooth",
+        "data": {
+          "auth_token": "โทเค็นยืนยันตัวตนหรือคีย์จับคู่ (ไม่บังคับ)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "การผสานรวมนี้ต้องใช้ Bluetooth เครื่องจะถูกค้นพบโดยอัตโนมัติ"
+      }
+    },
+    "error": {
+      "invalid_auth_token": "ค่านี้ไม่ใช่ทั้งคีย์จับคู่และโทเค็นยืนยันตัวตน ต้องเป็นอักขระฐานสิบหก 32 ตัวจากบัญชี Nespresso ของคุณ หรือ 16 ตัวจากการดักจับข้อมูล Bluetooth"
+    },
+    "abort": {
+      "already_configured": "เครื่องนี้ได้รับการกำหนดค่าแล้ว",
+      "bluetooth_only": "การผสานรวมนี้ค้นพบเครื่องผ่าน Bluetooth โดยอัตโนมัติ ตรวจสอบให้แน่ใจว่าเปิดใช้งาน Bluetooth แล้วและเครื่องเปิดอยู่"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ตัวเลือก Nespresso",
+        "data": {
+          "scan_interval": "ช่วงเวลาการดึงข้อมูล (วินาที)",
+          "persistent_connection": "การเชื่อมต่อแบบต่อเนื่อง (อัปเดตแบบเรียลไทม์ บล็อกแอป Nespresso)",
+          "send_tx_level": "ส่งคำขอระดับ TX ระหว่างการตั้งค่าเริ่มต้น",
+          "descaling_capsules": "รอบการล้างตะกรัน (แคปซูล)",
+          "descaling_days": "รอบการล้างตะกรัน (วัน)",
+          "force_brew_button": "เสนอการชงในรุ่นที่ไม่ทราบว่าสามารถชงได้"
+        },
+        "data_description": {
+          "force_brew_button": "Vertuo Pop และ Vertuo Creatista ตอบรับทุกคำสั่งชงแต่ยังคงอยู่เฉย ๆ โดยไม่ชง จึงไม่มีการสร้างปุ่มชงสำหรับรุ่นเหล่านี้ เปิดตัวเลือกนี้เพื่อเรียกปุ่มและการตั้งค่าสองรายการของปุ่มกลับมา แล้วลองใช้ดูอยู่ดี"
+        }
+      }
+    }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "สแกนหาเครือข่าย Wi-Fi",
+      "description": "ถามเครื่องว่ามองเห็นเครือข่าย Wi-Fi ใดบ้าง เครื่องเป็นผู้สแกน ไม่ใช่ Home Assistant ดังนั้นรายการจึงแสดงสิ่งที่เครื่องเข้าถึงได้",
+      "fields": {
+        "config_entry_id": {
+          "name": "เครื่อง",
+          "description": "เครื่อง Nespresso ที่จะดำเนินการ"
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "กำหนดค่า Wi-Fi",
+      "description": "เชื่อมต่อเครื่องเข้ากับเครือข่าย Wi-Fi รหัสผ่านจะถูกส่งไปยังเครื่องแบบไม่เข้ารหัส เหมือนกับที่แอป Nespresso อย่างเป็นทางการส่งทุกประการ ดูผลลัพธ์ได้จากเซ็นเซอร์สถานะ Wi-Fi",
+      "fields": {
+        "config_entry_id": {
+          "name": "เครื่อง",
+          "description": "เครื่อง Nespresso ที่จะดำเนินการ"
+        },
+        "market": {
+          "name": "ตลาด",
+          "description": "รหัสประเทศสองตัวอักษร เช่น TH หากไม่มีรหัสนี้ เครื่องจะไม่สามารถเข้าถึงเซิร์ฟเวอร์ของ Nespresso ได้"
+        },
+        "ssid": {
+          "name": "ชื่อเครือข่าย",
+          "description": "SSID ที่จะเชื่อมต่อ ไม่เกิน 32 ไบต์"
+        },
+        "password": {
+          "name": "รหัสผ่าน",
+          "description": "ไม่เกิน 64 ไบต์ เว้นว่างไว้สำหรับเครือข่ายแบบเปิด"
+        },
+        "security": {
+          "name": "ความปลอดภัย",
+          "description": "ประเภทความปลอดภัยของเครือข่าย"
+        },
+        "connection_index": {
+          "name": "ดัชนีการเชื่อมต่อ",
+          "description": "ใส่ดัชนีจากผลการสแกนตามเดิม คงค่าไว้ที่ 255 เมื่อพิมพ์ชื่อเครือข่ายเอง"
+        }
+      }
+    },
+    "send_command": {
+      "name": "ส่งคำสั่งดิบ",
+      "description": "เขียนเฟรมดิบไปยังคาแรกเทอริสติกคำสั่งของเครื่องและรายงานสิ่งที่ได้รับกลับมา เป็นเครื่องมือสำหรับการดีบัก โดยจะบอกว่าคาแรกเทอริสติกทั้งสองรองรับอะไรบ้าง และเครื่องสามารถตอบกลับได้หรือไม่ ซึ่งเป็นสิ่งที่ใช้แยกคำสั่งที่ถูกปฏิเสธออกจากคำสั่งที่เครื่องไม่สามารถตอบรับได้",
+      "fields": {
+        "config_entry_id": {
+          "name": "เครื่อง",
+          "description": "เครื่อง Nespresso ที่จะดำเนินการ"
+        },
+        "payload": {
+          "name": "เพย์โหลด",
+          "description": "เฟรมที่จะเขียน ในรูปแบบเลขฐานสิบหก ตัวอย่าง 03050704000000000002000000000000000000 คือ Vertuo lungo ที่อุณหภูมิปานกลาง"
+        }
+      }
+    },
+    "watch": {
+      "name": "เฝ้าดูเครื่อง",
+      "description": "เปิดการเชื่อมต่อค้างไว้และบันทึกทุกสิ่งที่เปลี่ยนแปลง ได้แก่ ทุกคาแรกเทอริสติกที่ค่าเปลี่ยนไปและทุกการแจ้งเตือน พร้อมประทับเวลา เรียกใช้งาน แล้วใช้งานเครื่องด้วยมือ นี่คือวิธีระบุคาแรกเทอริสติกที่แอปอย่างเป็นทางการไม่เคยกล่าวถึง",
+      "fields": {
+        "config_entry_id": {
+          "name": "เครื่อง",
+          "description": "เครื่อง Nespresso ที่จะดำเนินการ"
+        },
+        "seconds": {
+          "name": "ระยะเวลา",
+          "description": "ระยะเวลาที่จะเฝ้าดู เป็นวินาที ควรนานพอที่จะครอบคลุมทั้งรอบ ไม่ว่าจะเป็นการชงหรือการทำฟองนม"
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "เริ่มชงแล้ว",
+      "brewing_finished": "ชงเสร็จแล้ว",
+      "error_occurred": "เกิดข้อผิดพลาด",
+      "ready": "เครื่องพร้อมแล้ว",
+      "standby": "เครื่องอยู่ในโหมดสแตนด์บาย",
+      "descaling_needed": "ต้องล้างตะกรัน",
+      "water_tank_empty": "ถังน้ำว่างเปล่า"
+    }
+  }
+}
