@@ -1,0 +1,393 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "state": {
+          "standby": "În așteptare",
+          "ready": "Gata",
+          "brewing": "Preparare",
+          "local_settings": "Setări locale",
+          "error": "Eroare",
+          "overheated": "Supraîncălzit",
+          "setup": "Configurare inițială",
+          "paused": "În pauză",
+          "factory_reset": "Resetare din fabrică",
+          "heating": "Încălzire",
+          "descaling_ready": "Gata pentru decalcifiere",
+          "cleaning": "Curățare",
+          "descaling": "Decalcifiere",
+          "emptying": "Golire",
+          "power_save": "Economie de energie",
+          "cooldown": "Răcire",
+          "service_mode": "Mod asistență",
+          "updating": "Se actualizează firmware-ul",
+          "rinsing": "Clătire",
+          "capsule_reading": "Citirea capsulei",
+          "descale_decoding": "Decodarea decalcifierii",
+          "tank_empty": "Rezervor gol",
+          "descaling_paused": "Decalcifiere în pauză",
+          "initializing": "Inițializare",
+          "rinsing_ready": "Gata de clătire",
+          "maintenance_menu": "Meniu de mentenanță",
+          "cleaning_paused": "Curățare în pauză",
+          "emptying_ready": "Gata de golire",
+          "cleaning_ready": "Gata de curățare",
+          "ready_old_capsule": "Gata (capsulă veche)",
+          "rinsing_paused": "Clătire în pauză",
+          "unknown": "Necunoscut"
+        }
+      },
+      "wifi_status": {
+        "name": "Stare Wi-Fi",
+        "state": {
+          "not_connected": "Neconectat",
+          "connecting": "Se conectează",
+          "connected": "Conectat",
+          "updating_combo_firmware": "Se actualizează firmware-ul combo",
+          "updating_firmware": "Se actualizează firmware-ul",
+          "updating_recipes": "Se actualizează rețetele",
+          "cloud_onboarding": "Înregistrare în cloud",
+          "connection_failed": "Conectare eșuată",
+          "server_unreachable": "Server inaccesibil",
+          "not_configured": "Neconfigurat",
+          "mqtt_init_error": "Eroare la inițializarea MQTT",
+          "combo_firmware_update_failed": "Actualizarea firmware-ului combo a eșuat",
+          "firmware_update_failed": "Actualizarea firmware-ului a eșuat",
+          "recipe_update_failed": "Actualizarea rețetelor a eșuat",
+          "market_not_set": "Piață nesetată",
+          "no_internet": "Fără internet",
+          "wrong_password": "Parolă greșită",
+          "unknown": "Necunoscut"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Rețea Wi-Fi"
+      },
+      "firmware_version": {
+        "name": "Versiune firmware"
+      },
+      "hardware_version": {
+        "name": "Versiune hardware"
+      },
+      "recipe_count": {
+        "name": "Locuri pentru rețete"
+      },
+      "profile_version": {
+        "name": "Versiune profil"
+      },
+      "bootloader_version": {
+        "name": "Versiune bootloader"
+      },
+      "bluetooth_version": {
+        "name": "Versiune Bluetooth"
+      },
+      "recipe_db_version": {
+        "name": "Versiune bază de date rețete"
+      },
+      "connectivity_fw_version": {
+        "name": "Firmware conectivitate"
+      },
+      "error_code": {
+        "name": "Cod de eroare"
+      },
+      "error_list_code": {
+        "name": "Cod jurnal de erori"
+      },
+      "iot_market_name": {
+        "name": "Piață IoT"
+      },
+      "shadow_data": {
+        "name": "Shadow dispozitiv"
+      },
+      "fota_status": {
+        "name": "Stare actualizare firmware"
+      },
+      "fota_progress": {
+        "name": "Progres actualizare firmware"
+      },
+      "brew_total": {
+        "name": "Total cafele"
+      },
+      "brews_since_descaling": {
+        "name": "Cafele de la decalcifiere"
+      },
+      "brews_until_descaling": {
+        "name": "Cafele până la decalcifiere"
+      },
+      "days_until_descaling": {
+        "name": "Zile până la decalcifiere"
+      },
+      "brewing_duration": {
+        "name": "Durata preparării"
+      },
+      "milk_unit_state": {
+        "name": "Sistem de lapte",
+        "state": {
+          "offline": "Deconectat",
+          "ready": "Gata",
+          "frothing": "Spumare",
+          "cleaning": "Curățare",
+          "heating": "Încălzire",
+          "descaling_ready": "Gata pentru decalcifiere",
+          "descaling": "Decalcifiere",
+          "descaling_paused": "Decalcifiere în pauză",
+          "rinsing_ready": "Gata de clătire",
+          "rinsing": "Clătire",
+          "rinsing_paused": "Clătire în pauză",
+          "blocked_menu": "Blocat, meniu deschis",
+          "blocked_cleaning_needed": "Blocat, necesită curățare",
+          "blocked_descaling_needed": "Blocat, necesită decalcifiere",
+          "waiting": "Așteaptă",
+          "unknown_3": "Necunoscut (3)",
+          "unknown": "Necunoscut"
+        }
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Eroare"
+      },
+      "water_tank_empty": {
+        "name": "Rezervor de apă gol"
+      },
+      "descaling_needed": {
+        "name": "Decalcifiere necesară"
+      },
+      "cleaning_needed": {
+        "name": "Curățare necesară"
+      },
+      "capsule_container_full": {
+        "name": "Recipient de capsule plin"
+      },
+      "brewing_unit_open": {
+        "name": "Unitate de preparare"
+      },
+      "induction_heating": {
+        "name": "Încălzire prin inducție"
+      },
+      "milk_frother_running": {
+        "name": "Spumator de lapte"
+      },
+      "led_signaling": {
+        "name": "Semnalizare LED"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Duritatea apei"
+      },
+      "caps_counter_setting": {
+        "name": "Contor de capsule"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Rețetă",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Personalizată"
+        }
+      },
+      "language": {
+        "name": "Limbă"
+      },
+      "brew_type": {
+        "name": "Tip de preparare",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Apă fierbinte",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Temperatura de preparare",
+        "state": {
+          "low": "Scăzută",
+          "medium": "Medie",
+          "high": "Ridicată"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Resetează contorul de decalcifiere"
+      },
+      "fota_check": {
+        "name": "Caută actualizări de firmware"
+      },
+      "brew": {
+        "name": "Prepară"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Schimbare de stare",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "În așteptare",
+              "ready": "Gata",
+              "brewing": "Preparare",
+              "local_settings": "Setări locale",
+              "error": "Eroare",
+              "overheated": "Supraîncălzit",
+              "setup": "Configurare inițială",
+              "paused": "În pauză",
+              "factory_reset": "Resetare din fabrică",
+              "heating": "Încălzire",
+              "descaling_ready": "Gata pentru decalcifiere",
+              "cleaning": "Curățare",
+              "descaling": "Decalcifiere",
+              "emptying": "Golire",
+              "power_save": "Economie de energie",
+              "cooldown": "Răcire",
+              "service_mode": "Mod asistență",
+              "updating": "Se actualizează firmware-ul",
+              "rinsing": "Clătire",
+              "capsule_reading": "Citirea capsulei",
+              "descale_decoding": "Decodarea decalcifierii",
+              "tank_empty": "Rezervor gol",
+              "descaling_paused": "Decalcifiere în pauză",
+              "initializing": "Inițializare",
+              "rinsing_ready": "Gata de clătire",
+              "maintenance_menu": "Meniu de mentenanță",
+              "cleaning_paused": "Curățare în pauză",
+              "emptying_ready": "Gata de golire",
+              "cleaning_ready": "Gata de curățare",
+              "ready_old_capsule": "Gata (capsulă veche)",
+              "rinsing_paused": "Clătire în pauză",
+              "unknown": "Necunoscut"
+            }
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Confirmă espressorul Nespresso",
+        "description": "Am găsit {name}. Lasă câmpul gol pentru un espressor care nu a fost asociat niciodată, iar integrarea își generează propriul token. Dacă aplicația Nespresso a asociat deja acest espressor, lipește cheia de asociere de 32 de caractere din contul tău Nespresso, ca ambele să funcționeze în continuare, sau tokenul de autentificare de 16 caractere dintr-o captură Bluetooth.",
+        "data": {
+          "auth_token": "Token de autentificare sau cheie de asociere (opțional)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "Această integrare necesită Bluetooth. Espressoarele sunt descoperite automat."
+      }
+    },
+    "error": {
+      "invalid_auth_token": "Aceasta nu este nici o cheie de asociere, nici un token de autentificare. Se așteptau 32 de caractere hexazecimale din contul tău Nespresso sau 16 dintr-o captură Bluetooth."
+    },
+    "abort": {
+      "already_configured": "Espressorul este deja configurat.",
+      "bluetooth_only": "Această integrare descoperă automat espressoarele prin Bluetooth. Asigură-te că Bluetooth este activat și că espressorul este pornit."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opțiuni Nespresso",
+        "data": {
+          "scan_interval": "Interval de interogare (secunde)",
+          "persistent_connection": "Conexiune permanentă (actualizări în timp real, blochează aplicația Nespresso)",
+          "send_tx_level": "Trimite cererea de nivel de transmisie (TX) la asociere",
+          "descaling_capsules": "Interval de decalcifiere (capsule)",
+          "descaling_days": "Interval de decalcifiere (zile)",
+          "force_brew_button": "Oferă prepararea pe un model despre care nu se știe că poate prepara"
+        },
+        "data_description": {
+          "force_brew_button": "Vertuo Pop și Vertuo Creatista confirmă primirea fiecărei comenzi de preparare și rămân inactive, așa că nu se creează niciun buton de preparare pentru ele. Activează această opțiune pentru a recupera butonul și cele două setări ale sale și a încerca oricum."
+        }
+      }
+    }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Caută rețele Wi-Fi",
+      "description": "Întreabă espressorul ce rețele Wi-Fi vede. Scanarea o face espressorul, nu Home Assistant, așa că lista arată rețelele pe care le poate accesa espressorul.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Espressor",
+          "description": "Espressorul Nespresso asupra căruia se acționează."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Configurează Wi-Fi",
+      "description": "Conectează espressorul la o rețea Wi-Fi. Parola este trimisă espressorului necriptată, exact așa cum o trimite aplicația oficială Nespresso. Urmărește rezultatul în senzorul Stare Wi-Fi.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Espressor",
+          "description": "Espressorul Nespresso asupra căruia se acționează."
+        },
+        "market": {
+          "name": "Piață",
+          "description": "Cod de țară din două litere, de exemplu RO. Fără el, espressorul nu va putea accesa serverele Nespresso."
+        },
+        "ssid": {
+          "name": "Numele rețelei",
+          "description": "SSID-ul la care să se conecteze, maximum 32 de octeți."
+        },
+        "password": {
+          "name": "Parolă",
+          "description": "Maximum 64 de octeți. Lasă gol pentru o rețea deschisă."
+        },
+        "security": {
+          "name": "Securitate",
+          "description": "Tipul de securitate al rețelei."
+        },
+        "connection_index": {
+          "name": "Index de conexiune",
+          "description": "Preia indexul dintr-un rezultat al scanării. Lasă 255 când introduci rețeaua manual."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Trimite o comandă brută",
+      "description": "Scrie un cadru brut în caracteristica de comandă a espressorului și raportează ce s-a primit înapoi. Un instrument de depanare: arată ce oferă ambele caracteristici și dacă espressorul a putut măcar să răspundă, lucru care deosebește o comandă refuzată de una pe care espressorul nu o poate confirma.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Espressor",
+          "description": "Espressorul Nespresso asupra căruia se acționează."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "Cadrul de scris, în hexazecimal. Exemplu 03050704000000000002000000000000000000, un lungo Vertuo la temperatură medie."
+        }
+      }
+    },
+    "watch": {
+      "name": "Monitorizează espressorul",
+      "description": "Ține conexiunea deschisă și înregistrează tot ce se schimbă: fiecare caracteristică ce își schimbă valoarea și fiecare notificare, cu marcaj de timp. Pornește acțiunea, apoi folosește espressorul manual. Așa se identifică caracteristicile pe care aplicația oficială nu le menționează niciodată.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Espressor",
+          "description": "Espressorul Nespresso asupra căruia se acționează."
+        },
+        "seconds": {
+          "name": "Durată",
+          "description": "Cât timp să fie monitorizat, în secunde. Suficient cât să acopere un ciclu întreg, de preparare sau de spumare."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Prepararea a început",
+      "brewing_finished": "Prepararea s-a încheiat",
+      "error_occurred": "A apărut o eroare",
+      "ready": "Espressor gata",
+      "standby": "Espressor în așteptare",
+      "descaling_needed": "Decalcifiere necesară",
+      "water_tank_empty": "Rezervor de apă gol"
+    }
+  }
+}
