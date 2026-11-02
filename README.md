@@ -350,7 +350,7 @@ as `Service Discovery has not been performed yet`.
 
 Entity names, the machine state values, the event types, the dropdown options
 and the device triggers are translated into English, French, German, Spanish,
-Italian, Dutch and Polish, and follow
+Italian, Dutch, Polish and Swedish, and follow
 the language set in your Home Assistant profile. The names below are the
 English ones.
 
