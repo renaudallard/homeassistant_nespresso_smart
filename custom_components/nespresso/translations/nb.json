@@ -1,0 +1,393 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "state": {
+          "standby": "Standby",
+          "ready": "Klar",
+          "brewing": "Brygger",
+          "local_settings": "Lokale innstillinger",
+          "error": "Feil",
+          "overheated": "Overopphetet",
+          "setup": "Førstegangsoppsett",
+          "paused": "Pauset",
+          "factory_reset": "Tilbakestilling til fabrikkinnstillinger",
+          "heating": "Varmer opp",
+          "descaling_ready": "Klar for avkalking",
+          "cleaning": "Rengjøring",
+          "descaling": "Avkalking",
+          "emptying": "Tømming",
+          "power_save": "Strømsparingsmodus",
+          "cooldown": "Kjøles ned",
+          "service_mode": "Servicemodus",
+          "updating": "Oppdaterer fastvare",
+          "rinsing": "Skylling",
+          "capsule_reading": "Leser kapsel",
+          "descale_decoding": "Dekoding av avkalkingssekvens",
+          "tank_empty": "Vanntanken er tom",
+          "descaling_paused": "Avkalking pauset",
+          "initializing": "Initialiserer",
+          "rinsing_ready": "Klar for skylling",
+          "maintenance_menu": "Vedlikeholdsmeny",
+          "cleaning_paused": "Rengjøring pauset",
+          "emptying_ready": "Klar for tømming",
+          "cleaning_ready": "Klar for rengjøring",
+          "ready_old_capsule": "Klar (gammel kapsel)",
+          "rinsing_paused": "Skylling pauset",
+          "unknown": "Ukjent"
+        }
+      },
+      "wifi_status": {
+        "name": "Wi-Fi-status",
+        "state": {
+          "not_connected": "Ikke tilkoblet",
+          "connecting": "Kobler til",
+          "connected": "Tilkoblet",
+          "updating_combo_firmware": "Oppdaterer kombimodulens fastvare",
+          "updating_firmware": "Oppdaterer fastvare",
+          "updating_recipes": "Oppdaterer oppskrifter",
+          "cloud_onboarding": "Registrering i skytjenesten",
+          "connection_failed": "Tilkoblingen mislyktes",
+          "server_unreachable": "Serveren kan ikke nås",
+          "not_configured": "Ikke konfigurert",
+          "mqtt_init_error": "Feil ved initialisering av MQTT",
+          "combo_firmware_update_failed": "Oppdateringen av kombimodulens fastvare mislyktes",
+          "firmware_update_failed": "Fastvareoppdateringen mislyktes",
+          "recipe_update_failed": "Oppdateringen av oppskrifter mislyktes",
+          "market_not_set": "Marked er ikke angitt",
+          "no_internet": "Ingen internettilkobling",
+          "wrong_password": "Feil passord",
+          "unknown": "Ukjent"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi-nettverk"
+      },
+      "firmware_version": {
+        "name": "Fastvareversjon"
+      },
+      "hardware_version": {
+        "name": "Maskinvareversjon"
+      },
+      "recipe_count": {
+        "name": "Oppskriftsplasser"
+      },
+      "profile_version": {
+        "name": "Profilversjon"
+      },
+      "bootloader_version": {
+        "name": "Bootloader-versjon"
+      },
+      "bluetooth_version": {
+        "name": "Bluetooth-versjon"
+      },
+      "recipe_db_version": {
+        "name": "Versjon av oppskriftsdatabasen"
+      },
+      "connectivity_fw_version": {
+        "name": "Tilkoblingsmodulens fastvare"
+      },
+      "error_code": {
+        "name": "Feilkode"
+      },
+      "error_list_code": {
+        "name": "Kode i feilloggen"
+      },
+      "iot_market_name": {
+        "name": "IoT-marked"
+      },
+      "shadow_data": {
+        "name": "Enhetsskygge"
+      },
+      "fota_status": {
+        "name": "Status for fastvareoppdatering"
+      },
+      "fota_progress": {
+        "name": "Fremdrift for fastvareoppdatering"
+      },
+      "brew_total": {
+        "name": "Totalt antall brygginger"
+      },
+      "brews_since_descaling": {
+        "name": "Brygginger siden avkalking"
+      },
+      "brews_until_descaling": {
+        "name": "Brygginger til avkalking"
+      },
+      "days_until_descaling": {
+        "name": "Dager til avkalking"
+      },
+      "brewing_duration": {
+        "name": "Bryggetid"
+      },
+      "milk_unit_state": {
+        "name": "Melkemodul",
+        "state": {
+          "offline": "Frakoblet",
+          "ready": "Klar",
+          "frothing": "Skummer",
+          "cleaning": "Rengjøring",
+          "heating": "Varmer opp",
+          "descaling_ready": "Klar for avkalking",
+          "descaling": "Avkalking",
+          "descaling_paused": "Avkalking pauset",
+          "rinsing_ready": "Klar for skylling",
+          "rinsing": "Skylling",
+          "rinsing_paused": "Skylling pauset",
+          "blocked_menu": "Blokkert, menyen er åpen",
+          "blocked_cleaning_needed": "Blokkert, rengjøring påkrevd",
+          "blocked_descaling_needed": "Blokkert, avkalking påkrevd",
+          "waiting": "Venter",
+          "unknown_3": "Ukjent (3)",
+          "unknown": "Ukjent"
+        }
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Feil"
+      },
+      "water_tank_empty": {
+        "name": "Vanntanken er tom"
+      },
+      "descaling_needed": {
+        "name": "Avkalking påkrevd"
+      },
+      "cleaning_needed": {
+        "name": "Rengjøring påkrevd"
+      },
+      "capsule_container_full": {
+        "name": "Kapselbeholderen er full"
+      },
+      "brewing_unit_open": {
+        "name": "Bryggeenhet"
+      },
+      "induction_heating": {
+        "name": "Induksjonsvarmer"
+      },
+      "milk_frother_running": {
+        "name": "Melkeskummer"
+      },
+      "led_signaling": {
+        "name": "LED-signalisering"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Vannhardhet"
+      },
+      "caps_counter_setting": {
+        "name": "Kapselteller"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Oppskrift",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Egendefinert"
+        }
+      },
+      "language": {
+        "name": "Språk"
+      },
+      "brew_type": {
+        "name": "Bryggetype",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Varmt vann",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Bryggetemperatur",
+        "state": {
+          "low": "Lav",
+          "medium": "Middels",
+          "high": "Høy"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Tilbakestill avkalkingstelleren"
+      },
+      "fota_check": {
+        "name": "Se etter fastvareoppdatering"
+      },
+      "brew": {
+        "name": "Brygg"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Tilstandsendring",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Standby",
+              "ready": "Klar",
+              "brewing": "Brygger",
+              "local_settings": "Lokale innstillinger",
+              "error": "Feil",
+              "overheated": "Overopphetet",
+              "setup": "Førstegangsoppsett",
+              "paused": "Pauset",
+              "factory_reset": "Tilbakestilling til fabrikkinnstillinger",
+              "heating": "Varmer opp",
+              "descaling_ready": "Klar for avkalking",
+              "cleaning": "Rengjøring",
+              "descaling": "Avkalking",
+              "emptying": "Tømming",
+              "power_save": "Strømsparingsmodus",
+              "cooldown": "Kjøles ned",
+              "service_mode": "Servicemodus",
+              "updating": "Oppdaterer fastvare",
+              "rinsing": "Skylling",
+              "capsule_reading": "Leser kapsel",
+              "descale_decoding": "Dekoding av avkalkingssekvens",
+              "tank_empty": "Vanntanken er tom",
+              "descaling_paused": "Avkalking pauset",
+              "initializing": "Initialiserer",
+              "rinsing_ready": "Klar for skylling",
+              "maintenance_menu": "Vedlikeholdsmeny",
+              "cleaning_paused": "Rengjøring pauset",
+              "emptying_ready": "Klar for tømming",
+              "cleaning_ready": "Klar for rengjøring",
+              "ready_old_capsule": "Klar (gammel kapsel)",
+              "rinsing_paused": "Skylling pauset",
+              "unknown": "Ukjent"
+            }
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Bekreft Nespresso-maskin",
+        "description": "Fant {name}. La feltet stå tomt for en maskin som aldri har vært sammenkoblet, så genererer integrasjonen sitt eget token. Hvis Nespresso-appen allerede har sammenkoblet denne maskinen, limer du inn sammenkoblingsnøkkelen på 32 tegn fra Nespresso-kontoen din, slik at begge fortsetter å fungere, eller autentiseringstokenet på 16 tegn fra et opptak av Bluetooth-trafikken.",
+        "data": {
+          "auth_token": "Autentiseringstoken eller sammenkoblingsnøkkel (valgfritt)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "Denne integrasjonen krever Bluetooth. Maskiner oppdages automatisk."
+      }
+    },
+    "error": {
+      "invalid_auth_token": "Dette er verken en sammenkoblingsnøkkel eller et autentiseringstoken. Forventet 32 heksadesimale tegn fra Nespresso-kontoen din, eller 16 fra et opptak av Bluetooth-trafikken."
+    },
+    "abort": {
+      "already_configured": "Maskinen er allerede konfigurert.",
+      "bluetooth_only": "Denne integrasjonen oppdager maskiner automatisk via Bluetooth. Sørg for at Bluetooth er aktivert og at maskinen er slått på."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nespresso-alternativer",
+        "data": {
+          "scan_interval": "Avlesningsintervall (sekunder)",
+          "persistent_connection": "Vedvarende tilkobling (sanntidsoppdateringer, blokkerer Nespresso-appen)",
+          "send_tx_level": "Send forespørselen om TX-nivå under oppsettet",
+          "descaling_capsules": "Avkalkingsintervall (kapsler)",
+          "descaling_days": "Avkalkingsintervall (dager)",
+          "force_brew_button": "Tilby brygging på en modell som ikke er kjent for å kunne brygge"
+        },
+        "data_description": {
+          "force_brew_button": "Vertuo Pop og Vertuo Creatista bekrefter mottak av hver bryggekommando, men forblir inaktive, så det opprettes ingen bryggeknapp for dem. Slå på dette for å få tilbake knappen og de to innstillingene dens og prøve likevel."
+        }
+      }
+    }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Søk etter Wi-Fi-nettverk",
+      "description": "Spør maskinen hvilke Wi-Fi-nettverk den kan se. Det er maskinen som søker, ikke Home Assistant, så listen viser det maskinen kan nå.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maskin",
+          "description": "Nespresso-maskinen handlingen skal utføres på."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Konfigurer Wi-Fi",
+      "description": "Koble maskinen til et Wi-Fi-nettverk. Passordfrasen sendes til maskinen i klartekst, nøyaktig slik den offisielle Nespresso-appen sender den. Følg med på sensoren for Wi-Fi-status for å se resultatet.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maskin",
+          "description": "Nespresso-maskinen handlingen skal utføres på."
+        },
+        "market": {
+          "name": "Marked",
+          "description": "Landskode på to bokstaver, for eksempel NO. Uten den når ikke maskinen Nespressos servere."
+        },
+        "ssid": {
+          "name": "Nettverksnavn",
+          "description": "SSID-en til nettverket maskinen skal koble seg til, høyst 32 byte."
+        },
+        "password": {
+          "name": "Passordfrase",
+          "description": "Høyst 64 byte. La feltet stå tomt for et åpent nettverk."
+        },
+        "security": {
+          "name": "Sikkerhet",
+          "description": "Nettverkets sikkerhetstype."
+        },
+        "connection_index": {
+          "name": "Tilkoblingsindeks",
+          "description": "Oppgi samme indeks som i et søkeresultat. La verdien stå på 255 når du skriver inn nettverket manuelt."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Send en råkommando",
+      "description": "Skriv en rå ramme til maskinens kommandokarakteristikk og rapporter hva som kom tilbake. Et feilsøkingsverktøy: det viser hva begge karakteristikkene støtter, og om maskinen i det hele tatt kunne svare, og det er dette som skiller en avvist kommando fra en som maskinen ikke kan bekrefte.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maskin",
+          "description": "Nespresso-maskinen handlingen skal utføres på."
+        },
+        "payload": {
+          "name": "Nyttelast",
+          "description": "Rammen som skal skrives, i heksadesimal form. Eksempel: 03050704000000000002000000000000000000, en Vertuo-lungo med middels temperatur."
+        }
+      }
+    },
+    "watch": {
+      "name": "Overvåk maskinen",
+      "description": "Hold tilkoblingen åpen og registrer alt som endrer seg: hver karakteristikk som skifter verdi, og hvert varsel, med tidsstempel. Start overvåkingen, og bruk deretter maskinen manuelt. Det er slik karakteristikkene som den offisielle appen aldri nevner, blir identifisert.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maskin",
+          "description": "Nespresso-maskinen handlingen skal utføres på."
+        },
+        "seconds": {
+          "name": "Varighet",
+          "description": "Hvor lenge overvåkingen skal vare, i sekunder. Lenge nok til å dekke en hel syklus, brygging eller skumming."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Bryggingen startet",
+      "brewing_finished": "Bryggingen er ferdig",
+      "error_occurred": "Det oppstod en feil",
+      "ready": "Maskinen er klar",
+      "standby": "Maskinen er i standby",
+      "descaling_needed": "Avkalking påkrevd",
+      "water_tank_empty": "Vanntanken er tom"
+    }
+  }
+}
