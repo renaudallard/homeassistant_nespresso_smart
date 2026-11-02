@@ -1,0 +1,393 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "state": {
+          "standby": "待機",
+          "ready": "就緒",
+          "brewing": "萃取中",
+          "local_settings": "本機設定",
+          "error": "錯誤",
+          "overheated": "過熱",
+          "setup": "初始設定",
+          "paused": "已暫停",
+          "factory_reset": "恢復原廠設定",
+          "heating": "加熱中",
+          "descaling_ready": "除垢已就緒",
+          "cleaning": "清潔中",
+          "descaling": "除垢中",
+          "emptying": "清空中",
+          "power_save": "省電模式",
+          "cooldown": "冷卻中",
+          "service_mode": "維護模式",
+          "updating": "韌體更新中",
+          "rinsing": "清洗中",
+          "capsule_reading": "讀取膠囊中",
+          "descale_decoding": "除垢步驟解析",
+          "tank_empty": "水箱已空",
+          "descaling_paused": "除垢已暫停",
+          "initializing": "初始化中",
+          "rinsing_ready": "清洗已就緒",
+          "maintenance_menu": "保養選單",
+          "cleaning_paused": "清潔已暫停",
+          "emptying_ready": "清空已就緒",
+          "cleaning_ready": "清潔已就緒",
+          "ready_old_capsule": "就緒（使用過的膠囊）",
+          "rinsing_paused": "清洗已暫停",
+          "unknown": "未知"
+        }
+      },
+      "wifi_status": {
+        "name": "Wi-Fi 狀態",
+        "state": {
+          "not_connected": "未連線",
+          "connecting": "連線中",
+          "connected": "已連線",
+          "updating_combo_firmware": "Combo 韌體更新中",
+          "updating_firmware": "韌體更新中",
+          "updating_recipes": "食譜更新中",
+          "cloud_onboarding": "雲端註冊中",
+          "connection_failed": "連線失敗",
+          "server_unreachable": "無法連線至伺服器",
+          "not_configured": "未設定",
+          "mqtt_init_error": "MQTT 初始化錯誤",
+          "combo_firmware_update_failed": "Combo 韌體更新失敗",
+          "firmware_update_failed": "韌體更新失敗",
+          "recipe_update_failed": "食譜更新失敗",
+          "market_not_set": "未設定市場",
+          "no_internet": "無網際網路連線",
+          "wrong_password": "密碼錯誤",
+          "unknown": "未知"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi 網路"
+      },
+      "firmware_version": {
+        "name": "韌體版本"
+      },
+      "hardware_version": {
+        "name": "硬體版本"
+      },
+      "recipe_count": {
+        "name": "食譜欄位"
+      },
+      "profile_version": {
+        "name": "設定檔版本"
+      },
+      "bootloader_version": {
+        "name": "開機載入程式版本"
+      },
+      "bluetooth_version": {
+        "name": "藍牙版本"
+      },
+      "recipe_db_version": {
+        "name": "食譜資料庫版本"
+      },
+      "connectivity_fw_version": {
+        "name": "連線模組韌體"
+      },
+      "error_code": {
+        "name": "錯誤代碼"
+      },
+      "error_list_code": {
+        "name": "錯誤記錄代碼"
+      },
+      "iot_market_name": {
+        "name": "IoT 市場"
+      },
+      "shadow_data": {
+        "name": "裝置影子"
+      },
+      "fota_status": {
+        "name": "韌體更新狀態"
+      },
+      "fota_progress": {
+        "name": "韌體更新進度"
+      },
+      "brew_total": {
+        "name": "總萃取次數"
+      },
+      "brews_since_descaling": {
+        "name": "上次除垢後萃取次數"
+      },
+      "brews_until_descaling": {
+        "name": "距離除垢剩餘萃取次數"
+      },
+      "days_until_descaling": {
+        "name": "距離除垢剩餘天數"
+      },
+      "brewing_duration": {
+        "name": "萃取時間"
+      },
+      "milk_unit_state": {
+        "name": "牛奶模組",
+        "state": {
+          "offline": "離線",
+          "ready": "就緒",
+          "frothing": "奶泡製作中",
+          "cleaning": "清潔中",
+          "heating": "加熱中",
+          "descaling_ready": "除垢已就緒",
+          "descaling": "除垢中",
+          "descaling_paused": "除垢已暫停",
+          "rinsing_ready": "清洗已就緒",
+          "rinsing": "清洗中",
+          "rinsing_paused": "清洗已暫停",
+          "blocked_menu": "已鎖定，選單開啟中",
+          "blocked_cleaning_needed": "已鎖定，需要清潔",
+          "blocked_descaling_needed": "已鎖定，需要除垢",
+          "waiting": "等待中",
+          "unknown_3": "未知 (3)",
+          "unknown": "未知"
+        }
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "錯誤"
+      },
+      "water_tank_empty": {
+        "name": "水箱已空"
+      },
+      "descaling_needed": {
+        "name": "需要除垢"
+      },
+      "cleaning_needed": {
+        "name": "需要清潔"
+      },
+      "capsule_container_full": {
+        "name": "膠囊收集盒已滿"
+      },
+      "brewing_unit_open": {
+        "name": "萃取單元"
+      },
+      "induction_heating": {
+        "name": "感應加熱器"
+      },
+      "milk_frother_running": {
+        "name": "奶泡器"
+      },
+      "led_signaling": {
+        "name": "LED 指示"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "水質硬度"
+      },
+      "caps_counter_setting": {
+        "name": "膠囊計數器"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "食譜",
+        "state": {
+          "espresso": "濃縮咖啡",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "卡布奇諾",
+          "latte_macchiato": "拿鐵瑪奇朵",
+          "custom": "自訂"
+        }
+      },
+      "language": {
+        "name": "語言"
+      },
+      "brew_type": {
+        "name": "萃取類型",
+        "state": {
+          "ristretto": "極致濃縮咖啡",
+          "espresso": "濃縮咖啡",
+          "lungo": "Lungo",
+          "hot_water": "熱水",
+          "americano": "美式咖啡"
+        }
+      },
+      "brew_temperature": {
+        "name": "萃取溫度",
+        "state": {
+          "low": "低",
+          "medium": "中",
+          "high": "高"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "重置除垢計數器"
+      },
+      "fota_check": {
+        "name": "檢查韌體更新"
+      },
+      "brew": {
+        "name": "萃取"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "狀態變更",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "待機",
+              "ready": "就緒",
+              "brewing": "萃取中",
+              "local_settings": "本機設定",
+              "error": "錯誤",
+              "overheated": "過熱",
+              "setup": "初始設定",
+              "paused": "已暫停",
+              "factory_reset": "恢復原廠設定",
+              "heating": "加熱中",
+              "descaling_ready": "除垢已就緒",
+              "cleaning": "清潔中",
+              "descaling": "除垢中",
+              "emptying": "清空中",
+              "power_save": "省電模式",
+              "cooldown": "冷卻中",
+              "service_mode": "維護模式",
+              "updating": "韌體更新中",
+              "rinsing": "清洗中",
+              "capsule_reading": "讀取膠囊中",
+              "descale_decoding": "除垢步驟解析",
+              "tank_empty": "水箱已空",
+              "descaling_paused": "除垢已暫停",
+              "initializing": "初始化中",
+              "rinsing_ready": "清洗已就緒",
+              "maintenance_menu": "保養選單",
+              "cleaning_paused": "清潔已暫停",
+              "emptying_ready": "清空已就緒",
+              "cleaning_ready": "清潔已就緒",
+              "ready_old_capsule": "就緒（使用過的膠囊）",
+              "rinsing_paused": "清洗已暫停",
+              "unknown": "未知"
+            }
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "確認 Nespresso 咖啡機",
+        "description": "已找到 {name}。如果咖啡機從未配對過，請將此欄位留空，整合會自行產生權杖。如果 Nespresso App 已經配對過這台咖啡機，請貼上 Nespresso 帳號中的 32 字元配對金鑰，讓兩者都能繼續運作；或貼上從藍牙擷取資料中取得的 16 字元驗證權杖。",
+        "data": {
+          "auth_token": "驗證權杖或配對金鑰（選填）"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "此整合需要藍牙。咖啡機會自動被發現。"
+      }
+    },
+    "error": {
+      "invalid_auth_token": "這既不是配對金鑰，也不是驗證權杖。應為 Nespresso 帳號中的 32 個十六進位字元，或藍牙擷取資料中的 16 個字元。"
+    },
+    "abort": {
+      "already_configured": "咖啡機已經設定完成。",
+      "bluetooth_only": "此整合會透過藍牙自動發現咖啡機。請確認藍牙已開啟，且咖啡機電源已開啟。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nespresso 選項",
+        "data": {
+          "scan_interval": "輪詢間隔（秒）",
+          "persistent_connection": "持續連線（即時更新，會阻擋 Nespresso App）",
+          "send_tx_level": "初始連線設定時傳送 TX 等級請求",
+          "descaling_capsules": "除垢間隔（膠囊數）",
+          "descaling_days": "除垢間隔（天數）",
+          "force_brew_button": "在未確認可萃取的型號上提供萃取功能"
+        },
+        "data_description": {
+          "force_brew_button": "Vertuo Pop 與 Vertuo Creatista 會確認收到每一個萃取指令，但仍保持閒置而不萃取，因此不會為它們建立萃取按鈕。開啟此選項即可重新取得按鈕及其兩項設定，並仍然嘗試看看。"
+        }
+      }
+    }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "掃描 Wi-Fi 網路",
+      "description": "詢問咖啡機能看到哪些 Wi-Fi 網路。掃描是由咖啡機而非 Home Assistant 執行，因此列表中是咖啡機能夠連線的網路。",
+      "fields": {
+        "config_entry_id": {
+          "name": "咖啡機",
+          "description": "要操作的 Nespresso 咖啡機。"
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "設定 Wi-Fi",
+      "description": "將咖啡機連線至 Wi-Fi 網路。密碼會以明文傳送至咖啡機，與官方 Nespresso App 的傳送方式完全相同。請查看 Wi-Fi 狀態感測器以取得結果。",
+      "fields": {
+        "config_entry_id": {
+          "name": "咖啡機",
+          "description": "要操作的 Nespresso 咖啡機。"
+        },
+        "market": {
+          "name": "市場",
+          "description": "兩個字母的國家代碼，例如 TW。沒有此代碼，咖啡機將無法連線至 Nespresso 的伺服器。"
+        },
+        "ssid": {
+          "name": "網路名稱",
+          "description": "要加入的 SSID，最多 32 位元組。"
+        },
+        "password": {
+          "name": "密碼",
+          "description": "最多 64 位元組。開放網路請留空。"
+        },
+        "security": {
+          "name": "安全性",
+          "description": "網路的安全性類型。"
+        },
+        "connection_index": {
+          "name": "連線索引",
+          "description": "沿用掃描結果中的索引。手動輸入網路時請保留為 255。"
+        }
+      }
+    },
+    "send_command": {
+      "name": "傳送原始指令",
+      "description": "將原始資料框寫入咖啡機的指令特徵值，並回報傳回的內容。這是一個除錯工具：它會顯示兩個特徵值各自提供的功能，以及咖啡機是否能夠回應，藉此區分被拒絕的指令與咖啡機無法確認收到的指令。",
+      "fields": {
+        "config_entry_id": {
+          "name": "咖啡機",
+          "description": "要操作的 Nespresso 咖啡機。"
+        },
+        "payload": {
+          "name": "酬載",
+          "description": "要寫入的資料框，以十六進位表示。例如 03050704000000000002000000000000000000，代表中溫的 Vertuo Lungo。"
+        }
+      }
+    },
+    "watch": {
+      "name": "監看咖啡機",
+      "description": "保持連線開啟並記錄所有變動：每一個數值改變的特徵值與每一則通知，皆附上時間戳記。執行後，請手動操作咖啡機。官方 App 從未提及的特徵值就是以這種方式辨識出來的。",
+      "fields": {
+        "config_entry_id": {
+          "name": "咖啡機",
+          "description": "要操作的 Nespresso 咖啡機。"
+        },
+        "seconds": {
+          "name": "持續時間",
+          "description": "監看的時間長度（秒）。長度需足以涵蓋整個萃取或奶泡製作循環。"
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "開始萃取",
+      "brewing_finished": "萃取完成",
+      "error_occurred": "發生錯誤",
+      "ready": "咖啡機已就緒",
+      "standby": "咖啡機待機中",
+      "descaling_needed": "需要除垢",
+      "water_tank_empty": "水箱已空"
+    }
+  }
+}
