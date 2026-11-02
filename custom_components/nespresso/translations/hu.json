@@ -1,0 +1,393 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "state": {
+          "standby": "Készenlét",
+          "ready": "Kész",
+          "brewing": "Főzés",
+          "local_settings": "Helyi beállítások",
+          "error": "Hiba",
+          "overheated": "Túlmelegedett",
+          "setup": "Kezdeti beállítás",
+          "paused": "Szünetel",
+          "factory_reset": "Gyári visszaállítás",
+          "heating": "Felfűtés",
+          "descaling_ready": "Vízkőmentesítésre kész",
+          "cleaning": "Tisztítás",
+          "descaling": "Vízkőmentesítés",
+          "emptying": "Kiürítés",
+          "power_save": "Energiatakarékos mód",
+          "cooldown": "Lehűlés",
+          "service_mode": "Szervizmód",
+          "updating": "Firmware frissítése",
+          "rinsing": "Öblítés",
+          "capsule_reading": "Kapszula felismerése",
+          "descale_decoding": "Vízkőmentesítés dekódolása",
+          "tank_empty": "Üres tartály",
+          "descaling_paused": "Vízkőmentesítés szünetel",
+          "initializing": "Előkészítés",
+          "rinsing_ready": "Öblítésre kész",
+          "maintenance_menu": "Karbantartási menü",
+          "cleaning_paused": "Tisztítás szünetel",
+          "emptying_ready": "Kiürítésre kész",
+          "cleaning_ready": "Tisztításra kész",
+          "ready_old_capsule": "Kész (régi kapszula)",
+          "rinsing_paused": "Öblítés szünetel",
+          "unknown": "Ismeretlen"
+        }
+      },
+      "wifi_status": {
+        "name": "Wi-Fi-állapot",
+        "state": {
+          "not_connected": "Nincs csatlakoztatva",
+          "connecting": "Csatlakozás",
+          "connected": "Csatlakoztatva",
+          "updating_combo_firmware": "A kombinált modul firmware-ének frissítése",
+          "updating_firmware": "Firmware frissítése",
+          "updating_recipes": "Receptek frissítése",
+          "cloud_onboarding": "Regisztráció a felhőben",
+          "connection_failed": "Sikertelen csatlakozás",
+          "server_unreachable": "A szerver nem érhető el",
+          "not_configured": "Nincs konfigurálva",
+          "mqtt_init_error": "MQTT-inicializálási hiba",
+          "combo_firmware_update_failed": "A kombinált modul firmware-frissítése sikertelen",
+          "firmware_update_failed": "Sikertelen firmware-frissítés",
+          "recipe_update_failed": "Sikertelen receptfrissítés",
+          "market_not_set": "Nincs beállítva piac",
+          "no_internet": "Nincs internet",
+          "wrong_password": "Hibás jelszó",
+          "unknown": "Ismeretlen"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi-hálózat"
+      },
+      "firmware_version": {
+        "name": "Firmware-verzió"
+      },
+      "hardware_version": {
+        "name": "Hardververzió"
+      },
+      "recipe_count": {
+        "name": "Recepthelyek"
+      },
+      "profile_version": {
+        "name": "Profilverzió"
+      },
+      "bootloader_version": {
+        "name": "Rendszerbetöltő verziója"
+      },
+      "bluetooth_version": {
+        "name": "Bluetooth-verzió"
+      },
+      "recipe_db_version": {
+        "name": "Receptadatbázis verziója"
+      },
+      "connectivity_fw_version": {
+        "name": "Kapcsolati modul firmware-e"
+      },
+      "error_code": {
+        "name": "Hibakód"
+      },
+      "error_list_code": {
+        "name": "Hibanapló kódja"
+      },
+      "iot_market_name": {
+        "name": "IoT-piac"
+      },
+      "shadow_data": {
+        "name": "Eszközárnyék"
+      },
+      "fota_status": {
+        "name": "Firmware-frissítés állapota"
+      },
+      "fota_progress": {
+        "name": "Firmware-frissítés előrehaladása"
+      },
+      "brew_total": {
+        "name": "Összes főzés"
+      },
+      "brews_since_descaling": {
+        "name": "Főzések a vízkőmentesítés óta"
+      },
+      "brews_until_descaling": {
+        "name": "Főzések a vízkőmentesítésig"
+      },
+      "days_until_descaling": {
+        "name": "Napok a vízkőmentesítésig"
+      },
+      "brewing_duration": {
+        "name": "Főzés időtartama"
+      },
+      "milk_unit_state": {
+        "name": "Tejegység",
+        "state": {
+          "offline": "Leválasztva",
+          "ready": "Kész",
+          "frothing": "Habosítás",
+          "cleaning": "Tisztítás",
+          "heating": "Felfűtés",
+          "descaling_ready": "Vízkőmentesítésre kész",
+          "descaling": "Vízkőmentesítés",
+          "descaling_paused": "Vízkőmentesítés szünetel",
+          "rinsing_ready": "Öblítésre kész",
+          "rinsing": "Öblítés",
+          "rinsing_paused": "Öblítés szünetel",
+          "blocked_menu": "Blokkolva, a menü nyitva van",
+          "blocked_cleaning_needed": "Blokkolva, tisztítás szükséges",
+          "blocked_descaling_needed": "Blokkolva, vízkőmentesítés szükséges",
+          "waiting": "Várakozás",
+          "unknown_3": "Ismeretlen (3)",
+          "unknown": "Ismeretlen"
+        }
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Hiba"
+      },
+      "water_tank_empty": {
+        "name": "Üres víztartály"
+      },
+      "descaling_needed": {
+        "name": "Vízkőmentesítés szükséges"
+      },
+      "cleaning_needed": {
+        "name": "Tisztítás szükséges"
+      },
+      "capsule_container_full": {
+        "name": "Megtelt a kapszulatartály"
+      },
+      "brewing_unit_open": {
+        "name": "Főzőegység"
+      },
+      "induction_heating": {
+        "name": "Indukciós fűtőegység"
+      },
+      "milk_frother_running": {
+        "name": "Tejhabosító"
+      },
+      "led_signaling": {
+        "name": "LED-jelzés"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Vízkeménység"
+      },
+      "caps_counter_setting": {
+        "name": "Kapszulaszámláló"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Recept",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Egyéni"
+        }
+      },
+      "language": {
+        "name": "Nyelv"
+      },
+      "brew_type": {
+        "name": "Főzés típusa",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Forró víz",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Főzési hőmérséklet",
+        "state": {
+          "low": "Alacsony",
+          "medium": "Közepes",
+          "high": "Magas"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Vízkőmentesítési számláló nullázása"
+      },
+      "fota_check": {
+        "name": "Firmware-frissítés keresése"
+      },
+      "brew": {
+        "name": "Főzés indítása"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Állapotváltozás",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Készenlét",
+              "ready": "Kész",
+              "brewing": "Főzés",
+              "local_settings": "Helyi beállítások",
+              "error": "Hiba",
+              "overheated": "Túlmelegedett",
+              "setup": "Kezdeti beállítás",
+              "paused": "Szünetel",
+              "factory_reset": "Gyári visszaállítás",
+              "heating": "Felfűtés",
+              "descaling_ready": "Vízkőmentesítésre kész",
+              "cleaning": "Tisztítás",
+              "descaling": "Vízkőmentesítés",
+              "emptying": "Kiürítés",
+              "power_save": "Energiatakarékos mód",
+              "cooldown": "Lehűlés",
+              "service_mode": "Szervizmód",
+              "updating": "Firmware frissítése",
+              "rinsing": "Öblítés",
+              "capsule_reading": "Kapszula felismerése",
+              "descale_decoding": "Vízkőmentesítés dekódolása",
+              "tank_empty": "Üres tartály",
+              "descaling_paused": "Vízkőmentesítés szünetel",
+              "initializing": "Előkészítés",
+              "rinsing_ready": "Öblítésre kész",
+              "maintenance_menu": "Karbantartási menü",
+              "cleaning_paused": "Tisztítás szünetel",
+              "emptying_ready": "Kiürítésre kész",
+              "cleaning_ready": "Tisztításra kész",
+              "ready_old_capsule": "Kész (régi kapszula)",
+              "rinsing_paused": "Öblítés szünetel",
+              "unknown": "Ismeretlen"
+            }
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Nespresso készülék megerősítése",
+        "description": "Megtalált készülék: {name}. Olyan készüléknél, amelyet még soha nem párosítottak, hagyja üresen ezt a mezőt, és az integráció saját tokent hoz létre. Ha a Nespresso alkalmazás már párosította ezt a készüléket, illessze be a Nespresso-fiókjából a 32 karakteres párosítási kulcsot, hogy mindkettő továbbra is működjön, vagy a Bluetooth-forgalom rögzítéséből a 16 karakteres hitelesítési tokent.",
+        "data": {
+          "auth_token": "Hitelesítési token vagy párosítási kulcs (opcionális)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "Ehhez az integrációhoz Bluetooth szükséges. A készülékeket a rendszer automatikusan felfedezi."
+      }
+    },
+    "error": {
+      "invalid_auth_token": "Ez sem párosítási kulcs, sem hitelesítési token. A várt érték 32 hexadecimális karakter a Nespresso-fiókjából, vagy 16 egy Bluetooth-forgalom rögzítéséből."
+    },
+    "abort": {
+      "already_configured": "A készülék már konfigurálva van.",
+      "bluetooth_only": "Ez az integráció Bluetooth-on keresztül automatikusan felfedezi a készülékeket. Győződjön meg arról, hogy a Bluetooth engedélyezve van, és a készülék be van kapcsolva."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nespresso-beállítások",
+        "data": {
+          "scan_interval": "Lekérdezési időköz (másodperc)",
+          "persistent_connection": "Állandó kapcsolat (valós idejű frissítések, blokkolja a Nespresso alkalmazást)",
+          "send_tx_level": "TX-szintkérés küldése párosításkor",
+          "descaling_capsules": "Vízkőmentesítési időköz (kapszula)",
+          "descaling_days": "Vízkőmentesítési időköz (nap)",
+          "force_brew_button": "Főzés felajánlása olyan modellen is, amelyről nem ismert, hogy tud főzni"
+        },
+        "data_description": {
+          "force_brew_button": "A Vertuo Pop és a Vertuo Creatista minden főzési parancs fogadását nyugtázza, de tétlen marad, ezért nem jön létre számukra főzésgomb. Kapcsolja be ezt, hogy a gomb és annak két beállítása visszakerüljön, és mégis kipróbálhassa."
+        }
+      }
+    }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Wi-Fi-hálózatok keresése",
+      "description": "Megkérdezi a készüléket, mely Wi-Fi-hálózatokat látja. A keresést a készülék végzi, nem a Home Assistant, így a lista azt mutatja, amit a készülék elér.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Készülék",
+          "description": "A Nespresso készülék, amelyen a műveletet végre kell hajtani."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Wi-Fi beállítása",
+      "description": "Csatlakoztatja a készüléket egy Wi-Fi-hálózathoz. A jelszót titkosítatlanul küldi el a készüléknek, pontosan úgy, ahogy a hivatalos Nespresso alkalmazás is küldi. Az eredményt a Wi-Fi-állapot érzékelőn követheti nyomon.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Készülék",
+          "description": "A Nespresso készülék, amelyen a műveletet végre kell hajtani."
+        },
+        "market": {
+          "name": "Piac",
+          "description": "Kétbetűs országkód, például HU. Enélkül a készülék nem éri el a Nespresso szervereit."
+        },
+        "ssid": {
+          "name": "Hálózatnév",
+          "description": "Az SSID, amelyhez csatlakozni kell, legfeljebb 32 bájt."
+        },
+        "password": {
+          "name": "Jelszó",
+          "description": "Legfeljebb 64 bájt. Nyílt hálózat esetén hagyja üresen."
+        },
+        "security": {
+          "name": "Biztonság",
+          "description": "A hálózat biztonsági típusa."
+        },
+        "connection_index": {
+          "name": "Kapcsolatindex",
+          "description": "Vegye át az indexet egy keresési eredményből. Ha a hálózatot kézzel adja meg, hagyja 255-ön."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Nyers parancs küldése",
+      "description": "Nyers keretet ír a készülék parancskarakterisztikájára, és jelenti, mi érkezett vissza. Hibakereső eszköz: megmondja, mit kínál a két karakterisztika, és hogy a készülék egyáltalán tudott-e válaszolni, és éppen ebből különböztethető meg egy elutasított parancs attól, amelyet a készülék nem tud nyugtázni.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Készülék",
+          "description": "A Nespresso készülék, amelyen a műveletet végre kell hajtani."
+        },
+        "payload": {
+          "name": "Hasznos adat",
+          "description": "A kiírandó keret hexadecimális formában. Példa: 03050704000000000002000000000000000000, egy Vertuo lungo közepes hőmérsékleten."
+        }
+      }
+    },
+    "watch": {
+      "name": "A készülék megfigyelése",
+      "description": "Nyitva tartja a kapcsolatot, és mindent rögzít, ami mozog: minden karakterisztikát, amelynek megváltozik az értéke, és minden értesítést, időbélyeggel. Indítsa el, majd kezelje a készüléket kézzel. Így azonosíthatók azok a karakterisztikák, amelyeket a hivatalos alkalmazás soha nem említ.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Készülék",
+          "description": "A Nespresso készülék, amelyen a műveletet végre kell hajtani."
+        },
+        "seconds": {
+          "name": "Időtartam",
+          "description": "Mennyi ideig tartson a megfigyelés, másodpercben. Elég hosszú legyen ahhoz, hogy egy teljes ciklust lefedjen, akár főzést, akár habosítást."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Főzés elindult",
+      "brewing_finished": "Főzés befejeződött",
+      "error_occurred": "Hiba történt",
+      "ready": "A készülék kész",
+      "standby": "A készülék készenlétben",
+      "descaling_needed": "Vízkőmentesítés szükséges",
+      "water_tank_empty": "Üres víztartály"
+    }
+  }
+}
