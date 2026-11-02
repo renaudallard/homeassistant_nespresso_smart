@@ -1,0 +1,393 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "state": {
+          "standby": "En espera",
+          "ready": "Listo",
+          "brewing": "Preparando",
+          "local_settings": "Ajustes locales",
+          "error": "Error",
+          "overheated": "Sobrecalentado",
+          "setup": "Configuración inicial",
+          "paused": "Pausado",
+          "factory_reset": "Restablecimiento de fábrica",
+          "heating": "Calentando",
+          "descaling_ready": "Descalcificación lista",
+          "cleaning": "Limpieza",
+          "descaling": "Descalcificación",
+          "emptying": "Vaciando",
+          "power_save": "Ahorro de energía",
+          "cooldown": "Enfriando",
+          "service_mode": "Modo servicio",
+          "updating": "Actualizando firmware",
+          "rinsing": "Enjuagando",
+          "capsule_reading": "Leyendo cápsula",
+          "descale_decoding": "Decodificación de descalcificación",
+          "tank_empty": "Tanque vacío",
+          "descaling_paused": "Descalcificación pausada",
+          "initializing": "Inicializando",
+          "rinsing_ready": "Enjuague listo",
+          "maintenance_menu": "Menú de mantenimiento",
+          "cleaning_paused": "Limpieza pausada",
+          "emptying_ready": "Vaciado listo",
+          "cleaning_ready": "Limpieza lista",
+          "ready_old_capsule": "Listo (cápsula antigua)",
+          "rinsing_paused": "Enjuague pausado",
+          "unknown": "Desconocido"
+        }
+      },
+      "wifi_status": {
+        "name": "Estado del wifi",
+        "state": {
+          "not_connected": "No conectado",
+          "connecting": "Conectando",
+          "connected": "Conectado",
+          "updating_combo_firmware": "Actualizando firmware combo",
+          "updating_firmware": "Actualizando firmware",
+          "updating_recipes": "Actualizando recetas",
+          "cloud_onboarding": "Vinculación con la nube",
+          "connection_failed": "Error de conexión",
+          "server_unreachable": "Servidor inaccesible",
+          "not_configured": "Sin configurar",
+          "mqtt_init_error": "Error de inicio de MQTT",
+          "combo_firmware_update_failed": "Error al actualizar el firmware combo",
+          "firmware_update_failed": "Error al actualizar el firmware",
+          "recipe_update_failed": "Error al actualizar las recetas",
+          "market_not_set": "Mercado sin definir",
+          "no_internet": "Sin internet",
+          "wrong_password": "Contraseña incorrecta",
+          "unknown": "Desconocido"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Red wifi"
+      },
+      "firmware_version": {
+        "name": "Versión del firmware"
+      },
+      "hardware_version": {
+        "name": "Versión del hardware"
+      },
+      "recipe_count": {
+        "name": "Espacios de recetas"
+      },
+      "profile_version": {
+        "name": "Versión del perfil"
+      },
+      "bootloader_version": {
+        "name": "Versión del gestor de arranque"
+      },
+      "bluetooth_version": {
+        "name": "Versión de Bluetooth"
+      },
+      "recipe_db_version": {
+        "name": "Versión de la base de datos de recetas"
+      },
+      "connectivity_fw_version": {
+        "name": "Firmware de conectividad"
+      },
+      "error_code": {
+        "name": "Código de error"
+      },
+      "error_list_code": {
+        "name": "Código del registro de errores"
+      },
+      "iot_market_name": {
+        "name": "Mercado IoT"
+      },
+      "shadow_data": {
+        "name": "Sombra del dispositivo"
+      },
+      "fota_status": {
+        "name": "Estado de la actualización de firmware"
+      },
+      "fota_progress": {
+        "name": "Progreso de la actualización de firmware"
+      },
+      "brew_total": {
+        "name": "Preparaciones totales"
+      },
+      "brews_since_descaling": {
+        "name": "Preparaciones desde la descalcificación"
+      },
+      "brews_until_descaling": {
+        "name": "Preparaciones hasta la descalcificación"
+      },
+      "days_until_descaling": {
+        "name": "Días hasta la descalcificación"
+      },
+      "brewing_duration": {
+        "name": "Duración de la preparación"
+      },
+      "milk_unit_state": {
+        "name": "Unidad de leche",
+        "state": {
+          "offline": "Desconectada",
+          "ready": "Lista",
+          "frothing": "Espumando",
+          "cleaning": "Limpieza",
+          "heating": "Calentando",
+          "descaling_ready": "Descalcificación lista",
+          "descaling": "Descalcificando",
+          "descaling_paused": "Descalcificación en pausa",
+          "rinsing_ready": "Enjuague listo",
+          "rinsing": "Enjuagando",
+          "rinsing_paused": "Enjuague en pausa",
+          "blocked_menu": "Bloqueada, menú abierto",
+          "blocked_cleaning_needed": "Bloqueada, requiere limpieza",
+          "blocked_descaling_needed": "Bloqueada, requiere descalcificación",
+          "waiting": "Esperando",
+          "unknown_3": "Desconocido (3)",
+          "unknown": "Desconocido"
+        }
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Error"
+      },
+      "water_tank_empty": {
+        "name": "Tanque de agua vacío"
+      },
+      "descaling_needed": {
+        "name": "Descalcificación necesaria"
+      },
+      "cleaning_needed": {
+        "name": "Limpieza necesaria"
+      },
+      "capsule_container_full": {
+        "name": "Recipiente de cápsulas lleno"
+      },
+      "brewing_unit_open": {
+        "name": "Unidad de preparación"
+      },
+      "induction_heating": {
+        "name": "Calentador de inducción"
+      },
+      "milk_frother_running": {
+        "name": "Espumador de leche"
+      },
+      "led_signaling": {
+        "name": "Señalización LED"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Dureza del agua"
+      },
+      "caps_counter_setting": {
+        "name": "Contador de cápsulas"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Receta",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Personalizado"
+        }
+      },
+      "language": {
+        "name": "Idioma"
+      },
+      "brew_type": {
+        "name": "Tipo de preparación",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Agua caliente",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Temperatura de preparación",
+        "state": {
+          "low": "Baja",
+          "medium": "Media",
+          "high": "Alta"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Restablecer el contador de descalcificación"
+      },
+      "fota_check": {
+        "name": "Buscar actualización de firmware"
+      },
+      "brew": {
+        "name": "Preparar"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Cambio de estado",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "En espera",
+              "ready": "Listo",
+              "brewing": "Preparando",
+              "local_settings": "Ajustes locales",
+              "error": "Error",
+              "overheated": "Sobrecalentado",
+              "setup": "Configuración inicial",
+              "paused": "Pausado",
+              "factory_reset": "Restablecimiento de fábrica",
+              "heating": "Calentando",
+              "descaling_ready": "Descalcificación lista",
+              "cleaning": "Limpieza",
+              "descaling": "Descalcificación",
+              "emptying": "Vaciando",
+              "power_save": "Ahorro de energía",
+              "cooldown": "Enfriando",
+              "service_mode": "Modo servicio",
+              "updating": "Actualizando firmware",
+              "rinsing": "Enjuagando",
+              "capsule_reading": "Leyendo cápsula",
+              "descale_decoding": "Decodificación de descalcificación",
+              "tank_empty": "Tanque vacío",
+              "descaling_paused": "Descalcificación pausada",
+              "initializing": "Inicializando",
+              "rinsing_ready": "Enjuague listo",
+              "maintenance_menu": "Menú de mantenimiento",
+              "cleaning_paused": "Limpieza pausada",
+              "emptying_ready": "Vaciado listo",
+              "cleaning_ready": "Limpieza lista",
+              "ready_old_capsule": "Listo (cápsula antigua)",
+              "rinsing_paused": "Enjuague pausado",
+              "unknown": "Desconocido"
+            }
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Confirmar máquina Nespresso",
+        "description": "Se encontró {name}. Deje este campo vacío en una máquina que nunca se ha emparejado y la integración generará su propio token. Si la aplicación Nespresso ya emparejó esta máquina, pegue la clave de emparejamiento de 32 caracteres de su cuenta Nespresso para que ambas sigan funcionando, o el token de 16 caracteres obtenido de una captura Bluetooth.",
+        "data": {
+          "auth_token": "Token o clave de emparejamiento (opcional)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "Esta integración requiere Bluetooth. Las máquinas se descubren automáticamente."
+      }
+    },
+    "error": {
+      "invalid_auth_token": "Esto no es ni una clave de emparejamiento ni un token. Se esperan 32 caracteres hexadecimales de su cuenta Nespresso, o 16 de una captura Bluetooth."
+    },
+    "abort": {
+      "already_configured": "La máquina ya está configurada.",
+      "bluetooth_only": "Esta integración descubre máquinas por Bluetooth automáticamente. Asegúrese de que el Bluetooth esté activado y la máquina encendida."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones Nespresso",
+        "data": {
+          "scan_interval": "Intervalo de actualización (segundos)",
+          "persistent_connection": "Conexión persistente (actualizaciones en tiempo real, bloquea la aplicación Nespresso)",
+          "send_tx_level": "Enviar la solicitud de nivel TX al vincular",
+          "descaling_capsules": "Intervalo de descalcificación (cápsulas)",
+          "descaling_days": "Intervalo de descalcificación (días)",
+          "force_brew_button": "Ofrecer preparación en un modelo que no la admite"
+        },
+        "data_description": {
+          "force_brew_button": "La Vertuo Pop y la Vertuo Creatista confirman cualquier comando de preparación y no hacen nada, por lo que no se crea ningún botón para ellas. Active esto para recuperar el botón y sus dos ajustes e intentarlo de todos modos."
+        }
+      }
+    }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Buscar redes WiFi",
+      "description": "Preguntar a la máquina qué redes WiFi ve. La búsqueda la hace la máquina, no Home Assistant, así que la lista es lo que la máquina puede alcanzar.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Máquina",
+          "description": "La máquina Nespresso sobre la que actuar."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Configurar WiFi",
+      "description": "Conectar la máquina a una red WiFi. La contraseña se envía a la máquina en claro, exactamente como la envía la aplicación oficial de Nespresso. El resultado aparece en el sensor de estado WiFi.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Máquina",
+          "description": "La máquina Nespresso sobre la que actuar."
+        },
+        "market": {
+          "name": "Mercado",
+          "description": "Código de país de dos letras, por ejemplo MX. Sin él la máquina no alcanzará los servidores de Nespresso."
+        },
+        "ssid": {
+          "name": "Nombre de red",
+          "description": "El SSID al que conectarse, 32 bytes como máximo."
+        },
+        "password": {
+          "name": "Contraseña",
+          "description": "64 bytes como máximo. Dejar vacío para una red abierta."
+        },
+        "security": {
+          "name": "Seguridad",
+          "description": "El tipo de seguridad de la red."
+        },
+        "connection_index": {
+          "name": "Índice de conexión",
+          "description": "Repetir el índice de un resultado de búsqueda. Dejar en 255 si se escribe la red a mano."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Enviar un comando en bruto",
+      "description": "Escribe una trama en bruto en la característica de comando de la máquina e informa de la respuesta. Herramienta de diagnóstico: indica qué ofrecen ambas características y si la máquina podía responder, que es lo que distingue un comando rechazado de uno que la máquina no puede confirmar.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Máquina",
+          "description": "La máquina Nespresso sobre la que actuar."
+        },
+        "payload": {
+          "name": "Trama",
+          "description": "La trama a escribir, en hexadecimal. Ejemplo 03050704000000000002000000000000000000, un lungo Vertuo a temperatura media."
+        }
+      }
+    },
+    "watch": {
+      "name": "Observar la máquina",
+      "description": "Mantiene la conexión abierta y registra todo lo que cambia: cada característica cuyo valor se mueve y cada notificación, con marca de tiempo. Ejecútela y luego use la máquina a mano. Así se identifican las características que la aplicación oficial nunca menciona.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Máquina",
+          "description": "La máquina Nespresso sobre la que actuar."
+        },
+        "seconds": {
+          "name": "Duración",
+          "description": "Cuánto tiempo observar, en segundos. Lo bastante para cubrir un ciclo entero, preparación o espumado."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Preparación iniciada",
+      "brewing_finished": "Preparación finalizada",
+      "error_occurred": "Ocurrió un error",
+      "ready": "Máquina lista",
+      "standby": "Máquina en espera",
+      "descaling_needed": "Descalcificación necesaria",
+      "water_tank_empty": "Tanque de agua vacío"
+    }
+  }
+}
