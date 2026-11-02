@@ -1,0 +1,393 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "state": {
+          "standby": "Pohotovostný režim",
+          "ready": "Pripravené",
+          "brewing": "Príprava",
+          "local_settings": "Miestne nastavenia",
+          "error": "Chyba",
+          "overheated": "Prehriate",
+          "setup": "Počiatočné nastavenie",
+          "paused": "Pozastavené",
+          "factory_reset": "Obnovenie továrenských nastavení",
+          "heating": "Ohrev",
+          "descaling_ready": "Odvápňovanie pripravené",
+          "cleaning": "Čistenie",
+          "descaling": "Odvápňovanie",
+          "emptying": "Vyprázdňovanie",
+          "power_save": "Úsporný režim",
+          "cooldown": "Ochladzovanie",
+          "service_mode": "Servisný režim",
+          "updating": "Aktualizácia firmvéru",
+          "rinsing": "Oplachovanie",
+          "capsule_reading": "Čítanie kapsuly",
+          "descale_decoding": "Dekódovanie odvápňovania",
+          "tank_empty": "Prázdna nádrž",
+          "descaling_paused": "Odvápňovanie pozastavené",
+          "initializing": "Inicializácia",
+          "rinsing_ready": "Oplachovanie pripravené",
+          "maintenance_menu": "Ponuka údržby",
+          "cleaning_paused": "Čistenie pozastavené",
+          "emptying_ready": "Vyprázdnenie pripravené",
+          "cleaning_ready": "Čistenie pripravené",
+          "ready_old_capsule": "Pripravené (stará kapsula)",
+          "rinsing_paused": "Oplachovanie pozastavené",
+          "unknown": "Neznámy"
+        }
+      },
+      "wifi_status": {
+        "name": "Stav Wi-Fi",
+        "state": {
+          "not_connected": "Nepripojené",
+          "connecting": "Pripája sa",
+          "connected": "Pripojené",
+          "updating_combo_firmware": "Aktualizácia firmvéru kombinovaného modulu",
+          "updating_firmware": "Aktualizácia firmvéru",
+          "updating_recipes": "Aktualizácia receptov",
+          "cloud_onboarding": "Registrácia v cloude",
+          "connection_failed": "Pripojenie zlyhalo",
+          "server_unreachable": "Server je nedostupný",
+          "not_configured": "Nenakonfigurované",
+          "mqtt_init_error": "Chyba inicializácie MQTT",
+          "combo_firmware_update_failed": "Aktualizácia firmvéru kombinovaného modulu zlyhala",
+          "firmware_update_failed": "Aktualizácia firmvéru zlyhala",
+          "recipe_update_failed": "Aktualizácia receptov zlyhala",
+          "market_not_set": "Trh nie je nastavený",
+          "no_internet": "Bez internetu",
+          "wrong_password": "Nesprávne heslo",
+          "unknown": "Neznámy"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Sieť Wi-Fi"
+      },
+      "firmware_version": {
+        "name": "Verzia firmvéru"
+      },
+      "hardware_version": {
+        "name": "Verzia hardvéru"
+      },
+      "recipe_count": {
+        "name": "Miesta na recepty"
+      },
+      "profile_version": {
+        "name": "Verzia profilu"
+      },
+      "bootloader_version": {
+        "name": "Verzia zavádzača"
+      },
+      "bluetooth_version": {
+        "name": "Verzia Bluetooth"
+      },
+      "recipe_db_version": {
+        "name": "Verzia databázy receptov"
+      },
+      "connectivity_fw_version": {
+        "name": "Firmvér modulu pripojenia"
+      },
+      "error_code": {
+        "name": "Kód chyby"
+      },
+      "error_list_code": {
+        "name": "Kód z denníka chýb"
+      },
+      "iot_market_name": {
+        "name": "Trh IoT"
+      },
+      "shadow_data": {
+        "name": "Tieň zariadenia"
+      },
+      "fota_status": {
+        "name": "Stav aktualizácie firmvéru"
+      },
+      "fota_progress": {
+        "name": "Priebeh aktualizácie firmvéru"
+      },
+      "brew_total": {
+        "name": "Celkový počet príprav"
+      },
+      "brews_since_descaling": {
+        "name": "Prípravy od odvápnenia"
+      },
+      "brews_until_descaling": {
+        "name": "Prípravy do odvápnenia"
+      },
+      "days_until_descaling": {
+        "name": "Dni do odvápnenia"
+      },
+      "brewing_duration": {
+        "name": "Trvanie prípravy"
+      },
+      "milk_unit_state": {
+        "name": "Mliečna jednotka",
+        "state": {
+          "offline": "Odpojené",
+          "ready": "Pripravené",
+          "frothing": "Napeňovanie",
+          "cleaning": "Čistenie",
+          "heating": "Ohrev",
+          "descaling_ready": "Odvápňovanie pripravené",
+          "descaling": "Odvápňovanie",
+          "descaling_paused": "Odvápňovanie pozastavené",
+          "rinsing_ready": "Oplachovanie pripravené",
+          "rinsing": "Oplachovanie",
+          "rinsing_paused": "Oplachovanie pozastavené",
+          "blocked_menu": "Zablokované, ponuka je otvorená",
+          "blocked_cleaning_needed": "Zablokované, potrebné čistenie",
+          "blocked_descaling_needed": "Zablokované, potrebné odvápnenie",
+          "waiting": "Čakanie",
+          "unknown_3": "Neznámy (3)",
+          "unknown": "Neznámy"
+        }
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Chyba"
+      },
+      "water_tank_empty": {
+        "name": "Prázdna nádrž na vodu"
+      },
+      "descaling_needed": {
+        "name": "Potrebné odvápnenie"
+      },
+      "cleaning_needed": {
+        "name": "Potrebné čistenie"
+      },
+      "capsule_container_full": {
+        "name": "Plný zásobník na kapsuly"
+      },
+      "brewing_unit_open": {
+        "name": "Spariaca jednotka"
+      },
+      "induction_heating": {
+        "name": "Indukčný ohrievač"
+      },
+      "milk_frother_running": {
+        "name": "Napeňovač mlieka"
+      },
+      "led_signaling": {
+        "name": "Signalizácia LED"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Tvrdosť vody"
+      },
+      "caps_counter_setting": {
+        "name": "Počítadlo kapsúl"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Recept",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Vlastný"
+        }
+      },
+      "language": {
+        "name": "Jazyk"
+      },
+      "brew_type": {
+        "name": "Typ prípravy",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Horúca voda",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Teplota prípravy",
+        "state": {
+          "low": "Nízka",
+          "medium": "Stredná",
+          "high": "Vysoká"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Vynulovať počítadlo odvápnenia"
+      },
+      "fota_check": {
+        "name": "Skontrolovať aktualizáciu firmvéru"
+      },
+      "brew": {
+        "name": "Pripraviť"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Zmena stavu",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Pohotovostný režim",
+              "ready": "Pripravené",
+              "brewing": "Príprava",
+              "local_settings": "Miestne nastavenia",
+              "error": "Chyba",
+              "overheated": "Prehriate",
+              "setup": "Počiatočné nastavenie",
+              "paused": "Pozastavené",
+              "factory_reset": "Obnovenie továrenských nastavení",
+              "heating": "Ohrev",
+              "descaling_ready": "Odvápňovanie pripravené",
+              "cleaning": "Čistenie",
+              "descaling": "Odvápňovanie",
+              "emptying": "Vyprázdňovanie",
+              "power_save": "Úsporný režim",
+              "cooldown": "Ochladzovanie",
+              "service_mode": "Servisný režim",
+              "updating": "Aktualizácia firmvéru",
+              "rinsing": "Oplachovanie",
+              "capsule_reading": "Čítanie kapsuly",
+              "descale_decoding": "Dekódovanie odvápňovania",
+              "tank_empty": "Prázdna nádrž",
+              "descaling_paused": "Odvápňovanie pozastavené",
+              "initializing": "Inicializácia",
+              "rinsing_ready": "Oplachovanie pripravené",
+              "maintenance_menu": "Ponuka údržby",
+              "cleaning_paused": "Čistenie pozastavené",
+              "emptying_ready": "Vyprázdnenie pripravené",
+              "cleaning_ready": "Čistenie pripravené",
+              "ready_old_capsule": "Pripravené (stará kapsula)",
+              "rinsing_paused": "Oplachovanie pozastavené",
+              "unknown": "Neznámy"
+            }
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Potvrdiť kávovar Nespresso",
+        "description": "Nájdené zariadenie {name}. Pri kávovare, ktorý ešte nikdy nebol spárovaný, nechajte toto pole prázdne a integrácia si vygeneruje vlastný token. Ak aplikácia Nespresso tento kávovar už spárovala, vložte 32-znakový párovací kľúč z vášho účtu Nespresso, aby naďalej fungovali obe, alebo 16-znakový overovací token zo záznamu prevádzky Bluetooth.",
+        "data": {
+          "auth_token": "Overovací token alebo párovací kľúč (voliteľné)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "Táto integrácia vyžaduje Bluetooth. Kávovary sa vyhľadávajú automaticky."
+      }
+    },
+    "error": {
+      "invalid_auth_token": "Nejde ani o párovací kľúč, ani o overovací token. Očakáva sa 32 hexadecimálnych znakov z vášho účtu Nespresso alebo 16 zo záznamu prevádzky Bluetooth."
+    },
+    "abort": {
+      "already_configured": "Kávovar už je nakonfigurovaný.",
+      "bluetooth_only": "Táto integrácia vyhľadáva kávovary automaticky cez Bluetooth. Uistite sa, že je Bluetooth povolený a kávovar je zapnutý."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Možnosti Nespresso",
+        "data": {
+          "scan_interval": "Interval dotazovania (sekundy)",
+          "persistent_connection": "Trvalé pripojenie (aktualizácie v reálnom čase, blokuje aplikáciu Nespresso)",
+          "send_tx_level": "Pri párovaní odoslať požiadavku na úroveň TX",
+          "descaling_capsules": "Interval odvápnenia (kapsuly)",
+          "descaling_days": "Interval odvápnenia (dni)",
+          "force_brew_button": "Ponúknuť prípravu aj na modeli, o ktorom nie je známe, že ju zvláda"
+        },
+        "data_description": {
+          "force_brew_button": "Vertuo Pop a Vertuo Creatista potvrdia prijatie každého príkazu na prípravu, ale zostanú nečinné, preto sa pre ne tlačidlo prípravy nevytvára. Zapnite túto možnosť, ak chcete tlačidlo a jeho dve nastavenia vrátiť a aj tak to vyskúšať."
+        }
+      }
+    }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Vyhľadať siete Wi-Fi",
+      "description": "Opýta sa kávovaru, ktoré siete Wi-Fi vidí. Vyhľadávanie vykonáva kávovar, nie Home Assistant, takže zoznam ukazuje to, na čo kávovar dosiahne.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Kávovar",
+          "description": "Kávovar Nespresso, s ktorým sa má pracovať."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Nastaviť Wi-Fi",
+      "description": "Pripojí kávovar k sieti Wi-Fi. Heslo sa do kávovaru odosiela nešifrovane, presne tak, ako ho odosiela oficiálna aplikácia Nespresso. Výsledok sledujte na snímači Stav Wi-Fi.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Kávovar",
+          "description": "Kávovar Nespresso, s ktorým sa má pracovať."
+        },
+        "market": {
+          "name": "Trh",
+          "description": "Dvojpísmenový kód krajiny, napríklad SK. Bez neho sa kávovar nedostane k serverom Nespresso."
+        },
+        "ssid": {
+          "name": "Názov siete",
+          "description": "SSID, ku ktorému sa má pripojiť, najviac 32 bajtov."
+        },
+        "password": {
+          "name": "Heslo",
+          "description": "Najviac 64 bajtov. Pri otvorenej sieti nechajte prázdne."
+        },
+        "security": {
+          "name": "Zabezpečenie",
+          "description": "Typ zabezpečenia siete."
+        },
+        "connection_index": {
+          "name": "Index pripojenia",
+          "description": "Prevezmite index z výsledku vyhľadávania. Ak sieť zadávate ručne, ponechajte 255."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Odoslať surový príkaz",
+      "description": "Zapíše surový rámec do príkazovej charakteristiky kávovaru a oznámi, čo sa vrátilo. Ladiaci nástroj: uvádza, čo obe charakteristiky ponúkajú a či kávovar vôbec mohol odpovedať, a práve podľa toho sa rozlíši odmietnutý príkaz od príkazu, ktorý kávovar nedokáže potvrdiť.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Kávovar",
+          "description": "Kávovar Nespresso, s ktorým sa má pracovať."
+        },
+        "payload": {
+          "name": "Dátová časť",
+          "description": "Rámec na zápis, v hexadecimálnom tvare. Príklad 03050704000000000002000000000000000000, Vertuo lungo pri strednej teplote."
+        }
+      }
+    },
+    "watch": {
+      "name": "Sledovať kávovar",
+      "description": "Udržiava spojenie otvorené a zaznamenáva všetko, čo sa mení: každú charakteristiku, ktorej hodnota sa zmení, a každé oznámenie, s časovou pečiatkou. Spustite ju a potom kávovar ovládajte ručne. Takto sa identifikujú charakteristiky, o ktorých sa oficiálna aplikácia nikdy nezmieňuje.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Kávovar",
+          "description": "Kávovar Nespresso, s ktorým sa má pracovať."
+        },
+        "seconds": {
+          "name": "Trvanie",
+          "description": "Ako dlho sledovať, v sekundách. Dostatočne dlho na to, aby sa pokryl celý cyklus, príprava alebo napeňovanie."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Príprava sa začala",
+      "brewing_finished": "Príprava sa skončila",
+      "error_occurred": "Vyskytla sa chyba",
+      "ready": "Kávovar je pripravený",
+      "standby": "Kávovar v pohotovostnom režime",
+      "descaling_needed": "Potrebné odvápnenie",
+      "water_tank_empty": "Prázdna nádrž na vodu"
+    }
+  }
+}
