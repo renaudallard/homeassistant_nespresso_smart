@@ -1,0 +1,393 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "state": {
+          "standby": "대기 모드",
+          "ready": "준비 완료",
+          "brewing": "추출 중",
+          "local_settings": "로컬 설정",
+          "error": "오류",
+          "overheated": "과열",
+          "setup": "초기 설정",
+          "paused": "일시 중지됨",
+          "factory_reset": "공장 초기화",
+          "heating": "예열 중",
+          "descaling_ready": "디스케일링 준비 완료",
+          "cleaning": "클리닝 중",
+          "descaling": "디스케일링 중",
+          "emptying": "물 비우기 중",
+          "power_save": "절전 모드",
+          "cooldown": "냉각 중",
+          "service_mode": "서비스 모드",
+          "updating": "펌웨어 업데이트 중",
+          "rinsing": "헹구기 중",
+          "capsule_reading": "캡슐 읽는 중",
+          "descale_decoding": "디스케일링 디코딩",
+          "tank_empty": "물탱크 비어 있음",
+          "descaling_paused": "디스케일링 일시 중지",
+          "initializing": "초기화 중",
+          "rinsing_ready": "헹구기 준비 완료",
+          "maintenance_menu": "유지 관리 메뉴",
+          "cleaning_paused": "클리닝 일시 중지",
+          "emptying_ready": "물 비우기 준비 완료",
+          "cleaning_ready": "클리닝 준비 완료",
+          "ready_old_capsule": "준비 완료 (오래된 캡슐)",
+          "rinsing_paused": "헹구기 일시 중지",
+          "unknown": "알 수 없음"
+        }
+      },
+      "wifi_status": {
+        "name": "Wi-Fi 상태",
+        "state": {
+          "not_connected": "연결되지 않음",
+          "connecting": "연결 중",
+          "connected": "연결됨",
+          "updating_combo_firmware": "콤보 펌웨어 업데이트 중",
+          "updating_firmware": "펌웨어 업데이트 중",
+          "updating_recipes": "레시피 업데이트 중",
+          "cloud_onboarding": "클라우드 등록 중",
+          "connection_failed": "연결 실패",
+          "server_unreachable": "서버에 연결할 수 없음",
+          "not_configured": "구성되지 않음",
+          "mqtt_init_error": "MQTT 초기화 오류",
+          "combo_firmware_update_failed": "콤보 펌웨어 업데이트 실패",
+          "firmware_update_failed": "펌웨어 업데이트 실패",
+          "recipe_update_failed": "레시피 업데이트 실패",
+          "market_not_set": "마켓이 설정되지 않음",
+          "no_internet": "인터넷 연결 없음",
+          "wrong_password": "잘못된 비밀번호",
+          "unknown": "알 수 없음"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi 네트워크"
+      },
+      "firmware_version": {
+        "name": "펌웨어 버전"
+      },
+      "hardware_version": {
+        "name": "하드웨어 버전"
+      },
+      "recipe_count": {
+        "name": "레시피 슬롯"
+      },
+      "profile_version": {
+        "name": "프로필 버전"
+      },
+      "bootloader_version": {
+        "name": "부트로더 버전"
+      },
+      "bluetooth_version": {
+        "name": "Bluetooth 버전"
+      },
+      "recipe_db_version": {
+        "name": "레시피 데이터베이스 버전"
+      },
+      "connectivity_fw_version": {
+        "name": "통신 모듈 펌웨어"
+      },
+      "error_code": {
+        "name": "오류 코드"
+      },
+      "error_list_code": {
+        "name": "오류 로그 코드"
+      },
+      "iot_market_name": {
+        "name": "IoT 마켓"
+      },
+      "shadow_data": {
+        "name": "디바이스 섀도우"
+      },
+      "fota_status": {
+        "name": "펌웨어 업데이트 상태"
+      },
+      "fota_progress": {
+        "name": "펌웨어 업데이트 진행률"
+      },
+      "brew_total": {
+        "name": "총 추출 횟수"
+      },
+      "brews_since_descaling": {
+        "name": "디스케일링 이후 추출 횟수"
+      },
+      "brews_until_descaling": {
+        "name": "디스케일링까지 남은 추출 횟수"
+      },
+      "days_until_descaling": {
+        "name": "디스케일링까지 남은 일수"
+      },
+      "brewing_duration": {
+        "name": "추출 시간"
+      },
+      "milk_unit_state": {
+        "name": "우유 모듈",
+        "state": {
+          "offline": "오프라인",
+          "ready": "준비 완료",
+          "frothing": "우유 거품 만드는 중",
+          "cleaning": "청소 중",
+          "heating": "예열 중",
+          "descaling_ready": "디스케일링 준비 완료",
+          "descaling": "디스케일링 중",
+          "descaling_paused": "디스케일링 일시 중지",
+          "rinsing_ready": "헹구기 준비 완료",
+          "rinsing": "헹구기 중",
+          "rinsing_paused": "헹구기 일시 중지",
+          "blocked_menu": "차단됨, 메뉴 열림",
+          "blocked_cleaning_needed": "차단됨, 청소 필요",
+          "blocked_descaling_needed": "차단됨, 디스케일링 필요",
+          "waiting": "대기 중",
+          "unknown_3": "알 수 없음 (3)",
+          "unknown": "알 수 없음"
+        }
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "오류"
+      },
+      "water_tank_empty": {
+        "name": "물탱크 비어 있음"
+      },
+      "descaling_needed": {
+        "name": "디스케일링 필요"
+      },
+      "cleaning_needed": {
+        "name": "클리닝 필요"
+      },
+      "capsule_container_full": {
+        "name": "캡슐 용기 가득 참"
+      },
+      "brewing_unit_open": {
+        "name": "추출 유닛"
+      },
+      "induction_heating": {
+        "name": "인덕션 히터"
+      },
+      "milk_frother_running": {
+        "name": "우유 거품기"
+      },
+      "led_signaling": {
+        "name": "LED 신호 표시"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "물 경도"
+      },
+      "caps_counter_setting": {
+        "name": "캡슐 카운터"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "레시피",
+        "state": {
+          "espresso": "에스프레소",
+          "lungo": "룽고",
+          "extra_lungo": "엑스트라 룽고",
+          "cappuccino": "카푸치노",
+          "latte_macchiato": "라떼 마키아토",
+          "custom": "사용자 지정"
+        }
+      },
+      "language": {
+        "name": "언어"
+      },
+      "brew_type": {
+        "name": "추출 유형",
+        "state": {
+          "ristretto": "리스트레토",
+          "espresso": "에스프레소",
+          "lungo": "룽고",
+          "hot_water": "뜨거운 물",
+          "americano": "아메리카노"
+        }
+      },
+      "brew_temperature": {
+        "name": "추출 온도",
+        "state": {
+          "low": "낮음",
+          "medium": "중간",
+          "high": "높음"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "디스케일링 카운터 재설정"
+      },
+      "fota_check": {
+        "name": "펌웨어 업데이트 확인"
+      },
+      "brew": {
+        "name": "추출"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "상태 변경",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "대기 모드",
+              "ready": "준비 완료",
+              "brewing": "추출 중",
+              "local_settings": "로컬 설정",
+              "error": "오류",
+              "overheated": "과열",
+              "setup": "초기 설정",
+              "paused": "일시 중지됨",
+              "factory_reset": "공장 초기화",
+              "heating": "예열 중",
+              "descaling_ready": "디스케일링 준비 완료",
+              "cleaning": "클리닝 중",
+              "descaling": "디스케일링 중",
+              "emptying": "물 비우기 중",
+              "power_save": "절전 모드",
+              "cooldown": "냉각 중",
+              "service_mode": "서비스 모드",
+              "updating": "펌웨어 업데이트 중",
+              "rinsing": "헹구기 중",
+              "capsule_reading": "캡슐 읽는 중",
+              "descale_decoding": "디스케일링 디코딩",
+              "tank_empty": "물탱크 비어 있음",
+              "descaling_paused": "디스케일링 일시 중지",
+              "initializing": "초기화 중",
+              "rinsing_ready": "헹구기 준비 완료",
+              "maintenance_menu": "유지 관리 메뉴",
+              "cleaning_paused": "클리닝 일시 중지",
+              "emptying_ready": "물 비우기 준비 완료",
+              "cleaning_ready": "클리닝 준비 완료",
+              "ready_old_capsule": "준비 완료 (오래된 캡슐)",
+              "rinsing_paused": "헹구기 일시 중지",
+              "unknown": "알 수 없음"
+            }
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Nespresso 머신 확인",
+        "description": "{name}을(를) 찾았습니다. 한 번도 페어링된 적이 없는 머신이라면 이 칸을 비워 두세요. 통합에서 자체 토큰을 생성합니다. Nespresso 앱으로 이미 이 머신을 페어링했다면 둘 다 계속 작동하도록 Nespresso 계정의 32자 페어링 키를 붙여 넣거나, Bluetooth 캡처에서 얻은 16자 인증 토큰을 붙여 넣으세요.",
+        "data": {
+          "auth_token": "인증 토큰 또는 페어링 키 (선택 사항)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "이 통합에는 Bluetooth가 필요합니다. 머신은 자동으로 검색됩니다."
+      }
+    },
+    "error": {
+      "invalid_auth_token": "페어링 키도 인증 토큰도 아닙니다. Nespresso 계정의 16진수 32자 또는 Bluetooth 캡처의 16자를 입력하세요."
+    },
+    "abort": {
+      "already_configured": "머신이 이미 구성되었습니다.",
+      "bluetooth_only": "이 통합은 Bluetooth를 통해 머신을 자동으로 검색합니다. Bluetooth가 활성화되어 있고 머신의 전원이 켜져 있는지 확인하세요."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nespresso 옵션",
+        "data": {
+          "scan_interval": "폴링 간격 (초)",
+          "persistent_connection": "지속 연결 (실시간 업데이트, Nespresso 앱 사용 차단)",
+          "send_tx_level": "온보딩 시 TX 레벨 요청 보내기",
+          "descaling_capsules": "디스케일링 간격 (캡슐)",
+          "descaling_days": "디스케일링 간격 (일)",
+          "force_brew_button": "추출이 확인되지 않은 모델에서도 추출 기능 제공"
+        },
+        "data_description": {
+          "force_brew_button": "Vertuo Pop과 Vertuo Creatista는 모든 추출 명령의 수신을 확인하지만 추출하지 않고 대기 상태로 남아 있으므로, 이 모델에는 추출 버튼이 생성되지 않습니다. 버튼과 두 가지 설정을 다시 표시하고 그래도 시도해 보려면 이 옵션을 켜세요."
+        }
+      }
+    }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Wi-Fi 네트워크 검색",
+      "description": "머신에 어떤 Wi-Fi 네트워크가 보이는지 요청합니다. 검색은 Home Assistant가 아닌 머신이 수행하므로, 목록에는 머신이 연결할 수 있는 네트워크가 표시됩니다.",
+      "fields": {
+        "config_entry_id": {
+          "name": "머신",
+          "description": "작업을 수행할 Nespresso 머신입니다."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Wi-Fi 구성",
+      "description": "머신을 Wi-Fi 네트워크에 연결합니다. 암호는 공식 Nespresso 앱과 똑같이 평문으로 머신에 전송됩니다. 결과는 Wi-Fi 상태 센서에서 확인하세요.",
+      "fields": {
+        "config_entry_id": {
+          "name": "머신",
+          "description": "작업을 수행할 Nespresso 머신입니다."
+        },
+        "market": {
+          "name": "마켓",
+          "description": "두 글자 국가 코드입니다(예: KR). 이 값이 없으면 머신이 Nespresso 서버에 연결할 수 없습니다."
+        },
+        "ssid": {
+          "name": "네트워크 이름",
+          "description": "연결할 SSID이며 최대 32바이트입니다."
+        },
+        "password": {
+          "name": "암호",
+          "description": "최대 64바이트입니다. 개방형 네트워크의 경우 비워 두세요."
+        },
+        "security": {
+          "name": "보안",
+          "description": "네트워크의 보안 유형입니다."
+        },
+        "connection_index": {
+          "name": "연결 인덱스",
+          "description": "검색 결과의 인덱스를 그대로 입력하세요. 네트워크를 직접 입력하는 경우 255로 두세요."
+        }
+      }
+    },
+    "send_command": {
+      "name": "원시 명령 보내기",
+      "description": "머신의 명령 특성에 원시 프레임을 쓰고 돌아온 응답을 보고합니다. 디버깅 도구입니다. 두 특성이 각각 무엇을 제공하는지, 그리고 머신이 응답할 수 있었는지 여부를 알려 주며, 이를 통해 거부된 명령과 머신이 수신을 확인할 수 없는 명령을 구분할 수 있습니다.",
+      "fields": {
+        "config_entry_id": {
+          "name": "머신",
+          "description": "작업을 수행할 Nespresso 머신입니다."
+        },
+        "payload": {
+          "name": "페이로드",
+          "description": "쓸 프레임(16진수)입니다. 예: 03050704000000000002000000000000000000, 중간 온도의 Vertuo 룽고."
+        }
+      }
+    },
+    "watch": {
+      "name": "머신 모니터링",
+      "description": "연결을 유지한 채 움직이는 모든 것, 즉 값이 바뀌는 모든 특성과 모든 알림을 타임스탬프와 함께 기록합니다. 실행한 다음 머신을 직접 조작하세요. 공식 앱이 전혀 언급하지 않는 특성은 이 방법으로 식별됩니다.",
+      "fields": {
+        "config_entry_id": {
+          "name": "머신",
+          "description": "작업을 수행할 Nespresso 머신입니다."
+        },
+        "seconds": {
+          "name": "기간",
+          "description": "모니터링할 시간(초)입니다. 추출이나 우유 거품 만들기 등 전체 사이클을 포함할 수 있을 만큼 길게 설정하세요."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "추출 시작됨",
+      "brewing_finished": "추출 완료됨",
+      "error_occurred": "오류 발생",
+      "ready": "머신 준비 완료",
+      "standby": "머신 대기 모드",
+      "descaling_needed": "디스케일링 필요",
+      "water_tank_empty": "물탱크 비어 있음"
+    }
+  }
+}
