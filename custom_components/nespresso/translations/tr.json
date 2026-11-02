@@ -1,0 +1,393 @@
+{
+  "entity": {
+    "sensor": {
+      "machine_state": {
+        "state": {
+          "standby": "Bekleme modu",
+          "ready": "Hazır",
+          "brewing": "Demleniyor",
+          "local_settings": "Yerel ayarlar",
+          "error": "Hata",
+          "overheated": "Aşırı ısındı",
+          "setup": "İlk kurulum",
+          "paused": "Duraklatıldı",
+          "factory_reset": "Fabrika ayarlarına sıfırlama",
+          "heating": "Isınıyor",
+          "descaling_ready": "Kireç çözmeye hazır",
+          "cleaning": "Temizleme",
+          "descaling": "Kireç çözme",
+          "emptying": "Boşaltma",
+          "power_save": "Güç tasarrufu",
+          "cooldown": "Soğuyor",
+          "service_mode": "Servis modu",
+          "updating": "Donanım yazılımı güncelleniyor",
+          "rinsing": "Durulama",
+          "capsule_reading": "Kapsül okuma",
+          "descale_decoding": "Kireç çözme kodu çözülüyor",
+          "tank_empty": "Hazne boş",
+          "descaling_paused": "Kireç çözme duraklatıldı",
+          "initializing": "Başlatılıyor",
+          "rinsing_ready": "Durulamaya hazır",
+          "maintenance_menu": "Bakım menüsü",
+          "cleaning_paused": "Temizlik duraklatıldı",
+          "emptying_ready": "Boşaltmaya hazır",
+          "cleaning_ready": "Temizlik için hazır",
+          "ready_old_capsule": "Hazır (eski kapsül)",
+          "rinsing_paused": "Durulama duraklatıldı",
+          "unknown": "Bilinmiyor"
+        }
+      },
+      "wifi_status": {
+        "name": "Wi-Fi durumu",
+        "state": {
+          "not_connected": "Bağlı değil",
+          "connecting": "Bağlanıyor",
+          "connected": "Bağlandı",
+          "updating_combo_firmware": "Kombo modülün donanım yazılımı güncelleniyor",
+          "updating_firmware": "Donanım yazılımı güncelleniyor",
+          "updating_recipes": "Tarifler güncelleniyor",
+          "cloud_onboarding": "Bulut kurulumu yapılıyor",
+          "connection_failed": "Bağlantı başarısız oldu",
+          "server_unreachable": "Sunucuya ulaşılamıyor",
+          "not_configured": "Yapılandırılmadı",
+          "mqtt_init_error": "MQTT başlatma hatası",
+          "combo_firmware_update_failed": "Kombo modülün donanım yazılımı güncellemesi başarısız oldu",
+          "firmware_update_failed": "Donanım yazılımı güncellemesi başarısız oldu",
+          "recipe_update_failed": "Tarif güncellemesi başarısız oldu",
+          "market_not_set": "Pazar ayarlanmadı",
+          "no_internet": "İnternet yok",
+          "wrong_password": "Yanlış parola",
+          "unknown": "Bilinmiyor"
+        }
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi ağı"
+      },
+      "firmware_version": {
+        "name": "Donanım yazılımı sürümü"
+      },
+      "hardware_version": {
+        "name": "Donanım sürümü"
+      },
+      "recipe_count": {
+        "name": "Tarif yuvaları"
+      },
+      "profile_version": {
+        "name": "Profil sürümü"
+      },
+      "bootloader_version": {
+        "name": "Önyükleyici sürümü"
+      },
+      "bluetooth_version": {
+        "name": "Bluetooth sürümü"
+      },
+      "recipe_db_version": {
+        "name": "Tarif veritabanı sürümü"
+      },
+      "connectivity_fw_version": {
+        "name": "Bağlantı modülü donanım yazılımı"
+      },
+      "error_code": {
+        "name": "Hata kodu"
+      },
+      "error_list_code": {
+        "name": "Hata günlüğü kodu"
+      },
+      "iot_market_name": {
+        "name": "IoT pazarı"
+      },
+      "shadow_data": {
+        "name": "Cihaz gölgesi"
+      },
+      "fota_status": {
+        "name": "Donanım yazılımı güncelleme durumu"
+      },
+      "fota_progress": {
+        "name": "Donanım yazılımı güncelleme ilerlemesi"
+      },
+      "brew_total": {
+        "name": "Toplam demleme"
+      },
+      "brews_since_descaling": {
+        "name": "Kireç çözmeden bu yana demleme"
+      },
+      "brews_until_descaling": {
+        "name": "Kireç çözmeye kalan demleme"
+      },
+      "days_until_descaling": {
+        "name": "Kireç çözmeye kalan gün"
+      },
+      "brewing_duration": {
+        "name": "Demleme süresi"
+      },
+      "milk_unit_state": {
+        "name": "Süt ünitesi",
+        "state": {
+          "offline": "Çevrimdışı",
+          "ready": "Hazır",
+          "frothing": "Köpürtülüyor",
+          "cleaning": "Temizleme",
+          "heating": "Isınıyor",
+          "descaling_ready": "Kireç çözmeye hazır",
+          "descaling": "Kireç çözme",
+          "descaling_paused": "Kireç çözme duraklatıldı",
+          "rinsing_ready": "Durulamaya hazır",
+          "rinsing": "Durulama",
+          "rinsing_paused": "Durulama duraklatıldı",
+          "blocked_menu": "Engellendi, menü açık",
+          "blocked_cleaning_needed": "Engellendi, temizlik gerekiyor",
+          "blocked_descaling_needed": "Engellendi, kireç çözme gerekiyor",
+          "waiting": "Bekliyor",
+          "unknown_3": "Bilinmiyor (3)",
+          "unknown": "Bilinmiyor"
+        }
+      }
+    },
+    "binary_sensor": {
+      "error_present": {
+        "name": "Hata"
+      },
+      "water_tank_empty": {
+        "name": "Su haznesi boş"
+      },
+      "descaling_needed": {
+        "name": "Kireç çözme gerekiyor"
+      },
+      "cleaning_needed": {
+        "name": "Temizlik gerekiyor"
+      },
+      "capsule_container_full": {
+        "name": "Kapsül haznesi dolu"
+      },
+      "brewing_unit_open": {
+        "name": "Demleme ünitesi"
+      },
+      "induction_heating": {
+        "name": "İndüksiyon ısıtıcı"
+      },
+      "milk_frother_running": {
+        "name": "Süt köpürtücü"
+      },
+      "led_signaling": {
+        "name": "LED sinyali"
+      }
+    },
+    "number": {
+      "water_hardness": {
+        "name": "Su sertliği"
+      },
+      "caps_counter_setting": {
+        "name": "Kapsül sayacı"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Tarif",
+        "state": {
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "extra_lungo": "Extra lungo",
+          "cappuccino": "Cappuccino",
+          "latte_macchiato": "Latte macchiato",
+          "custom": "Özel"
+        }
+      },
+      "language": {
+        "name": "Dil"
+      },
+      "brew_type": {
+        "name": "Demleme türü",
+        "state": {
+          "ristretto": "Ristretto",
+          "espresso": "Espresso",
+          "lungo": "Lungo",
+          "hot_water": "Sıcak su",
+          "americano": "Americano"
+        }
+      },
+      "brew_temperature": {
+        "name": "Demleme sıcaklığı",
+        "state": {
+          "low": "Düşük",
+          "medium": "Orta",
+          "high": "Yüksek"
+        }
+      }
+    },
+    "button": {
+      "reset_descaling": {
+        "name": "Kireç çözme sayacını sıfırla"
+      },
+      "fota_check": {
+        "name": "Donanım yazılımı güncellemesini kontrol et"
+      },
+      "brew": {
+        "name": "Demle"
+      }
+    },
+    "event": {
+      "state_change": {
+        "name": "Durum değişikliği",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "standby": "Bekleme modu",
+              "ready": "Hazır",
+              "brewing": "Demleniyor",
+              "local_settings": "Yerel ayarlar",
+              "error": "Hata",
+              "overheated": "Aşırı ısındı",
+              "setup": "İlk kurulum",
+              "paused": "Duraklatıldı",
+              "factory_reset": "Fabrika ayarlarına sıfırlama",
+              "heating": "Isınıyor",
+              "descaling_ready": "Kireç çözmeye hazır",
+              "cleaning": "Temizleme",
+              "descaling": "Kireç çözme",
+              "emptying": "Boşaltma",
+              "power_save": "Güç tasarrufu",
+              "cooldown": "Soğuyor",
+              "service_mode": "Servis modu",
+              "updating": "Donanım yazılımı güncelleniyor",
+              "rinsing": "Durulama",
+              "capsule_reading": "Kapsül okuma",
+              "descale_decoding": "Kireç çözme kodu çözülüyor",
+              "tank_empty": "Hazne boş",
+              "descaling_paused": "Kireç çözme duraklatıldı",
+              "initializing": "Başlatılıyor",
+              "rinsing_ready": "Durulamaya hazır",
+              "maintenance_menu": "Bakım menüsü",
+              "cleaning_paused": "Temizlik duraklatıldı",
+              "emptying_ready": "Boşaltmaya hazır",
+              "cleaning_ready": "Temizlik için hazır",
+              "ready_old_capsule": "Hazır (eski kapsül)",
+              "rinsing_paused": "Durulama duraklatıldı",
+              "unknown": "Bilinmiyor"
+            }
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Nespresso makinesini onayla",
+        "description": "{name} bulundu. Hiç eşleştirilmemiş bir makinede bu alanı boş bırakın, entegrasyon kendi belirtecini oluşturur. Bu makine Nespresso uygulamasıyla zaten eşleştirildiyse, ikisinin de çalışmaya devam etmesi için Nespresso hesabınızdaki 32 karakterlik eşleştirme anahtarını yapıştırın ya da bir Bluetooth yakalamasından alınan 16 karakterlik kimlik doğrulama belirtecini yapıştırın.",
+        "data": {
+          "auth_token": "Kimlik doğrulama belirteci veya eşleştirme anahtarı (isteğe bağlı)"
+        }
+      },
+      "user": {
+        "title": "Nespresso Smart",
+        "description": "Bu entegrasyon Bluetooth gerektirir. Makineler otomatik olarak keşfedilir."
+      }
+    },
+    "error": {
+      "invalid_auth_token": "Bu ne bir eşleştirme anahtarı ne de bir kimlik doğrulama belirteci. Nespresso hesabınızdan 32 onaltılık karakter veya bir Bluetooth yakalamasından 16 karakter bekleniyor."
+    },
+    "abort": {
+      "already_configured": "Makine zaten yapılandırılmış.",
+      "bluetooth_only": "Bu entegrasyon makineleri Bluetooth üzerinden otomatik olarak keşfeder. Bluetooth'un etkin olduğundan ve makinenin açık olduğundan emin olun."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nespresso seçenekleri",
+        "data": {
+          "scan_interval": "Yoklama aralığı (saniye)",
+          "persistent_connection": "Kalıcı bağlantı (gerçek zamanlı güncellemeler, Nespresso uygulamasını engeller)",
+          "send_tx_level": "İlk kurulum sırasında TX seviyesi isteğini gönder",
+          "descaling_capsules": "Kireç çözme aralığı (kapsül)",
+          "descaling_days": "Kireç çözme aralığı (gün)",
+          "force_brew_button": "Demleme yaptığı bilinmeyen bir modelde de demleme seçeneği sun"
+        },
+        "data_description": {
+          "force_brew_button": "Vertuo Pop ve Vertuo Creatista her demleme komutunun alındığını onaylar ancak demleme yapmadan boşta kalır, bu yüzden bu modeller için demleme düğmesi oluşturulmaz. Düğmeyi ve onun iki ayarını geri getirip yine de denemek için bunu açın."
+        }
+      }
+    }
+  },
+  "services": {
+    "scan_wifi": {
+      "name": "Wi-Fi ağlarını tara",
+      "description": "Makineye hangi Wi-Fi ağlarını görebildiğini sorar. Taramayı Home Assistant değil makine yapar, bu yüzden liste makinenin ulaşabildiği ağları gösterir.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Makine",
+          "description": "İşlem yapılacak Nespresso makinesi."
+        }
+      }
+    },
+    "configure_wifi": {
+      "name": "Wi-Fi'yi yapılandır",
+      "description": "Makineyi bir Wi-Fi ağına bağlar. Parola, tam olarak resmi Nespresso uygulamasının gönderdiği gibi makineye açık metin olarak gönderilir. Sonuç için Wi-Fi durumu sensörünü izleyin.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Makine",
+          "description": "İşlem yapılacak Nespresso makinesi."
+        },
+        "market": {
+          "name": "Pazar",
+          "description": "İki harfli ülke kodu, örneğin TR. Bu olmadan makine Nespresso sunucularına ulaşamaz."
+        },
+        "ssid": {
+          "name": "Ağ adı",
+          "description": "Katılınacak SSID, en fazla 32 bayt."
+        },
+        "password": {
+          "name": "Parola",
+          "description": "En fazla 64 bayt. Açık bir ağ için boş bırakın."
+        },
+        "security": {
+          "name": "Güvenlik",
+          "description": "Ağın güvenlik türü."
+        },
+        "connection_index": {
+          "name": "Bağlantı indeksi",
+          "description": "Bir tarama sonucundaki indeksi aynen girin. Ağı elle yazıyorsanız 255 olarak bırakın."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Ham komut gönder",
+      "description": "Makinenin komut karakteristiğine ham bir çerçeve yazar ve geri gelen yanıtı bildirir. Bir hata ayıklama aracıdır: her iki karakteristiğin neler sunduğunu ve makinenin yanıt verip veremediğini söyler, reddedilen bir komutu makinenin alındığını onaylayamadığı bir komuttan ayırt etmeyi sağlayan da budur.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Makine",
+          "description": "İşlem yapılacak Nespresso makinesi."
+        },
+        "payload": {
+          "name": "Veri yükü",
+          "description": "Yazılacak çerçeve, onaltılık olarak. Örnek 03050704000000000002000000000000000000, orta sıcaklıkta bir Vertuo lungo."
+        }
+      }
+    },
+    "watch": {
+      "name": "Makineyi izle",
+      "description": "Bağlantıyı açık tutar ve hareket eden her şeyi zaman damgasıyla kaydeder: değeri değişen her karakteristiği ve her bildirimi. Çalıştırın, ardından makineyi elle kullanın. Resmi uygulamanın hiç bahsetmediği karakteristikler bu şekilde belirlenir.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Makine",
+          "description": "İşlem yapılacak Nespresso makinesi."
+        },
+        "seconds": {
+          "name": "Süre",
+          "description": "Saniye cinsinden ne kadar süre izleneceği. Demleme ya da köpürtme, bütün bir döngüyü kapsayacak kadar uzun olmalı."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "brewing_started": "Demleme başladı",
+      "brewing_finished": "Demleme bitti",
+      "error_occurred": "Hata oluştu",
+      "ready": "Makine hazır",
+      "standby": "Makine bekleme modunda",
+      "descaling_needed": "Kireç çözme gerekiyor",
+      "water_tank_empty": "Su haznesi boş"
+    }
+  }
+}
