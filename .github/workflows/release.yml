@@ -49,9 +49,14 @@ jobs:
       - name: Create release zip
         if: steps.check_release.outputs.exists == 'false'
         run: |
-          cd custom_components
-          zip -r ../nespresso.zip nespresso
-          cd ..
+          # The files of the integration at the root of the zip: hacs.json
+          # names it, and HACS and the Marketplace extract it into
+          # custom_components/nespresso/
+          cd custom_components/nespresso
+          zip -qr ../../nespresso.zip . \
+            -x '*.pyc' '__pycache__/*' '*/__pycache__/*'
+          cd ../..
+          unzip -l nespresso.zip
 
       - name: Create release
         if: steps.check_release.outputs.exists == 'false'
