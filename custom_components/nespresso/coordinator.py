@@ -895,17 +895,27 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         )
         self._async_save_counters()
 
+    def _counters(self) -> dict[str, Any]:
+        """Return the counters as they are stored."""
+        return {
+            "brew_total": self.brew_total,
+            "brews_since_descaling": self.brews_since_descaling,
+            "last_descaling": self.last_descaling,
+        }
+
     @callback
     def _async_save_counters(self) -> None:
         """Write counters with a delay so bursts do not thrash the disk."""
-        self._counter_store.async_delay_save(
-            lambda: {
-                "brew_total": self.brew_total,
-                "brews_since_descaling": self.brews_since_descaling,
-                "last_descaling": self.last_descaling,
-            },
-            COUNTER_SAVE_DELAY,
-        )
+        self._counter_store.async_delay_save(self._counters, COUNTER_SAVE_DELAY)
+
+    async def async_save_counters(self) -> None:
+        """Write counters now, in place of any delayed write still pending.
+
+        A reload reads the store before a pending write would land, so the
+        coordinator it creates starts from the counts on disk and the brews
+        of the last COUNTER_SAVE_DELAY seconds are lost.
+        """
+        await self._counter_store.async_save(self._counters())
 
     @callback
     def async_apply_advertisement(self, raw: bytes | None) -> bool:
