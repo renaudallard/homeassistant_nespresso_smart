@@ -278,6 +278,13 @@
           "auth_token": "Autentiseringstoken eller parkopplingsnyckel (valfritt)"
         }
       },
+      "reconfigure": {
+        "title": "Byt autentiseringstoken",
+        "description": "Klistra in parkopplingsnyckeln på 32 tecken från ditt Nespresso-konto eller autentiseringstoken på 16 tecken från en inspelning av Bluetooth-trafiken. Värdet ersätter den token som sparats för {name}. En maskin som integrationen har parkopplat med en egen token godtar ingen annan förrän efter en fabriksåterställning, så behåll den.",
+        "data": {
+          "auth_token": "Autentiseringstoken eller parkopplingsnyckel"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Den här integrationen kräver Bluetooth. Maskiner upptäcks automatiskt."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "Maskinen är redan konfigurerad.",
-      "bluetooth_only": "Den här integrationen upptäcker maskiner automatiskt via Bluetooth. Kontrollera att Bluetooth är aktiverat och att maskinen är påslagen."
+      "bluetooth_only": "Den här integrationen upptäcker maskiner automatiskt via Bluetooth. Kontrollera att Bluetooth är aktiverat och att maskinen är påslagen.",
+      "reconfigure_successful": "Omkonfigureringen lyckades"
     }
   },
   "options": {

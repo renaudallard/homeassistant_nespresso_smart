@@ -278,6 +278,13 @@
           "auth_token": "Auth token or pairing key (optional)"
         }
       },
+      "reconfigure": {
+        "title": "Change the auth token",
+        "description": "Paste the 32 character pairing key from your Nespresso account, or the 16 character auth token from a Bluetooth capture. It replaces the token stored for {name}. A machine the integration paired with a token of its own accepts no other until it is factory reset, so keep that one.",
+        "data": {
+          "auth_token": "Auth token or pairing key"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "This integration requires Bluetooth. Machines are discovered automatically."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "Machine is already configured.",
-      "bluetooth_only": "This integration discovers machines via Bluetooth automatically. Ensure Bluetooth is enabled and the machine is powered on."
+      "bluetooth_only": "This integration discovers machines via Bluetooth automatically. Ensure Bluetooth is enabled and the machine is powered on.",
+      "reconfigure_successful": "Reconfiguration was successful"
     }
   },
   "options": {

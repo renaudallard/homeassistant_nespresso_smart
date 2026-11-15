@@ -278,6 +278,13 @@
           "auth_token": "Hitelesítési token vagy párosítási kulcs (opcionális)"
         }
       },
+      "reconfigure": {
+        "title": "Hitelesítési token módosítása",
+        "description": "Illessze be a Nespresso-fiókjából a 32 karakteres párosítási kulcsot, vagy a Bluetooth-forgalom rögzítéséből a 16 karakteres hitelesítési tokent. Ez az érték lecseréli a(z) {name} készülékhez tárolt tokent. Az a készülék, amelyet az integráció saját tokennel párosított, gyári visszaállításig nem fogad el mást, ezért azt a tokent tartsa meg.",
+        "data": {
+          "auth_token": "Hitelesítési token vagy párosítási kulcs"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Ehhez az integrációhoz Bluetooth szükséges. A készülékeket a rendszer automatikusan felfedezi."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "A készülék már konfigurálva van.",
-      "bluetooth_only": "Ez az integráció Bluetooth-on keresztül automatikusan felfedezi a készülékeket. Győződjön meg arról, hogy a Bluetooth engedélyezve van, és a készülék be van kapcsolva."
+      "bluetooth_only": "Ez az integráció Bluetooth-on keresztül automatikusan felfedezi a készülékeket. Győződjön meg arról, hogy a Bluetooth engedélyezve van, és a készülék be van kapcsolva.",
+      "reconfigure_successful": "Az újrakonfigurálás sikeres volt"
     }
   },
   "options": {

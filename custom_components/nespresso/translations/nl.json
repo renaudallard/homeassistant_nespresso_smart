@@ -278,6 +278,13 @@
           "auth_token": "Token of koppelsleutel (optioneel)"
         }
       },
+      "reconfigure": {
+        "title": "Token wijzigen",
+        "description": "Plak de koppelsleutel van 32 tekens uit je Nespresso-account, of het token van 16 tekens uit een Bluetooth-opname. Dit vervangt het token dat voor {name} is opgeslagen. Een machine die de integratie met een eigen token heeft gekoppeld, accepteert geen ander token tot ze naar de fabrieksinstellingen is teruggezet, dus houd dat token.",
+        "data": {
+          "auth_token": "Token of koppelsleutel"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Deze integratie vereist Bluetooth. Machines worden automatisch ontdekt."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "Machine is al geconfigureerd.",
-      "bluetooth_only": "Deze integratie ontdekt machines automatisch via Bluetooth. Zorg dat Bluetooth is ingeschakeld en de machine aan staat."
+      "bluetooth_only": "Deze integratie ontdekt machines automatisch via Bluetooth. Zorg dat Bluetooth is ingeschakeld en de machine aan staat.",
+      "reconfigure_successful": "De herconfiguratie is gelukt"
     }
   },
   "options": {

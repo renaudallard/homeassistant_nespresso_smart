@@ -278,6 +278,13 @@
           "auth_token": "Godkendelsestoken eller parringsnøgle (valgfrit)"
         }
       },
+      "reconfigure": {
+        "title": "Skift godkendelsestoken",
+        "description": "Indsæt parringsnøglen på 32 tegn fra din Nespresso-konto eller godkendelsestokenet på 16 tegn fra en optagelse af Bluetooth-trafikken. Værdien erstatter det token, der er gemt for {name}. En maskine, som integrationen har parret med sit eget token, accepterer intet andet før en fabriksnulstilling, så behold det.",
+        "data": {
+          "auth_token": "Godkendelsestoken eller parringsnøgle"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Denne integration kræver Bluetooth. Maskiner bliver fundet automatisk."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "Maskinen er allerede konfigureret.",
-      "bluetooth_only": "Denne integration finder automatisk maskiner via Bluetooth. Sørg for, at Bluetooth er aktiveret, og at maskinen er tændt."
+      "bluetooth_only": "Denne integration finder automatisk maskiner via Bluetooth. Sørg for, at Bluetooth er aktiveret, og at maskinen er tændt.",
+      "reconfigure_successful": "Genkonfigurationen lykkedes"
     }
   },
   "options": {

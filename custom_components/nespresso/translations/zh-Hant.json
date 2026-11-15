@@ -278,6 +278,13 @@
           "auth_token": "驗證權杖或配對金鑰（選填）"
         }
       },
+      "reconfigure": {
+        "title": "變更驗證權杖",
+        "description": "請貼上 Nespresso 帳號中的 32 字元配對金鑰，或從藍牙擷取資料中取得的 16 字元驗證權杖。這會取代 {name} 已儲存的權杖。整合以自己的權杖配對的咖啡機，在恢復原廠設定前不會接受其他權杖，因此請保留該權杖。",
+        "data": {
+          "auth_token": "驗證權杖或配對金鑰"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "此整合需要藍牙。咖啡機會自動被發現。"
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "咖啡機已經設定完成。",
-      "bluetooth_only": "此整合會透過藍牙自動發現咖啡機。請確認藍牙已開啟，且咖啡機電源已開啟。"
+      "bluetooth_only": "此整合會透過藍牙自動發現咖啡機。請確認藍牙已開啟，且咖啡機電源已開啟。",
+      "reconfigure_successful": "重新設定成功"
     }
   },
   "options": {

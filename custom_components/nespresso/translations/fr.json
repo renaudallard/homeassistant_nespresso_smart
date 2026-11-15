@@ -278,6 +278,13 @@
           "auth_token": "Jeton ou clé d'association (facultatif)"
         }
       },
+      "reconfigure": {
+        "title": "Changer le jeton",
+        "description": "Collez la clé d'association de 32 caractères de votre compte Nespresso, ou le jeton de 16 caractères relevé dans une capture Bluetooth. Cette valeur remplace le jeton enregistré pour {name}. Une machine que l'intégration a associée avec son propre jeton n'en accepte aucun autre avant une réinitialisation d'usine : gardez donc celui-là.",
+        "data": {
+          "auth_token": "Jeton ou clé d'association"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Cette intégration nécessite le Bluetooth. Les machines sont découvertes automatiquement."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "La machine est déjà configurée.",
-      "bluetooth_only": "Cette intégration découvre automatiquement les machines via Bluetooth. Vérifiez que le Bluetooth est activé et que la machine est allumée."
+      "bluetooth_only": "Cette intégration découvre automatiquement les machines via Bluetooth. Vérifiez que le Bluetooth est activé et que la machine est allumée.",
+      "reconfigure_successful": "La reconfiguration a réussi"
     }
   },
   "options": {

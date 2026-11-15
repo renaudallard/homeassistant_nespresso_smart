@@ -218,6 +218,35 @@ class NespressoConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Replace the auth token of a machine already set up."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            auth_key = normalize_auth_key(user_input["auth_token"])
+            if auth_key is None:
+                errors["auth_token"] = "invalid_auth_token"
+            else:
+                data = {**entry.data, "auth_key": auth_key}
+                # The update listener reloads the entry, but it is only added
+                # once setup has succeeded. An entry still retrying with the
+                # wrong token has none and has to be reloaded from here.
+                if entry.update_listeners:
+                    return self.async_update_and_abort(entry, data=data)
+                return self.async_update_reload_and_abort(entry, data=data)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            description_placeholders={"name": entry.title},
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required("auth_token"): str}),
+                user_input,
+            ),
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

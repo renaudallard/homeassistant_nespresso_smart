@@ -74,6 +74,13 @@ machine: either the 32 character pairing key from your Nespresso account, which
 the integration converts to the token itself, or the 16 character token read
 off a Bluetooth capture. See below for both.
 
+The token can be changed later without removing the machine: in **Settings >
+Devices & services > Nespresso Smart**, pick **Reconfigure** in the machine
+entry's three dots menu and paste the pairing key or token. The entry reloads
+with it, and the brew counters and entities are kept. A token the integration
+generated itself is the only one the machine knows, so replacing it costs a
+factory reset of the machine.
+
 ### Machine already paired with the Nespresso app
 
 Each machine stores one auth token (CMID), and only accepts one while it holds none. `CMID_TYPE` says which of the four states it is in:
@@ -106,8 +113,9 @@ console.table((Array.isArray(res) ? res : res.machines ?? []).map(m =>
 ```
 
 Copy the `pairingKey` of the machine you are adding, 32 hex characters, and
-paste it into the auth token field during setup. The integration derives the
-token from it exactly as the app does.
+paste it into the auth token field during setup, or into **Reconfigure** if the
+machine is already added. The integration derives the token from it exactly as
+the app does.
 
 Both paths carry your market as their first segment, which is where the country
 code in the page URL comes from. If the calls fail, check that segment: it is
@@ -571,6 +579,9 @@ the app used is registered against your Nespresso account and can be recovered
 and pasted in, which is Option A of [Machine already paired with the Nespresso
 app](#machine-already-paired-with-the-nespresso-app). Failing that, factory reset
 the machine and add the integration again leaving the auth token field empty.
+
+If the machine is already added, paste the pairing key into **Reconfigure** in
+its entry's three dots menu rather than deleting the entry.
 
 The token the integration generates is stored in the config entry, so deleting
 the entry throws it away. If you have the token, put it in the auth token field

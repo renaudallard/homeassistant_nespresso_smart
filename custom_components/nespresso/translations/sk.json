@@ -278,6 +278,13 @@
           "auth_token": "Overovací token alebo párovací kľúč (voliteľné)"
         }
       },
+      "reconfigure": {
+        "title": "Zmeniť overovací token",
+        "description": "Vložte 32-znakový párovací kľúč z vášho účtu Nespresso alebo 16-znakový overovací token zo záznamu prevádzky Bluetooth. Hodnota nahradí token uložený pre {name}. Kávovar, ktorý integrácia spárovala s vlastným tokenom, neprijme žiadny iný až do obnovenia továrenských nastavení, preto si tento token ponechajte.",
+        "data": {
+          "auth_token": "Overovací token alebo párovací kľúč"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Táto integrácia vyžaduje Bluetooth. Kávovary sa vyhľadávajú automaticky."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "Kávovar už je nakonfigurovaný.",
-      "bluetooth_only": "Táto integrácia vyhľadáva kávovary automaticky cez Bluetooth. Uistite sa, že je Bluetooth povolený a kávovar je zapnutý."
+      "bluetooth_only": "Táto integrácia vyhľadáva kávovary automaticky cez Bluetooth. Uistite sa, že je Bluetooth povolený a kávovar je zapnutý.",
+      "reconfigure_successful": "Rekonfigurácia bola úspešná"
     }
   },
   "options": {

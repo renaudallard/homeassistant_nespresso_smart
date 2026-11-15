@@ -278,6 +278,13 @@
           "auth_token": "Token de autenticação ou chave de emparelhamento (opcional)"
         }
       },
+      "reconfigure": {
+        "title": "Alterar o token",
+        "description": "Cole a chave de emparelhamento de 32 caracteres da sua conta Nespresso, ou o token de autenticação de 16 caracteres de uma captura Bluetooth. Este valor substitui o token guardado para {name}. Uma máquina que a integração emparelhou com um token próprio não aceita outro até uma reposição das definições de fábrica, por isso mantenha esse.",
+        "data": {
+          "auth_token": "Token de autenticação ou chave de emparelhamento"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Esta integração requer Bluetooth. As máquinas são detetadas automaticamente."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "A máquina já está configurada.",
-      "bluetooth_only": "Esta integração deteta as máquinas automaticamente através de Bluetooth. Certifique-se de que o Bluetooth está ativado e de que a máquina está ligada."
+      "bluetooth_only": "Esta integração deteta as máquinas automaticamente através de Bluetooth. Certifique-se de que o Bluetooth está ativado e de que a máquina está ligada.",
+      "reconfigure_successful": "A reconfiguração foi bem sucedida"
     }
   },
   "options": {

@@ -278,6 +278,13 @@
           "auth_token": "Token lub klucz parowania (opcjonalnie)"
         }
       },
+      "reconfigure": {
+        "title": "Zmień token",
+        "description": "Wklej 32-znakowy klucz parowania z konta Nespresso albo 16-znakowy token odczytany z przechwyconej transmisji Bluetooth. Ta wartość zastąpi token zapisany dla {name}. Ekspres, który integracja sparowała z własnym tokenem, nie przyjmie innego aż do przywrócenia ustawień fabrycznych, więc zachowaj ten token.",
+        "data": {
+          "auth_token": "Token lub klucz parowania"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Ta integracja wymaga Bluetooth. Ekspresy są wykrywane automatycznie."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "Ekspres jest już skonfigurowany.",
-      "bluetooth_only": "Ta integracja wykrywa ekspresy przez Bluetooth automatycznie. Upewnij się, że Bluetooth jest włączony i ekspres jest uruchomiony."
+      "bluetooth_only": "Ta integracja wykrywa ekspresy przez Bluetooth automatycznie. Upewnij się, że Bluetooth jest włączony i ekspres jest uruchomiony.",
+      "reconfigure_successful": "Ponowna konfiguracja się powiodła"
     }
   },
   "options": {

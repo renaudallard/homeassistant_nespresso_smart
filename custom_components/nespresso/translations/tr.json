@@ -278,6 +278,13 @@
           "auth_token": "Kimlik doğrulama belirteci veya eşleştirme anahtarı (isteğe bağlı)"
         }
       },
+      "reconfigure": {
+        "title": "Kimlik doğrulama belirtecini değiştir",
+        "description": "Nespresso hesabınızdaki 32 karakterlik eşleştirme anahtarını ya da bir Bluetooth yakalamasından alınan 16 karakterlik kimlik doğrulama belirtecini yapıştırın. Bu değer, {name} için kayıtlı belirtecin yerini alır. Entegrasyonun kendi belirteciyle eşleştirdiği bir makine, fabrika ayarlarına sıfırlanana kadar başka bir belirteç kabul etmez, bu yüzden o belirteci koruyun.",
+        "data": {
+          "auth_token": "Kimlik doğrulama belirteci veya eşleştirme anahtarı"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Bu entegrasyon Bluetooth gerektirir. Makineler otomatik olarak keşfedilir."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "Makine zaten yapılandırılmış.",
-      "bluetooth_only": "Bu entegrasyon makineleri Bluetooth üzerinden otomatik olarak keşfeder. Bluetooth'un etkin olduğundan ve makinenin açık olduğundan emin olun."
+      "bluetooth_only": "Bu entegrasyon makineleri Bluetooth üzerinden otomatik olarak keşfeder. Bluetooth'un etkin olduğundan ve makinenin açık olduğundan emin olun.",
+      "reconfigure_successful": "Yeniden yapılandırma başarılı oldu"
     }
   },
   "options": {

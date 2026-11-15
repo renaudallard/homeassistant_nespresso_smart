@@ -278,6 +278,13 @@
           "auth_token": "Token de autentificare sau cheie de asociere (opțional)"
         }
       },
+      "reconfigure": {
+        "title": "Schimbă tokenul de autentificare",
+        "description": "Lipește cheia de asociere de 32 de caractere din contul tău Nespresso sau tokenul de autentificare de 16 caractere dintr-o captură Bluetooth. Valoarea înlocuiește tokenul salvat pentru {name}. Un espressor pe care integrarea l-a asociat cu propriul token nu acceptă altul până la o resetare din fabrică, așa că păstrează-l pe acela.",
+        "data": {
+          "auth_token": "Token de autentificare sau cheie de asociere"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Această integrare necesită Bluetooth. Espressoarele sunt descoperite automat."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "Espressorul este deja configurat.",
-      "bluetooth_only": "Această integrare descoperă automat espressoarele prin Bluetooth. Asigură-te că Bluetooth este activat și că espressorul este pornit."
+      "bluetooth_only": "Această integrare descoperă automat espressoarele prin Bluetooth. Asigură-te că Bluetooth este activat și că espressorul este pornit.",
+      "reconfigure_successful": "Reconfigurarea s-a realizat cu succes"
     }
   },
   "options": {

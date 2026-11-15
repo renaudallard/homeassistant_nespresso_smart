@@ -278,6 +278,13 @@
           "auth_token": "Token oder Kopplungsschlüssel (optional)"
         }
       },
+      "reconfigure": {
+        "title": "Token ändern",
+        "description": "Fügen Sie den 32-stelligen Kopplungsschlüssel aus Ihrem Nespresso-Konto oder das 16-stellige Token aus einer Bluetooth-Aufzeichnung ein. Der Wert ersetzt das für {name} gespeicherte Token. Eine Maschine, die die Integration mit einem eigenen Token gekoppelt hat, nimmt bis zum Zurücksetzen auf die Werkseinstellungen kein anderes an, behalten Sie dieses also.",
+        "data": {
+          "auth_token": "Token oder Kopplungsschlüssel"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Diese Integration benötigt Bluetooth. Maschinen werden automatisch erkannt."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "Maschine ist bereits konfiguriert.",
-      "bluetooth_only": "Diese Integration erkennt Maschinen automatisch über Bluetooth. Stellen Sie sicher, dass Bluetooth aktiviert und die Maschine eingeschaltet ist."
+      "bluetooth_only": "Diese Integration erkennt Maschinen automatisch über Bluetooth. Stellen Sie sicher, dass Bluetooth aktiviert und die Maschine eingeschaltet ist.",
+      "reconfigure_successful": "Die Neukonfiguration war erfolgreich"
     }
   },
   "options": {

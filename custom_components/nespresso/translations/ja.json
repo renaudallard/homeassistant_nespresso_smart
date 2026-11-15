@@ -278,6 +278,13 @@
           "auth_token": "認証トークンまたはペアリングキー（任意）"
         }
       },
+      "reconfigure": {
+        "title": "認証トークンの変更",
+        "description": "Nespresso アカウントの 32 文字のペアリングキー、または Bluetooth キャプチャから取得した 16 文字の認証トークンを貼り付けてください。{name} に保存されているトークンが置き換えられます。統合が独自のトークンでペアリングしたマシンは、工場出荷時リセットを行うまで他のトークンを受け付けないため、そのトークンは置き換えないでください。",
+        "data": {
+          "auth_token": "認証トークンまたはペアリングキー"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "この統合には Bluetooth が必要です。マシンは自動的に検出されます。"
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "マシンはすでに設定されています。",
-      "bluetooth_only": "この統合は Bluetooth を介してマシンを自動的に検出します。Bluetooth が有効になっていて、マシンの電源が入っていることを確認してください。"
+      "bluetooth_only": "この統合は Bluetooth を介してマシンを自動的に検出します。Bluetooth が有効になっていて、マシンの電源が入っていることを確認してください。",
+      "reconfigure_successful": "再構成は成功しました"
     }
   },
   "options": {

@@ -278,6 +278,13 @@
           "auth_token": "Autentiseringstoken eller sammenkoblingsnøkkel (valgfritt)"
         }
       },
+      "reconfigure": {
+        "title": "Endre autentiseringstoken",
+        "description": "Lim inn sammenkoblingsnøkkelen på 32 tegn fra Nespresso-kontoen din, eller autentiseringstokenet på 16 tegn fra et opptak av Bluetooth-trafikken. Verdien erstatter tokenet som er lagret for {name}. En maskin som integrasjonen har sammenkoblet med sitt eget token, godtar ikke noe annet før en tilbakestilling til fabrikkinnstillinger, så behold det.",
+        "data": {
+          "auth_token": "Autentiseringstoken eller sammenkoblingsnøkkel"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "Denne integrasjonen krever Bluetooth. Maskiner oppdages automatisk."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "Maskinen er allerede konfigurert.",
-      "bluetooth_only": "Denne integrasjonen oppdager maskiner automatisk via Bluetooth. Sørg for at Bluetooth er aktivert og at maskinen er slått på."
+      "bluetooth_only": "Denne integrasjonen oppdager maskiner automatisk via Bluetooth. Sørg for at Bluetooth er aktivert og at maskinen er slått på.",
+      "reconfigure_successful": "Rekonfigurasjonen var vellykket"
     }
   },
   "options": {

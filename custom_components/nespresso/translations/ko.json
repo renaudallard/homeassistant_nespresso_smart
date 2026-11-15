@@ -278,6 +278,13 @@
           "auth_token": "인증 토큰 또는 페어링 키 (선택 사항)"
         }
       },
+      "reconfigure": {
+        "title": "인증 토큰 변경",
+        "description": "Nespresso 계정의 32자 페어링 키 또는 Bluetooth 캡처에서 얻은 16자 인증 토큰을 붙여 넣으세요. {name}에 저장된 토큰이 대체됩니다. 통합이 자체 토큰으로 페어링한 머신은 공장 초기화 전까지 다른 토큰을 받지 않으므로 그 토큰은 그대로 두세요.",
+        "data": {
+          "auth_token": "인증 토큰 또는 페어링 키"
+        }
+      },
       "user": {
         "title": "Nespresso Smart",
         "description": "이 통합에는 Bluetooth가 필요합니다. 머신은 자동으로 검색됩니다."
@@ -288,7 +295,8 @@
     },
     "abort": {
       "already_configured": "머신이 이미 구성되었습니다.",
-      "bluetooth_only": "이 통합은 Bluetooth를 통해 머신을 자동으로 검색합니다. Bluetooth가 활성화되어 있고 머신의 전원이 켜져 있는지 확인하세요."
+      "bluetooth_only": "이 통합은 Bluetooth를 통해 머신을 자동으로 검색합니다. Bluetooth가 활성화되어 있고 머신의 전원이 켜져 있는지 확인하세요.",
+      "reconfigure_successful": "재구성이 완료되었습니다"
     }
   },
   "options": {
