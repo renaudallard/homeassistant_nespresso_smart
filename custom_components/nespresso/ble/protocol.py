@@ -928,7 +928,7 @@ def _explain_refused_read(address: str, state: int | None) -> None:
     # v0.3.3 and never once worked, on any machine. The Nespresso app has no
     # command for it either and tells the user to factory reset.
     _LOGGER.warning(
-        "%s is onboarded with a different auth token (CMID_TYPE=%s) and refuses to answer. Factory reset the machine to clear the stored token, then add the integration again leaving the auth token field empty. Note that the token this integration generates lives in the config entry, so deleting the entry loses it and costs another factory reset.",
+        "%s is onboarded with a different auth token (CMID_TYPE=%s) and refuses to answer. If the Nespresso app paired it, recover the pairing key from your Nespresso account as the README explains and paste it into Reconfigure on this entry. Otherwise factory reset the machine to clear the stored token; the integration then writes the token this entry holds again.",
         address,
         _describe_cmid_type(state),
     )
