@@ -2,7 +2,6 @@
   <img src="images/logo.png" alt="Nespresso Smart" width="120">
 </p>
 
-
 # Nespresso Smart - Home Assistant Integration
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/renaudallard/homeassistant_nespresso_smart)
@@ -22,7 +21,7 @@ Built by reverse-engineering the Nespresso Smart Android app (v1.2.5).
 
 A Vertuo Next device page, taken before 0.5.30 moved Auto power off, Water hardness and Reset descaling counter to Configuration and LED signaling to Diagnostic. Auto power off has been removed since, see [Limitations](#limitations).
 
-&gt; **Screenshot wanted:** If you have a Barista paired with this integration, please submit a screenshot of the HA device page via a [GitHub issue](https://github.com/renaudallard/homeassistant_nespresso_smart/issues).
+> **Screenshot wanted:** If you have a Barista paired with this integration, please submit a screenshot of the HA device page via a [GitHub issue](https://github.com/renaudallard/homeassistant_nespresso_smart/issues).
 
 ---
 
@@ -62,7 +61,7 @@ family default, and keeps its Bluetooth name as the device name.
 1. Search for **Nespresso Smart** in HACS, or click the button above, and install it
 2. Restart Home Assistant
 
-If the search does not find it, add `https://github.com/renaudallard/homeassistant_nespresso_smart` as a custom repository of category **Integration** (HACS three dots menu &gt; **Custom repositories**) and search again.
+If the search does not find it, add `https://github.com/renaudallard/homeassistant_nespresso_smart` as a custom repository of category **Integration** (HACS three dots menu > **Custom repositories**) and search again.
 
 ### Manual
 
@@ -79,8 +78,8 @@ machine: either the 32 character pairing key from your Nespresso account, which
 the integration converts to the token itself, or the 16 character token read
 off a Bluetooth capture. See below for both.
 
-The token can be changed later without removing the machine: in **Settings &gt;
-Devices & services &gt; Nespresso Smart**, pick **Reconfigure** in the machine
+The token can be changed later without removing the machine: in **Settings >
+Devices & services > Nespresso Smart**, pick **Reconfigure** in the machine
 entry's three dots menu and paste the pairing key or token. The entry reloads
 with it, and the brew counters and entities are kept. A token the integration
 generated itself is the only one the machine knows, so replacing it costs a
@@ -110,10 +109,10 @@ developer console on that page (F12, or Ctrl+Shift+J) and run:
 
 ```js
 const market = location.pathname.split('/')[1];  // fr on www.nespresso.com/fr/fr/
-const get = async p =&gt; (await fetch(p, {credentials: 'include'})).json();
+const get = async p => (await fetch(p, {credentials: 'include'})).json();
 const me = await get(`/ecapi/customers/v7/${market}/b2c/me/personal-info`);
 const res = await get(`/ecapi/machines/v1/${market}/b2c/${me.memberNumber}`);
-console.table((Array.isArray(res) ? res : res.machines ?? []).map(m =&gt;
+console.table((Array.isArray(res) ? res : res.machines ?? []).map(m =>
     ({serial: m.serialNumber, mac: m.macAddress, pairingKey: m.pairingKey})));
 ```
 
@@ -141,7 +140,7 @@ A factory reset clears the stored auth token and all settings. The Bluetooth pai
 After reset, clear the stale Bluetooth bond on the HA host and restart HA:
 
 ```bash
-bluetoothctl remove &lt;MACHINE_MAC_ADDRESS&gt;
+bluetoothctl remove <MACHINE_MAC_ADDRESS>
 ```
 
 Then remove and re-add the integration in HA. The Nespresso app will also need to re-pair.
@@ -150,7 +149,7 @@ Then remove and re-add the integration in HA. The Nespresso app will also need t
 
 Capture the auth token from the Nespresso app using Android's BLE logging:
 
-1. On your Android phone, enable **Developer Options** (Settings &gt; About &gt; tap Build Number 7 times)
+1. On your Android phone, enable **Developer Options** (Settings > About > tap Build Number 7 times)
 2. In Developer Options, enable **Bluetooth HCI snoop log**
 3. Open the Nespresso app and let it connect to the machine
 4. Disable Bluetooth HCI snoop log
@@ -485,7 +484,7 @@ Detailed protocol documentation from the APK decompilation is available under [d
 
 ## Configuration
 
-After adding the machine, go to **Settings &gt; Devices & Services &gt; Nespresso &gt; Configure** to set:
+After adding the machine, go to **Settings > Devices & Services > Nespresso > Configure** to set:
 
 - **Poll interval** (10-600 seconds, default 60): how often to read machine status
 - **Persistent connection** (off by default): keeps the BLE connection open for real-time GATT notifications, and polls, commands and settings changes go over it instead of connecting again. Gives instant status updates but blocks the Nespresso mobile app.
@@ -512,7 +511,7 @@ integration they need an admin user:
 ```yaml
 action: nespresso.configure_wifi
 data:
-  config_entry_id: &lt;your entry&gt;
+  config_entry_id: <your entry>
   market: GB
   ssid: MyNetwork
   password: hunter2
@@ -560,7 +559,7 @@ registered to a Nespresso account through their app as well. See
 BlueZ has a stale bond from a previous pairing. Clear it:
 
 ```bash
-bluetoothctl remove &lt;MACHINE_MAC_ADDRESS&gt;
+bluetoothctl remove <MACHINE_MAC_ADDRESS>
 ```
 
 Then restart HA. This is needed after a factory reset of the machine.
@@ -754,7 +753,7 @@ machine's command characteristic and returns what happened. It works on every
 machine, including the models that get no brew button, which is the point: it
 is how a machine gets tested rather than assumed about. It needs an admin user.
 
-From **Developer tools &gt; Actions**, pick the machine and give it a payload in
+From **Developer tools > Actions**, pick the machine and give it a payload in
 hex, for example `03050704000000000002000000000000000000`, a Vertuo lungo at
 medium temperature. The frame goes out exactly as typed. A Vertuo command is 19
 bytes, three header bytes and a 16 byte payload, and a Creatista acknowledges a
@@ -814,7 +813,7 @@ machine is idle and only mean something while it works.
 ```yaml
 action: nespresso.watch
 data:
-  config_entry_id: &lt;your entry&gt;
+  config_entry_id: <your entry>
   seconds: 90
 ```
 
