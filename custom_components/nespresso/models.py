@@ -71,6 +71,7 @@ class NespressoMachineData:
 
     # VMini specific
     shadow_data: str | None = None
+    error_code_text: str | None = None
     fota_status: str | None = None
     fota_progress: int | None = None
 
@@ -83,6 +84,34 @@ class NespressoMachineData:
 FLAG_TRIGGERS: tuple[str, ...] = ("descaling_needed", "water_tank_empty")
 
 
+def is_brew_state(state: str) -> bool:
+    """Return whether a machine state means a brew is in progress.
+
+    The Barista and the Vertuo Next decode their numeric BREWING state to
+    "brewing". A Vertuo Up's shadow namespaces its brew phases instead,
+    seen on hardware as "brew/running" and "brew/waiting for top up"
+    (fw 4.5.3), so anything under "brew/" counts. The top-up pause has to
+    count as brewing: the machine returns to "brew/running" when the
+    top-up is taken, and treating the pause as finished would report one
+    coffee as two. Other activities keep their own namespaces
+    ("descale/...", "rinse/...") and are not brews.
+    """
+    return state == "brewing" or state.startswith("brew/")
+
+
+def is_brew_run_state(state: str) -> bool:
+    """Return whether a machine state means extraction is actually pouring.
+
+    A Vertuo Up only reports "brew/running" while a fresh extraction pours
+    and gives the top-up phase its own states - seen on hardware as
+    "brew/waiting for top up" while it waits for the button and "brew/top up"
+    while the top-up pours (fw 4.5.3). Brew counting keys on pouring, so a
+    top-up is never a new brew and a new capsule started from the pause
+    always is. "brewing" is the Barista/Vertuo Next pour state.
+    """
+    return state in ("brewing", "brew/running")
+
+
 def machine_triggers(old: NespressoMachineData, new: NespressoMachineData) -> list[str]:
     """Name the device triggers that fire when old gives way to new.
 
@@ -93,9 +122,13 @@ def machine_triggers(old: NespressoMachineData, new: NespressoMachineData) -> li
     """
     triggers: list[str] = []
     if new.machine_state != old.machine_state:
-        if new.machine_state == "brewing":
+        if is_brew_state(new.machine_state) and not is_brew_state(
+            old.machine_state
+        ):
             triggers.append("brewing_started")
-        if old.machine_state == "brewing":
+        if is_brew_state(old.machine_state) and not is_brew_state(
+            new.machine_state
+        ):
             triggers.append("brewing_finished")
         if new.machine_state == "error":
             triggers.append("error_occurred")
@@ -126,6 +159,9 @@ class RawMachineData:
     firmware_version: str | None = None
     software_version: str | None = None
     shadow_header: str | None = None
+    shadow_data: str | None = None
+    asset_versions: str | None = None
     fota_status_bytes: bytes | None = None
     wifi_current_bytes: bytes | None = None
     gatt_dump: dict[str, dict[str, str]] | None = None
+    

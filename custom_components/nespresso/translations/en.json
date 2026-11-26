@@ -1,6 +1,12 @@
 {
   "entity": {
     "sensor": {
+      "water_hardness": {
+        "name": "Water hardness"
+      },
+      "error_code_text": {
+        "name": "Error code"
+      },
       "machine_state": {
         "state": {
           "standby": "Standby",
