@@ -73,9 +73,9 @@ async def async_setup_entry(
         entities.append(NespressoFotaCheckButton(coordinator, entry))
     if family == MachineFamily.VERTUO_NEXT and supports_brewing(entry, coordinator):
         entities.append(NespressoVertuoBrewButton(coordinator, entry))
-    # Only Vertuo Next: the derived counters this button resets are only
-    # created for that family.
-    if family == MachineFamily.VERTUO_NEXT:
+    # Vertuo Next and VMini: the derived counters this button resets are
+    # only created for those families.
+    if family in (MachineFamily.VERTUO_NEXT, MachineFamily.VMINI):
         entities.append(NespressoResetDescalingButton(coordinator, entry))
     async_add_entities(entities)
 
