@@ -454,7 +454,7 @@ That verdict rests on a handful of machines, so it is not final. **Offer brewing
 Event entity fires on machine state changes (Barista and Vertuo Next).
 
 Device triggers for automations:
-- **brewing_started** / **brewing_finished**: the machine entered or left the brewing state
+- **brewing_started** / **brewing_finished**: the machine entered or left the brewing state. On a Vertuo Up every state under `brew/` is part of the brew, so its top-up pause does not end it
 - **error_occurred**, **ready**, **standby**: the machine entered that state
 - **descaling_needed** / **water_tank_empty**: the machine raised the flag. Each fires once when the flag goes up, not on every poll while it stays up
 
@@ -548,7 +548,7 @@ registered to a Nespresso account through their app as well. See
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **Auto power off**: Not offered. Earlier versions showed the first two bytes of the user settings characteristic as a delay in minutes, but the app never reads them, writes 0xFFFF there when it sets the water hardness, and has no auto power off setting. A Vertuo Next and a Creatista both read 255 there, and the Vertuo Next did not power off after that long, so the value's meaning is unknown. The old entity is removed from the registry on the next setup.
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
-- **Vertuo Up sleep**: A Vertuo Up goes to standby after about 20 minutes idle and stops advertising shortly after. That is sleep, not a fault: the integration keeps its entities available and shows the state as `asleep`, and they update again when the machine wakes. A machine that still advertises but refuses connections is treated as unavailable.
+- **Vertuo Up sleep**: A Vertuo Up goes to standby after about 20 minutes idle and stops advertising shortly after. That is sleep, not a fault: the integration keeps its entities available and shows the state as `asleep`, and they update again when the machine wakes. A Vertuo Up that is unplugged or out of range looks the same over Bluetooth, so it shows `asleep` too. A machine that still advertises but refuses connections is treated as unavailable.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
 - **Single client**: Only one BLE client can connect at a time. If the Nespresso app is connected, HA will retry on the next poll.
 
