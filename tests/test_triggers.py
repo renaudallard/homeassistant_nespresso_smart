@@ -71,6 +71,20 @@ class TestStates:
     def test_no_change_fires_nothing(self) -> None:
         assert machine_triggers(data("brewing"), data("brewing")) == []
 
+    def test_a_vertuo_up_brew_is_one_brew(self) -> None:
+        """Its phases change under "brew/", which starts and ends once."""
+        assert machine_triggers(data("ready"), data("brew/black reading")) == [
+            "brewing_started"
+        ]
+        assert (
+            machine_triggers(data("brew/running"), data("brew/waiting for top up"))
+            == []
+        )
+        assert machine_triggers(data("brew/top up"), data("ready")) == [
+            "brewing_finished",
+            "ready",
+        ]
+
 
 class TestFlags:
     def test_a_raised_flag_fires(self) -> None:

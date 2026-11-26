@@ -90,8 +90,7 @@ from .const import (
 from .models import (
     NespressoMachineData,
     RawMachineData,
-    is_brew_run_state,
-    is_brew_state,
+    counts_as_brew,
     machine_triggers,
 )
 
@@ -983,13 +982,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             previous,
             current,
         )
-        if not is_brew_state(current):
-            return
-        if not is_brew_run_state(current) and (
-            is_brew_state(previous) or current.endswith(" reading")
-        ):
-            # Phase changes within one brew, and barcode-reading phases:
-            # those brews count when the pour starts.
+        if not counts_as_brew(previous, current):
             return
         self.brew_total += 1
         self.brews_since_descaling += 1

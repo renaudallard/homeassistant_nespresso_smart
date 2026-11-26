@@ -112,6 +112,21 @@ def is_brew_run_state(state: str) -> bool:
     return state in ("brewing", "brew/running")
 
 
+def counts_as_brew(previous: str, current: str) -> bool:
+    """Return whether a change from previous to current is a new brew.
+
+    Entering a pour always is. So is entering the brew namespace from
+    outside it, since a whole pour can fit between two polls, except into a
+    barcode read, which may never reach a pour. A phase change inside one
+    brew is not.
+    """
+    if previous == current or not is_brew_state(current):
+        return False
+    if is_brew_run_state(current):
+        return True
+    return not is_brew_state(previous) and not current.endswith(" reading")
+
+
 def machine_triggers(old: NespressoMachineData, new: NespressoMachineData) -> list[str]:
     """Name the device triggers that fire when old gives way to new.
 
