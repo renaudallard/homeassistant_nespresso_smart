@@ -30,8 +30,8 @@ The app communicates with three distinct hardware families, each with its own BL
 | Family | SDK Package | BLE UUID Prefix | Machines |
 |--------|------------|-----------------|----------|
 | Barista (Original) | `com.sdataway.barista` | `6524xxxx-0253-11E7-...` | Barista |
-| Vertuo Next (Venus) | `com.sdataway.vertuonext` | `06AAxxxx-F22A-11E3-...` | VertuoNext, VertuoPop, VertuoPopPlus, VertuoLattissima, VertuoCreatista, VertuoUp |
-| VMini | `com.sdataway.vmini` | `966001xx-526E-4676-...` / `E0F00xxx-5C88-455F-...` | Vertuo Mini (WiFi-enabled) |
+| Vertuo Next (Venus) | `com.sdataway.vertuonext` | `06AAxxxx-F22A-11E3-...` | VertuoNext, VertuoPop, VertuoPopPlus, VertuoLattissima, VertuoCreatista |
+| VMini | `com.sdataway.vmini` | `966001xx-526E-4676-...` / `E0F00xxx-5C88-455F-...` | VertuoUp |
 
 ## Permissions
 

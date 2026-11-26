@@ -50,7 +50,7 @@ same family apart over Bluetooth. The rest are cloud-side aliases, seen in
 | VertuoUp | MC1, MD1, MC2, MD2 | VENUS_MINI |
 | Barista | W10, W11 | WHITE |
 
-The integration only uses the Venus codes. A Barista and a Vertuo Mini are
+The integration only uses the Venus codes. A Barista and a Vertuo Up are
 already named by their family, and searching a serial number for a three
 character code invents matches when it has nothing to gain.
 
@@ -93,15 +93,15 @@ Features:
 - HMI (Human-Machine Interface) control
 - Language configuration
 
-### VMini (Vertuo Mini)
+### VMini (Vertuo Up)
 
 **SDK:** `com.sdataway.vmini`
 **BLE Protocol:** VMini protocol (different UUID family)
-**Machines:** Vertuo Mini
+**Machines:** Vertuo Up
 
 Features:
 - BLE and WiFi connectivity
-- Standard BLE Device Information Service
+- Standard BLE Device Information Service in the SDK, absent on a Vertuo Up
 - Machine control point (request/response)
 - Device shadow synchronization
 - Firmware over-the-air (FOTA)

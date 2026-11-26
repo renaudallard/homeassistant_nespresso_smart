@@ -71,7 +71,7 @@ def platform_code(entry: ConfigEntry, coordinator: NespressoCoordinator) -> str 
 def machine_model(entry: ConfigEntry, coordinator: NespressoCoordinator) -> str:
     """Name the model, falling back to the family when nothing says more.
 
-    Only the Venus profile needs this. A Barista and a Vertuo Mini are already
+    Only the Venus profile needs this. A Barista and a Vertuo Up are already
     named by their family, and searching their serials for a three character
     code would only invent matches.
     """

@@ -202,7 +202,7 @@ CMID_TYPE_NAMES: Final[dict[int, str]] = {
 CMID_TYPE_UNPAIRED: Final = frozenset({CMID_TYPE_NONE, CMID_TYPE_UNDEFINED})
 
 # ---------------------------------------------------------------------------
-# VMini (Vertuo Mini) BLE UUIDs
+# VMini (Vertuo Up) BLE UUIDs
 # Source: com.sdataway.vmini.sdk.GATTattributes.DeviceGATTAttributes
 # ---------------------------------------------------------------------------
 

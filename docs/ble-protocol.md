@@ -6,7 +6,7 @@ The Nespresso Smart app communicates with coffee machines over Bluetooth Low Ene
 
 - [Barista (Original Line)](#barista-original-line)
 - [Vertuo Next (Venus Line)](#vertuo-next-venus-line)
-- [VMini (Vertuo Mini)](#vmini-vertuo-mini)
+- [VMini (Vertuo Up)](#vmini-vertuo-up)
 - [Command Protocol](#command-protocol)
 - [Byte Sequence Transfer (BST) Protocol](#byte-sequence-transfer-bst-protocol)
 - [Machine Status Byte Format](#machine-status-byte-format)
@@ -110,7 +110,7 @@ and offers the same levels as the app, 0 to 4.
 
 ---
 
-## VMini (Vertuo Mini)
+## VMini (Vertuo Up)
 
 Source: `com.sdataway.vmini.sdk.GATTattributes.DeviceGATTAttributes`
 
@@ -175,6 +175,24 @@ Source: `com.sdataway.vmini.sdk.GATTattributes.DeviceGATTAttributes`
 |---------------|------|--------|
 | CHAR_SHADOWHEADER | `E0F00501-5C88-455F-98BA-CFE7DB1A7D1D` | Read/Write |
 | CHAR_SHADOWUPDATE | `E0F00502-5C88-455F-98BA-CFE7DB1A7D1D` | Read/Notify |
+
+### What a Vertuo Up returns
+
+Read off a Vertuo Up on firmware 4.5.3 (PR 18). It has no Device Information
+service, so the 2A2x characteristics above cannot be read.
+
+- **CHAR_ASSET_VERSIONS**: assets separated by `;`, each `name,version,required`,
+  e.g. `fmw-main,4.5.3,1.1.0;recipe,4.5.0,1.1.0;hmi,1.2.2,1.0.0;fmw-connectivity,3.18.0,2.0.0`.
+  The firmware version is the `fmw-main` one.
+- **CHAR_SHADOWHEADER**: the schema, `name,type` pairs separated by `;`:
+  `machineStatus,str;descalingAlert,bool;lastCoffeeFamilyID,int;volumeCustomization,str;temperatureCustomization,str;waterHardness,int;errorCode,str;firstCoffee,bool;firstRinsing,bool;recipeTag,str;customizationType,str`.
+- **CHAR_SHADOWUPDATE**: one value per schema field, separated by `,`. A list
+  value separates its items with `;`. The value ends at the first NUL, and the
+  bytes after it are not part of it: one read returned `vol and temp` followed
+  by `\0 temp\0temp`. Booleans are `0` or `1`.
+- `machineStatus` seen so far: `ready`, `standby`, `brew/black reading`,
+  `brew/running`, `brew/waiting for top up`, `brew/top up`. `errorCode` reads
+  `no error` when there is none.
 
 ---
 

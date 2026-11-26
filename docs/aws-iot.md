@@ -268,6 +268,6 @@ The DI module registers three machine type providers:
 
 | Provider | Machine Family |
 |----------|---------------|
-| VMini | Vertuo Mini (WiFi-first) |
+| VMini | Vertuo Up (WiFi-first) |
 | VertuoNext | Vertuo Venus line |
 | Barista | Original/Barista line |
