@@ -30,6 +30,7 @@ from the Nespresso Smart APK v1.2.5.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 
 from ..const import (
@@ -524,3 +525,30 @@ def parse_vmini_shadow(
         if name:
             fields.append(name)
     return dict(zip(fields, data_text.split(",")))
+
+
+def parse_vmini_status(
+    schema_text: str | None, data_text: str | None
+) -> dict[str, object]:
+    """Turn a VMini shadow into dataset fields.
+
+    The poll and the shadow notification both come through here, so they
+    agree on every field. Empty when there is no schema or no data yet.
+    """
+    shadow = parse_vmini_shadow(schema_text, data_text)
+    if not shadow:
+        return {}
+    error = shadow.get("errorCode", "").strip()
+    has_error = bool(error) and error.lower() != "no error"
+    fields: dict[str, object] = {
+        "machine_state": shadow.get("machineStatus") or "unknown",
+        "error_present": has_error,
+        "error_code_text": error if has_error else None,
+        "shadow_data": json.dumps(shadow),
+    }
+    if "descalingAlert" in shadow:
+        fields["descaling_needed"] = shadow["descalingAlert"] == "1"
+    hardness = shadow.get("waterHardness", "")
+    if hardness.isdigit():
+        fields["water_hardness"] = int(hardness)
+    return fields

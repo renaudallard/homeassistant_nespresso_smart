@@ -245,9 +245,7 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         icon="mdi:alert-circle-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VMINI}),
-        value_fn=lambda d: (
-            None if d.error_code_text in (None, "no error") else d.error_code_text
-        ),
+        value_fn=lambda d: d.error_code_text,
     ),
 )
 

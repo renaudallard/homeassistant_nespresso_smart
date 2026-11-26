@@ -61,10 +61,11 @@ from .ble.parsing import (
     parse_vertuonext_status,
     parse_vmini_asset_versions,
     parse_vmini_fota_status,
-    parse_vmini_shadow,
+    parse_vmini_status,
 )
 from .ble.protocol import (
     _authenticate,
+    _decode_ble_string,
     async_configure_wifi,
     async_scan_wifi,
     generate_auth_key,
@@ -128,6 +129,7 @@ _BARISTA_STATUS_FIELDS: tuple[str, ...] = (
     "setup_complete",
 )
 _VMINI_STATUS_FIELDS: tuple[str, ...] = (
+    "error_code_text",
     "descaling_needed",
     "water_hardness",
     "shadow_data",
@@ -299,35 +301,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             if self.family == MachineFamily.VERTUO_NEXT:
                 return parse_vertuonext_status(data)
             if self.family == MachineFamily.VMINI:
-                return self._parse_vmini_status(data)
+                # Bytes after the value's terminator are not part of it.
+                text = _decode_ble_string(data)
+                return parse_vmini_status(self._vmini_shadow_schema, text) or None
         except (ValueError, IndexError) as err:
             _LOGGER.debug("Failed to parse status %s: %s", data.hex(), err)
         return None
-
-    def _parse_vmini_status(self, data: bytes) -> dict[str, object] | None:
-        """Decode a VMini shadow notification into dataset fields.
-
-        The notification carries only the CSV values, zipped against the
-        schema cached from the last full read. The live fields mirror
-        _parse_vmini; the static ones (firmware, serial) stay with the poll.
-        """
-        text = data.decode("utf-8", errors="ignore").rstrip("\x00")
-        shadow = parse_vmini_shadow(self._vmini_shadow_schema or "", text)
-        if not shadow:
-            return None
-        fields: dict[str, object] = {
-            "machine_state": shadow.get("machineStatus", "unknown"),
-            "error_present": shadow.get("errorCode", "no error")
-            not in ("no error", ""),
-            "shadow_data": json.dumps(shadow),
-        }
-        if "descalingAlert" in shadow:
-            fields["descaling_needed"] = shadow["descalingAlert"] not in ("0", "")
-        try:
-            fields["water_hardness"] = int(shadow["waterHardness"])
-        except (KeyError, TypeError, ValueError):
-            pass
-        return fields
 
     def _handle_status_update(self, data: bytes) -> None:
         """Process status notification data on the event loop."""
@@ -1422,25 +1401,18 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             # Cache the schema so shadow notifications can be decoded without
             # reading the header again.
             self._vmini_shadow_schema = raw.shadow_header
-        shadow = parse_vmini_shadow(raw.shadow_header, raw.shadow_data)
-        error_text = shadow.get("errorCode", "").strip()
-        water_hardness = shadow.get("waterHardness", "")
+        status = parse_vmini_status(raw.shadow_header, raw.shadow_data)
 
-        return NespressoMachineData(
-            machine_state=shadow.get("machineStatus", "unknown"),
-            error_present=bool(error_text) and error_text.lower() != "no error",
-            error_code_text=error_text or None,
+        data = NespressoMachineData(
+            machine_state="unknown",
+            error_present=False,
             firmware_version=assets.get("fmw-main") or raw.firmware_version,
             hardware_version=raw.software_version,
             serial_number=serial,
             recipe_db_version=assets.get("recipe"),
             connectivity_fw_version=assets.get("fmw-connectivity"),
-            descaling_needed=shadow["descalingAlert"] == "1"
-            if "descalingAlert" in shadow
-            else None,
-            water_hardness=int(water_hardness) if water_hardness.isdigit() else None,
-            shadow_data=json.dumps(shadow) if shadow else raw.shadow_header,
             fota_status=fota_status,
             fota_progress=fota_progress,
             gatt_dump=raw.gatt_dump,
         )
+        return replace(data, **self._status_fields(status))
