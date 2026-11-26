@@ -134,6 +134,16 @@ _VMINI_STATUS_FIELDS: tuple[str, ...] = (
     "water_hardness",
     "shadow_data",
 )
+# A Vertuo Up that has slept since before Home Assistant started: asleep, and
+# nothing else known.
+_ASLEEP_STUB = NespressoMachineData(
+    machine_state="asleep",
+    error_present=False,
+    firmware_version=None,
+    hardware_version=None,
+    serial_number=None,
+)
+
 _STATUS_FIELDS: dict[MachineFamily, tuple[str, ...]] = {
     MachineFamily.BARISTA: _COMMON_STATUS_FIELDS + _BARISTA_STATUS_FIELDS,
     MachineFamily.VERTUO_NEXT: _COMMON_STATUS_FIELDS + _VERTUO_STATUS_FIELDS,
@@ -217,8 +227,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         No baseline means no triggers: the first dataset after a restart or a
         reload describes a machine that may have been in that state for hours.
+        A Vertuo Up asleep since before the restart is no baseline either, but
+        one that fell asleep while we watched is, so the first brew after it
+        wakes still fires brewing_started.
         """
-        if self._device_id is None or old is None or old.machine_state == "asleep":
+        if self._device_id is None or old is None or old is _ASLEEP_STUB:
             return
         triggers = machine_triggers(old, new)
         if not triggers:
@@ -848,13 +861,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         restart happened while the machine was already asleep.
         """
         if self.data is None:
-            return NespressoMachineData(
-                machine_state="asleep",
-                error_present=False,
-                firmware_version=None,
-                hardware_version=None,
-                serial_number=None,
-            )
+            return _ASLEEP_STUB
         if self.data.machine_state == "asleep":
             return self.data
         return replace(self.data, machine_state="asleep")
