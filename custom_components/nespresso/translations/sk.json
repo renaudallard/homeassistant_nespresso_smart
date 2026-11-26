@@ -34,7 +34,8 @@
           "cleaning_ready": "Čistenie pripravené",
           "ready_old_capsule": "Pripravené (stará kapsula)",
           "rinsing_paused": "Oplachovanie pozastavené",
-          "unknown": "Neznámy"
+          "unknown": "Neznámy",
+          "asleep": "Režim spánku"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "Priebeh aktualizácie firmvéru"
+      },
+      "water_hardness": {
+        "name": "Tvrdosť vody"
       },
       "brew_total": {
         "name": "Celkový počet príprav"

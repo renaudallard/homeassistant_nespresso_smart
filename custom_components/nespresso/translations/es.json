@@ -34,7 +34,8 @@
           "cleaning_ready": "Limpieza lista",
           "ready_old_capsule": "Listo (cápsula antigua)",
           "rinsing_paused": "Aclarado pausado",
-          "unknown": "Desconocido"
+          "unknown": "Desconocido",
+          "asleep": "En suspensión"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "Progreso de la actualización de firmware"
+      },
+      "water_hardness": {
+        "name": "Dureza del agua"
       },
       "brew_total": {
         "name": "Preparaciones totales"

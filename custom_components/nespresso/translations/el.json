@@ -34,7 +34,8 @@
           "cleaning_ready": "Έτοιμη για καθαρισμό",
           "ready_old_capsule": "Έτοιμη (παλιά κάψουλα)",
           "rinsing_paused": "Ξέπλυμα σε παύση",
-          "unknown": "Άγνωστο"
+          "unknown": "Άγνωστο",
+          "asleep": "Σε αδράνεια"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "Πρόοδος ενημέρωσης υλικολογισμικού"
+      },
+      "water_hardness": {
+        "name": "Σκληρότητα νερού"
       },
       "brew_total": {
         "name": "Συνολικές παρασκευές"

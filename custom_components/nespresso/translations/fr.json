@@ -34,7 +34,8 @@
           "cleaning_ready": "Prête pour le nettoyage",
           "ready_old_capsule": "Prête (capsule usagée)",
           "rinsing_paused": "Rinçage en pause",
-          "unknown": "Inconnu"
+          "unknown": "Inconnu",
+          "asleep": "En sommeil"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "Progression de la mise à jour"
+      },
+      "water_hardness": {
+        "name": "Dureté de l'eau"
       },
       "brew_total": {
         "name": "Total des cafés"

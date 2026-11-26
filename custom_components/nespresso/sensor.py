@@ -240,7 +240,7 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
     ),
     NespressoSensorDescription(
         key="error_code_text",
-        translation_key="error_code_text",
+        translation_key="error_code",
         icon="mdi:alert-circle-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VMINI}),

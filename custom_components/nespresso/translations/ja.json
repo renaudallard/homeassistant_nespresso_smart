@@ -34,7 +34,8 @@
           "cleaning_ready": "湯通し準備完了",
           "ready_old_capsule": "準備完了（古いカプセル）",
           "rinsing_paused": "すすぎ一時停止中",
-          "unknown": "不明"
+          "unknown": "不明",
+          "asleep": "スリープ"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "ファームウェア更新の進捗"
+      },
+      "water_hardness": {
+        "name": "水の硬度"
       },
       "brew_total": {
         "name": "総抽出回数"

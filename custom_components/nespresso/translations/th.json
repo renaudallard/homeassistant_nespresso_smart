@@ -34,7 +34,8 @@
           "cleaning_ready": "พร้อมทำความสะอาด",
           "ready_old_capsule": "พร้อม (แคปซูลเก่า)",
           "rinsing_paused": "พักการล้างแล้ว",
-          "unknown": "ไม่ทราบ"
+          "unknown": "ไม่ทราบ",
+          "asleep": "หลับอยู่"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "ความคืบหน้าการอัปเดตเฟิร์มแวร์"
+      },
+      "water_hardness": {
+        "name": "ความกระด้างของน้ำ"
       },
       "brew_total": {
         "name": "จำนวนการชงทั้งหมด"

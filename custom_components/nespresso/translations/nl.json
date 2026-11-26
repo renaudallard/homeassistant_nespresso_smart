@@ -34,7 +34,8 @@
           "cleaning_ready": "Reiniging gereed",
           "ready_old_capsule": "Gereed (oude capsule)",
           "rinsing_paused": "Spoelen gepauzeerd",
-          "unknown": "Onbekend"
+          "unknown": "Onbekend",
+          "asleep": "Slaapstand"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "Voortgang firmware-update"
+      },
+      "water_hardness": {
+        "name": "Waterhardheid"
       },
       "brew_total": {
         "name": "Totaal aantal koffies"

@@ -34,7 +34,8 @@
           "cleaning_ready": "Temizlik için hazır",
           "ready_old_capsule": "Hazır (eski kapsül)",
           "rinsing_paused": "Durulama duraklatıldı",
-          "unknown": "Bilinmiyor"
+          "unknown": "Bilinmiyor",
+          "asleep": "Uyku modu"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "Donanım yazılımı güncelleme ilerlemesi"
+      },
+      "water_hardness": {
+        "name": "Su sertliği"
       },
       "brew_total": {
         "name": "Toplam demleme"

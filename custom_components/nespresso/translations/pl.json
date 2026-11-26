@@ -34,7 +34,8 @@
           "cleaning_ready": "Czyszczenie gotowe",
           "ready_old_capsule": "Gotowy (stara kapsułka)",
           "rinsing_paused": "Płukanie wstrzymane",
-          "unknown": "Nieznany"
+          "unknown": "Nieznany",
+          "asleep": "Uśpienie"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "Postęp aktualizacji oprogramowania"
+      },
+      "water_hardness": {
+        "name": "Twardość wody"
       },
       "brew_total": {
         "name": "Łączna liczba parzeń"

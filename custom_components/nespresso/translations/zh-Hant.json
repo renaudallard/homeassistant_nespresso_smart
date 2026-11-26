@@ -34,7 +34,8 @@
           "cleaning_ready": "清潔已就緒",
           "ready_old_capsule": "就緒（使用過的膠囊）",
           "rinsing_paused": "清洗已暫停",
-          "unknown": "未知"
+          "unknown": "未知",
+          "asleep": "休眠"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "韌體更新進度"
+      },
+      "water_hardness": {
+        "name": "水質硬度"
       },
       "brew_total": {
         "name": "總萃取次數"

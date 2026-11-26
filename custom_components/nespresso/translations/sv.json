@@ -34,7 +34,8 @@
           "cleaning_ready": "Redo för rengöring",
           "ready_old_capsule": "Redo (gammal kapsel)",
           "rinsing_paused": "Sköljning pausad",
-          "unknown": "Okänd"
+          "unknown": "Okänd",
+          "asleep": "Sover"
         }
       },
       "wifi_status": {
@@ -104,6 +105,9 @@
       },
       "fota_progress": {
         "name": "Förlopp för uppdatering av fast programvara"
+      },
+      "water_hardness": {
+        "name": "Vattenhårdhet"
       },
       "brew_total": {
         "name": "Totalt antal bryggningar"

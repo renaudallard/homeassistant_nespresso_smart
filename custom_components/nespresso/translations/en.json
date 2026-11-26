@@ -1,12 +1,6 @@
 {
   "entity": {
     "sensor": {
-      "water_hardness": {
-        "name": "Water hardness"
-      },
-      "error_code_text": {
-        "name": "Error code"
-      },
       "machine_state": {
         "state": {
           "standby": "Standby",
@@ -40,7 +34,8 @@
           "cleaning_ready": "Cleaning ready",
           "ready_old_capsule": "Ready (old capsule)",
           "rinsing_paused": "Rinsing paused",
-          "unknown": "Unknown"
+          "unknown": "Unknown",
+          "asleep": "Asleep"
         }
       },
       "wifi_status": {
@@ -110,6 +105,9 @@
       },
       "fota_progress": {
         "name": "Firmware update progress"
+      },
+      "water_hardness": {
+        "name": "Water hardness"
       },
       "brew_total": {
         "name": "Total brews"
