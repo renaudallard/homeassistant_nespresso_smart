@@ -77,10 +77,12 @@ from ..const import (
     VERTUO_CHAR_WIFI_SCAN_RESULT,
     VERTUO_CHAR_WIFI_SCAN_SELECT,
     VERTUO_CHAR_WIFI_SETUP,
+    VMINI_CHAR_ASSET_VERSIONS,
     VMINI_CHAR_FOTA_STATUS,
     VMINI_CHAR_FW_REV,
     VMINI_CHAR_MACHINE_TOKEN,
     VMINI_CHAR_SERIAL,
+    VMINI_CHAR_SHADOW_DATA,
     VMINI_CHAR_SHADOW_HEADER,
     VMINI_CHAR_SW_REV,
     MachineFamily,
@@ -1268,26 +1270,41 @@ class VMiniProtocol(AbstractNespressoProtocol):
     """BLE protocol for VMini (Vertuo Mini) machines."""
 
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
-        serial = await _read_char(client, VMINI_CHAR_SERIAL, "serial")
-        fw = await _read_char(client, VMINI_CHAR_FW_REV, "firmware_rev")
-        sw = await _read_char(client, VMINI_CHAR_SW_REV, "software_rev")
-        # Optional chars that may not be available before WiFi setup
-        shadow = None
-        fota_status = None
-        try:
-            fota_status = await _read(client, VMINI_CHAR_FOTA_STATUS)
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("VMini FOTA status not available")
-        try:
-            shadow = await _read(client, VMINI_CHAR_SHADOW_HEADER)
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("VMini shadow header not available")
+        # No read is mandatory. This characteristic list comes from the
+        # APK's VMini SDK, never from hardware, and the first VMini-family
+        # machine seen in the wild (a Vertuo Up) exposes no standard Device
+        # Information service at all: a read the machine cannot answer must
+        # not keep the whole entry from setting up.
+        optional_reads = (
+            (VMINI_CHAR_SERIAL, "serial"),
+            (VMINI_CHAR_FW_REV, "firmware_rev"),
+            (VMINI_CHAR_SW_REV, "software_rev"),
+            (VMINI_CHAR_ASSET_VERSIONS, "asset_versions"),
+            (VMINI_CHAR_SHADOW_HEADER, "shadow_header"),
+            (VMINI_CHAR_SHADOW_DATA, "shadow_data"),
+            (VMINI_CHAR_FOTA_STATUS, "fota_status"),
+        )
+        values: dict[str, bytearray | None] = {}
+        for char, name in optional_reads:
+            try:
+                values[name] = await _read(client, char)
+                _LOGGER.debug("Read %s [%s]: %s", name, char, values[name].hex())
+            except Exception:  # noqa: BLE001
+                values[name] = None
+                _LOGGER.debug("VMini %s not available", name)
+        serial = values["serial"]
+        fw = values["firmware_rev"]
+        sw = values["software_rev"]
+        asset_versions = values["asset_versions"]
+        shadow = values["shadow_header"]
+        shadow_data = values["shadow_data"]
+        fota_status = values["fota_status"]
         _LOGGER.debug(
-            "VMini raw: serial=%s fw=%s sw=%s shadow=%s",
-            serial.hex(),
-            fw.hex(),
-            sw.hex(),
+            "VMini raw: serial=%s asset_versions=%s shadow=%s shadow_data=%s",
+            serial.hex() if serial else "N/A",
+            asset_versions.hex() if asset_versions else "N/A",
             shadow.hex() if shadow else "N/A",
+            shadow_data.hex() if shadow_data else "N/A",
         )
         # GATT dump only when debug logging is active
         gatt_dump_result = None
@@ -1295,10 +1312,16 @@ class VMiniProtocol(AbstractNespressoProtocol):
             gatt_dump_result = await _dump_all_characteristics(client)
 
         return RawMachineData(
-            serial_bytes=bytes(serial),
-            firmware_version=_decode_ble_string(bytes(fw)),
-            software_version=_decode_ble_string(bytes(sw)),
+            serial_bytes=bytes(serial) if serial else None,
+            firmware_version=_decode_ble_string(bytes(fw)) if fw else None,
+            software_version=_decode_ble_string(bytes(sw)) if sw else None,
+            asset_versions=_decode_ble_string(bytes(asset_versions))
+            if asset_versions
+            else None,
             shadow_header=_decode_ble_string(bytes(shadow)) if shadow else None,
+            shadow_data=_decode_ble_string(bytes(shadow_data))
+            if shadow_data
+            else None,
             fota_status_bytes=bytes(fota_status) if fota_status else None,
             gatt_dump=gatt_dump_result,
         )
