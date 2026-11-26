@@ -1076,22 +1076,19 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         )
         raw = await self._async_read_held_link()
         if raw is None:
-            try:
-                raw = await self._async_connect_and_read()
-            except UpdateFailed:
-                if self.family is MachineFamily.VMINI and (
-                    bluetooth.async_ble_device_from_address(
-                        self.hass, self.address, connectable=False
-                    )
-                    is None
-                ):
-                    # Asleep, not faulty: the machine stopped advertising
-                    # entirely. Entities stay available under an "asleep"
-                    # marker state; the poll recovers when the machine wakes.
-                    asleep = self._asleep_dataset()
-                    self._async_note_update(self.data, asleep)
-                    return asleep
-                raise
+            if self.family is MachineFamily.VMINI and (
+                bluetooth.async_ble_device_from_address(
+                    self.hass, self.address, connectable=False
+                )
+                is None
+            ):
+                # Asleep, not faulty: the machine stopped advertising
+                # entirely. Checked before connecting, which would mark it
+                # gone and log it on every poll for as long as it sleeps.
+                asleep = self._asleep_dataset()
+                self._async_note_update(self.data, asleep)
+                return asleep
+            raw = await self._async_connect_and_read()
 
         try:
             result = self._parse(raw)
