@@ -1287,11 +1287,13 @@ class VMiniProtocol(AbstractNespressoProtocol):
         values: dict[str, bytearray | None] = {}
         for char, name in optional_reads:
             try:
-                values[name] = await _read(client, char)
-                _LOGGER.debug("Read %s [%s]: %s", name, char, values[name].hex())
+                value = await _read(client, char)
             except Exception:  # noqa: BLE001
                 values[name] = None
                 _LOGGER.debug("VMini %s not available", name)
+                continue
+            values[name] = value
+            _LOGGER.debug("Read %s [%s]: %s", name, char, value.hex())
         serial = values["serial"]
         fw = values["firmware_rev"]
         sw = values["software_rev"]
