@@ -1267,7 +1267,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
 
 
 class VMiniProtocol(AbstractNespressoProtocol):
-    """BLE protocol for VMini (Vertuo Mini) machines."""
+    """BLE protocol for VMini (Vertuo Up) machines."""
 
     async def async_read_all(self, client: BleakClient) -> RawMachineData:
         # No read is mandatory. This characteristic list comes from the
