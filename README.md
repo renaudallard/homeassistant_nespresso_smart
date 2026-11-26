@@ -4,7 +4,7 @@
 
 # Nespresso Smart - Home Assistant Integration
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/renaudallard/homeassistant_nespresso_smart)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/renaudallard/homeassistant_nespresso_smart)
 [![Release](https://img.shields.io/github/v/release/renaudallard/homeassistant_nespresso_smart)](https://github.com/renaudallard/homeassistant_nespresso_smart/releases)
 [![Validate](https://github.com/renaudallard/homeassistant_nespresso_smart/actions/workflows/validate.yml/badge.svg)](https://github.com/renaudallard/homeassistant_nespresso_smart/actions/workflows/validate.yml)
 [![Test](https://github.com/renaudallard/homeassistant_nespresso_smart/actions/workflows/test.yml/badge.svg)](https://github.com/renaudallard/homeassistant_nespresso_smart/actions/workflows/test.yml)
@@ -62,6 +62,8 @@ family default, and keeps its Bluetooth name as the device name.
 2. Restart Home Assistant
 
 If the search does not find it, add `https://github.com/renaudallard/homeassistant_nespresso_smart` as a custom repository of category **Integration** (HACS three dots menu > **Custom repositories**) and search again.
+
+From Home Assistant 2026.11, HACS is replaced by the built-in Marketplace (**Settings > Marketplace**), which lists the same integrations. Search for **Nespresso Smart** there.
 
 ### Manual
 
@@ -371,7 +373,7 @@ your Home Assistant profile. The names below are the English ones.
 
 | Entity | Barista | Vertuo Next | VMini | Description |
 |--------|---------|-------------|-------|-------------|
-| State | Yes | Yes | Yes | Machine operational state. An enum with 32 translated states on a Barista or Vertuo Next, the readable shadow state on a Vertuo Up. It has no name of its own and shows as the device itself |
+| State | Yes | Yes | Yes | Machine operational state. An enum with 32 translated states on a Barista or Vertuo Next. On a Vertuo Up it is the state the machine reports, translated when it matches one of those, such as ready or standby, or is `asleep`, and shown as sent otherwise, like `brew/running`. It has no name of its own and shows as the device itself |
 | Firmware version | Yes | Yes | Yes | Current firmware version (diagnostic) |
 | Hardware version | Yes | Yes | No | Hardware revision (diagnostic) |
 | Bootloader version | Yes | Yes | No | Bootloader version (diagnostic) |
@@ -379,10 +381,12 @@ your Home Assistant profile. The names below are the English ones.
 | Bluetooth version | Yes | No | No | Bluetooth module version (diagnostic) |
 | Recipe DB version | No | Yes | No | Recipe database version (diagnostic) |
 | Connectivity FW | No | Yes | No | WiFi/connectivity firmware version (diagnostic) |
-| Error code | No | Yes | Yes | Current active error code (diagnostic). Numeric on a Vertuo Next, text on a Vertuo Up |
+| Error code | No | Yes | Yes | Current active error code (diagnostic). Numeric on a Vertuo Next, text on a Vertuo Up, where it is unknown while the machine reports no error |
 | Error log code | No | Yes | No | Error from error log (diagnostic) |
 | Milk unit | No | Yes | No | State of the milk system, 16 values from offline to frothing. Reads Cleaning both while a milk cleaning runs and while the machine is asking for one. Only on a Creatista or a Lattissima |
 | IoT market | No | Yes | No | IoT market name (diagnostic) |
+| WiFi status | No | Yes | No | Whether the machine is on WiFi, see below (diagnostic) |
+| WiFi network | No | Yes | No | The network the machine is set up for (diagnostic) |
 | Recipe slots | Yes | No | No | Maximum recipe slots (diagnostic) |
 | Brewing duration | Yes | Yes | No | Time elapsed since brewing started (seconds) |
 | Total brews | No | Yes | Yes | Brews counted since the integration was installed |
@@ -390,9 +394,11 @@ your Home Assistant profile. The names below are the English ones.
 | Brews until descaling | No | Yes | Yes | Brews left before the capsule limit is reached |
 | Days until descaling | No | Yes | Yes | Days left before the time limit is reached |
 | Water hardness | No | No | Yes | Water hardness level reported by the machine (diagnostic) |
-| Device shadow | No | No | Yes | Device shadow JSON data (diagnostic, disabled by default) |
+| Device shadow | No | No | Yes | Device shadow JSON data, cut to the 255 characters a state can hold. The diagnostics download has all of it (diagnostic, disabled by default) |
 | FOTA status | No | No | Yes | Firmware update status (diagnostic) |
 | FOTA progress | No | No | Yes | Firmware update progress (diagnostic) |
+
+Most Vertuo Next family machines driven over Bluetooth report **WiFi status** `not_configured`, which is normal and not a fault: it means the machine has never been put on WiFi. It matters because Nespresso's own maintenance functions, descaling among them, are cloud calls that reach the machine through AWS IoT, so a machine that is not online cannot receive them at all.
 
 ### Binary Sensors
 
@@ -458,7 +464,7 @@ Device triggers for automations:
 - **error_occurred**, **ready**, **standby**: the machine entered that state
 - **descaling_needed** / **water_tank_empty**: the machine raised the flag. Each fires once when the flag goes up, not on every poll while it stays up
 
-They fire from whichever path saw the change first: the poll, a notification on a persistent connection, or the advertisement on the Vertuo family.
+They fire from whichever path saw the change first: the poll, a notification on a persistent connection, or the advertisement on the Vertuo Next family.
 
 ### Device Info
 
@@ -472,7 +478,7 @@ The integration connects to the machine via BLE at a configurable interval (defa
 
 Machine family is detected automatically from the advertised BLE service UUID during discovery. When the machine becomes available after being off or out of range, a BLE advertisement callback triggers an immediate refresh.
 
-When Home Assistant stops seeing the machine's advertisements, which takes a few minutes after it is switched off or goes out of range, the entities become unavailable and the log gets one info line, `... is no longer seen over Bluetooth`. Polls are not logged as errors while it stays away, and Home Assistant logs `Fetching Nespresso ... data recovered` at info once it is back. With a persistent connection the machine's advertisements stop reaching Home Assistant while the link is up, so it drops the machine from its cache after a few minutes even though nothing is wrong. Polls read over the open link instead of reconnecting, so the entities stay available, and once the machine drops the link it is handled as above. If it goes quiet while a command is running, the next poll that cannot find it does the same. Connection, pairing and read failures on a machine that is still seen are logged as errors as before.
+When Home Assistant stops seeing the machine's advertisements, which takes a few minutes after it is switched off or goes out of range, the entities become unavailable and the log gets one info line, `... is no longer seen over Bluetooth`. Polls are not logged as errors while it stays away, and Home Assistant logs `Fetching Nespresso ... data recovered` at info once it is back. A Vertuo Up is the exception: it stops advertising when it sleeps, so it shows `asleep` with its entities available instead, see [Limitations](#limitations). With a persistent connection the machine's advertisements stop reaching Home Assistant while the link is up, so it drops the machine from its cache after a few minutes even though nothing is wrong. Polls read over the open link instead of reconnecting, so the entities stay available, and once the machine drops the link it is handled as above. If it goes quiet while a command is running, the next poll that cannot find it does the same. Connection, pairing and read failures on a machine that is still seen are logged as errors as before.
 
 On the Vertuo Next family the advertisement itself carries the machine status bytes, so state and alarm flags follow the machine within about a second instead of waiting for the next poll. Values that only a connection can read, such as error codes and the capsule counter, still come from the poll.
 
@@ -489,7 +495,6 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 - **Poll interval** (10-600 seconds, default 60): how often to read machine status
 - **Persistent connection** (off by default): keeps the BLE connection open for real-time GATT notifications, and polls, commands and settings changes go over it instead of connecting again. Gives instant status updates but blocks the Nespresso mobile app.
 - **Send the TX level request when onboarding** (on by default): the official app asks the machine to drop its transmit power just before handing over the auth token, and the integration does the same. Leave it on unless you are diagnosing a dropped connection. See [Onboarding drops the connection](#onboarding-drops-the-connection-gatt-error-133).
-The Vertuo family also gets a **WiFi status** and **WiFi network** sensor, both diagnostic. Most machines driven over Bluetooth report `not_configured`, which is normal and not a fault: it means the machine has never been put on WiFi. They matter because Nespresso's own maintenance functions, descaling among them, are cloud calls that reach the machine through AWS IoT, so a machine that is not online cannot receive them at all.
 
 - **Descaling interval (capsules)** (1-10000, default 300): how many brews before descaling is due. Vertuo Next and Vertuo Up.
 - **Descaling interval (days)** (1-3650, default 90): how many days before descaling is due. Vertuo Next and Vertuo Up.
@@ -499,8 +504,8 @@ Nespresso quotes 300 capsules or 3 months for the Vertuo range, whichever comes 
 
 ## WiFi setup
 
-Vertuo machines can be put on WiFi over Bluetooth, which is what the official app
-does during onboarding. Two actions do it, and like every action of this
+Vertuo Next family machines can be put on WiFi over Bluetooth, which is what the
+official app does during onboarding. Two actions do it, and like every action of this
 integration they need an admin user:
 
 - `nespresso.scan_wifi` returns the networks the machine can see. The machine
@@ -530,8 +535,8 @@ Two things worth knowing before using this:
 
 - **The passphrase is sent to the machine in clear.** That is how the official
   app sends it, and the characteristic has no encrypted alternative. It goes over
-  an encrypted BLE link when the machine asks for one, which the Vertuo family
-  does, but it is stored and transmitted as plain text either way
+  an encrypted BLE link when the machine asks for one, which the Vertuo Next
+  family does, but it is stored and transmitted as plain text either way
 - Only DHCP is supported. The static address fields exist in the protocol and are
   written with their octets reversed, which is not a detail worth risking
   somebody's network configuration on until someone needs it
@@ -884,9 +889,7 @@ If you find this integration useful, you can support its development:
 
 ## Contributing
 
-To submit this integration to the HACS default repository:
-
-1. Ensure it meets the [HACS requirements](https://hacs.xyz/docs/publish/integration)
-2. Fork [hacs/default](https://github.com/hacs/default)
-3. Add the repository URL to the `integration` file
-4. Submit a pull request
+Bug reports and pull requests are welcome on
+[GitHub](https://github.com/renaudallard/homeassistant_nespresso_smart). For
+anything protocol related, attach the diagnostics described in
+[Collecting diagnostics for an issue](#collecting-diagnostics-for-an-issue).
