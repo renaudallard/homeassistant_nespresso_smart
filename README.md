@@ -16,9 +16,9 @@ For Nespresso's cloud API, see [piitaya/ha-nespresso-cloud](https://github.com/p
 
 Built by reverse-engineering the Nespresso Smart Android app (v1.2.5).
 
-&lt;p align="center"&gt;
-  &lt;img src="images/vertuo-next-device.png" alt="Vertuo Next device page in Home Assistant" width="640"&gt;
-&lt;/p&gt;
+<p align="center">
+  <img src="images/vertuo-next-device.png" alt="Vertuo Next device page in Home Assistant" width="640">
+</p>
 
 A Vertuo Next device page, taken before 0.5.30 moved Auto power off, Water hardness and Reset descaling counter to Configuration and LED signaling to Diagnostic. Auto power off has been removed since, see [Limitations](#limitations).
 
