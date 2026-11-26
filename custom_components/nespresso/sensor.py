@@ -235,7 +235,6 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         translation_key="water_hardness",
         icon="mdi:water",
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
         families=frozenset({MachineFamily.VMINI}),
         value_fn=lambda d: d.water_hardness,
     ),
