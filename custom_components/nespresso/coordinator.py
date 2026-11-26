@@ -59,7 +59,9 @@ from .ble.parsing import (
     parse_vertuo_wifi_status,
     parse_vertuonext_machine_info,
     parse_vertuonext_status,
+    parse_vmini_asset_versions,
     parse_vmini_fota_status,
+    parse_vmini_shadow,
 )
 from .ble.protocol import (
     _authenticate,
@@ -79,11 +81,18 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     VERTUO_CHAR_STATUS,
+    VMINI_CHAR_SHADOW_DATA,
     WATCH_MAX_EVENTS,
     WATCH_SAMPLE_PAUSE,
     MachineFamily,
 )
-from .models import NespressoMachineData, RawMachineData, machine_triggers
+from .models import (
+    NespressoMachineData,
+    RawMachineData,
+    is_brew_run_state,
+    is_brew_state,
+    machine_triggers,
+)
 
 if TYPE_CHECKING:
     # Only an annotation needs it, and the tests stub bleak as a bare module.
@@ -118,9 +127,15 @@ _BARISTA_STATUS_FIELDS: tuple[str, ...] = (
     "induction_heating",
     "setup_complete",
 )
+_VMINI_STATUS_FIELDS: tuple[str, ...] = (
+    "descaling_needed",
+    "water_hardness",
+    "shadow_data",
+)
 _STATUS_FIELDS: dict[MachineFamily, tuple[str, ...]] = {
     MachineFamily.BARISTA: _COMMON_STATUS_FIELDS + _BARISTA_STATUS_FIELDS,
     MachineFamily.VERTUO_NEXT: _COMMON_STATUS_FIELDS + _VERTUO_STATUS_FIELDS,
+    MachineFamily.VMINI: _COMMON_STATUS_FIELDS + _VMINI_STATUS_FIELDS,
 }
 
 
@@ -175,11 +190,18 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.brew_total = 0
         self.brews_since_descaling = 0
         self.last_descaling: float | None = None
+        # Last machine state actually read, baseline for brew counting. Kept
+        # across "unknown" reads so a brew running through a read gap is not
+        # counted twice, and a brew started inside one is not missed.
+        self._brew_track_baseline: str | None = None
         self.descaling_capsules = 0
         self.descaling_days = 0
         self._counter_store = counter_store(hass, address)
         self._client: BleakClient | None = None
         self._status_uuid = self._get_status_uuid()
+        # Schema of the VMini device shadow, cached from the last full read
+        # so shadow notifications can be decoded without reading the header.
+        self._vmini_shadow_schema: str | None = None
         self._device_id: str | None = None
 
     def set_device_id(self, device_id: str) -> None:
@@ -194,7 +216,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         No baseline means no triggers: the first dataset after a restart or a
         reload describes a machine that may have been in that state for hours.
         """
-        if self._device_id is None or old is None:
+        if self._device_id is None or old is None or old.machine_state == "asleep":
             return
         triggers = machine_triggers(old, new)
         if not triggers:
@@ -219,6 +241,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             return BARISTA_CHAR_STATUS
         if self.family == MachineFamily.VERTUO_NEXT:
             return VERTUO_CHAR_STATUS
+        if self.family == MachineFamily.VMINI:
+            return VMINI_CHAR_SHADOW_DATA
         return None
 
     async def async_shutdown(self) -> None:
@@ -274,9 +298,36 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 return parse_barista_status(data)
             if self.family == MachineFamily.VERTUO_NEXT:
                 return parse_vertuonext_status(data)
+            if self.family == MachineFamily.VMINI:
+                return self._parse_vmini_status(data)         
         except (ValueError, IndexError) as err:
             _LOGGER.debug("Failed to parse status %s: %s", data.hex(), err)
         return None
+
+    def _parse_vmini_status(self, data: bytes) -> dict[str, object] | None:
+        """Decode a VMini shadow notification into dataset fields.
+
+        The notification carries only the CSV values, zipped against the
+        schema cached from the last full read. The live fields mirror
+        _parse_vmini; the static ones (firmware, serial) stay with the poll.
+        """
+        text = data.decode("utf-8", errors="ignore").rstrip("\x00")
+        shadow = parse_vmini_shadow(self._vmini_shadow_schema or "", text)
+        if not shadow:
+            return None
+        fields: dict[str, object] = {
+            "machine_state": shadow.get("machineStatus", "unknown"),
+            "error_present": shadow.get("errorCode", "no error")
+            not in ("no error", ""),
+            "shadow_data": json.dumps(shadow),
+        }
+        if "descalingAlert" in shadow:
+            fields["descaling_needed"] = shadow["descalingAlert"] not in ("0", "")
+        try:
+            fields["water_hardness"] = int(shadow["waterHardness"])
+        except (KeyError, TypeError, ValueError):
+            pass
+        return fields
 
     def _handle_status_update(self, data: bytes) -> None:
         """Process status notification data on the event loop."""
@@ -774,6 +825,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             self.brew_total = stored.get("brew_total", 0)
             self.brews_since_descaling = stored.get("brews_since_descaling", 0)
             self.last_descaling = stored.get("last_descaling")
+            self._brew_track_baseline = stored.get("machine_state")     
         if self.last_descaling is None:
             # No reference point yet, so start the clock now. Otherwise the
             # time half of the schedule could never trigger.
@@ -807,6 +859,26 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.last_descaling = time.time()
         self._async_save_counters()
         self.async_update_listeners()
+   
+    def _asleep_dataset(self) -> NespressoMachineData:
+        """Return a dataset marking the machine as asleep.
+
+        A Vertuo Up has no off switch: it stops advertising when it dozes,
+        so vanishing from Bluetooth means asleep rather than broken. Entities
+        stay available on the last known dataset, or on a bare stub when the
+        restart happened while the machine was already asleep.
+        """
+        if self.data is None:
+            return NespressoMachineData(
+                machine_state="asleep",
+                error_present=False,
+                firmware_version=None,
+                hardware_version=None,
+                serial_number=None,
+            )
+        if self.data.machine_state == "asleep":
+            return self.data
+        return replace(self.data, machine_state="asleep")
 
     @callback
     def async_machine_gone(self) -> None:
@@ -823,8 +895,22 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         poll marks it the same way if it really went away. The link itself is
         asked, not is_connected: a persistent client stays set after the
         machine drops it.
+
+        A Vertuo Up is the exception to unavailable: it has no off switch and
+        stops advertising when it dozes, so it goes to an "asleep" marker
+        state with its entities kept available.
         """
         if self._held_link() is not None or self._ble_lock.locked():
+            return
+        if self.family is MachineFamily.VMINI:
+            # A Vertuo Up that stops advertising is asleep, not broken: keep
+            # its entities available under an "asleep" marker state.
+            if self.data is None or self.data.machine_state != "asleep":
+                _LOGGER.info(
+                    "%s fell asleep (no longer seen over Bluetooth)", self.address
+                )
+                self.last_update_success = True
+                self._async_publish(self.data, self._asleep_dataset())
             return
         if self._mark_gone():
             self.async_update_listeners()
@@ -869,31 +955,66 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         all three come through here. Whichever sees a change first updates the
         data, and the others then see no change.
         """
-        self._async_track_brew(old.machine_state if old else None, new.machine_state)
+        self._async_track_brew(new.machine_state)
         self._fire_triggers(old, new)
 
     @callback
-    def _async_track_brew(self, previous: str | None, current: str) -> None:
-        """Count one brew per entry into the BREWING state.
+    def _async_track_brew(self, current: str) -> None:
+        """Count one brew per extraction.
 
-        BREWING is distinct from CAPSULE_READING, so an attempt with no capsule
-        never reaches this state and is correctly not counted.
+        Two edges count. Entry into a pour: a Vertuo Up only reports
+        "brew/running" while a fresh extraction pours, and everything around
+        it stays inside the brew namespace - the barcode read when a capsule
+        is loaded ("brew/black reading"), the pause waiting for the button
+        ("brew/waiting for top up") and the top-up pour itself ("brew/top
+        up", all seen on fw 4.5.3). So a top-up never counts, a barcode read
+        that never reaches a pour never counts, and a new capsule started
+        from the pause always does. And entry into the brew namespace from
+        outside it: a whole pour can fit between two polls, so the pause that
+        follows it may be the first sign of the brew.
 
-        A previous state of None means there is no baseline yet, which happens
-        on the first refresh after a restart or a reload. Counting there would
-        count a brew that is already running a second time.
+        The baseline is the last state that was actually read. It is
+        persisted with the counters, so a restart or reload keeps it: a
+        machine idle at shutdown still counts a brew started right after
+        boot, and one brewing at shutdown is not counted twice. "unknown"
+        reads - a poll that failed mid-flight, common right after a
+        reconnect - are skipped without moving it, so a read gap neither
+        counts a brew twice nor loses one. Only a brew started before the
+        first ever successful read is missed: there is no baseline to judge
+        it by. "asleep" and "standby" are skipped the same way: a machine that
+        wakes into another phase of the same brew must not count it again.
         """
-        if previous is None or current != "brewing" or previous == "brewing":
+        if current in ("unknown", "asleep", "standby"):
+            return
+        previous = self._brew_track_baseline
+        self._brew_track_baseline = current
+        if previous is None or previous == current:
+            return
+        self._async_save_counters()
+        _LOGGER.debug(
+            "Machine state transition for %s: %s -> %s",
+            self.address,
+            previous,
+            current,
+        )
+        if not is_brew_state(current):
+            return
+        if not is_brew_run_state(current) and (
+            is_brew_state(previous) or current.endswith(" reading")
+        ):
+            # Phase changes within one brew, and barcode-reading phases:
+            # those brews count when the pour starts.
             return
         self.brew_total += 1
         self.brews_since_descaling += 1
         _LOGGER.debug(
-            "Brew counted for %s: total=%s since_descaling=%s",
+            "Brew counted for %s: total=%s since_descaling=%s (%s -> %s)",
             self.address,
             self.brew_total,
             self.brews_since_descaling,
+            previous,
+            current,
         )
-        self._async_save_counters()
 
     def _counters(self) -> dict[str, Any]:
         """Return the counters as they are stored."""
@@ -901,6 +1022,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             "brew_total": self.brew_total,
             "brews_since_descaling": self.brews_since_descaling,
             "last_descaling": self.last_descaling,
+            "machine_state": self._brew_track_baseline,
         }
 
     @callback
@@ -975,7 +1097,22 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         )
         raw = await self._async_read_held_link()
         if raw is None:
-            raw = await self._async_connect_and_read()
+            try:
+                raw = await self._async_connect_and_read()
+            except UpdateFailed:
+                if self.family is MachineFamily.VMINI and (
+                    bluetooth.async_ble_device_from_address(
+                        self.hass, self.address, connectable=False
+                    )
+                    is None
+                ):
+                    # Asleep, not faulty: the machine stopped advertising
+                    # entirely. Entities stay available under an "asleep"
+                    # marker state; the poll recovers when the machine wakes.
+                    asleep = self._asleep_dataset()
+                    self._async_note_update(self.data, asleep)
+                    return asleep
+                raise
 
         try:
             result = self._parse(raw)
@@ -1277,13 +1414,34 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 int(raw_progress) if isinstance(raw_progress, (int, float, str)) else 0
             )
 
+        # A Vertuo Up has no standard Device Information service; its
+        # versions live in the asset versions string instead, and its live
+        # state in the shadow data, zipped against the shadow schema.
+        assets = parse_vmini_asset_versions(raw.asset_versions)
+        if raw.shadow_header:
+            # Cache the schema so shadow notifications can be decoded without
+            # reading the header again.
+            self._vmini_shadow_schema = raw.shadow_header
+        shadow = parse_vmini_shadow(raw.shadow_header, raw.shadow_data)
+        error_text = shadow.get("errorCode", "").strip()
+        water_hardness = shadow.get("waterHardness", "")
+
         return NespressoMachineData(
-            machine_state="unknown",
-            error_present=False,
-            firmware_version=raw.firmware_version,
+            machine_state=shadow.get("machineStatus", "unknown"),
+            error_present=bool(error_text) and error_text.lower() != "no error",
+            error_code_text=error_text or None,
+            firmware_version=assets.get("fmw-main") or raw.firmware_version,
             hardware_version=raw.software_version,
             serial_number=serial,
-            shadow_data=raw.shadow_header,
+            recipe_db_version=assets.get("recipe"),
+            connectivity_fw_version=assets.get("fmw-connectivity"),
+            descaling_needed=shadow["descalingAlert"] == "1"
+            if "descalingAlert" in shadow
+            else None,
+            water_hardness=int(water_hardness)
+            if water_hardness.isdigit()
+            else None,
+            shadow_data=json.dumps(shadow) if shadow else raw.shadow_header,
             fota_status=fota_status,
             fota_progress=fota_progress,
             gatt_dump=raw.gatt_dump,
