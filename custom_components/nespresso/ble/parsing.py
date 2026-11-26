@@ -486,7 +486,7 @@ def build_water_hardness(level: int) -> bytes:
             f"Water hardness must be 0 to {WATER_HARDNESS_MAX}, got {level}"
         )
     return bytes((0xFF, 0xFF, level, 0xFF))
-    
+
 def parse_vmini_asset_versions(text: str | None) -> dict[str, str]:
     """Parse the VMini asset versions characteristic.
 
@@ -520,4 +520,4 @@ def parse_vmini_shadow(schema_text: str | None, data_text: str | None) -> dict[s
         name = field.split(",")[0].strip()
         if name:
             fields.append(name)
-    return dict(zip(fields, data_text.split(",")))    
+    return dict(zip(fields, data_text.split(",")))
