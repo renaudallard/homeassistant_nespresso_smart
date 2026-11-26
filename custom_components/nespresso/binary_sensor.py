@@ -59,7 +59,9 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
         key="error_present",
         translation_key="error_present",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        families=frozenset({MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT}),
+        families=frozenset(
+            {MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT, MachineFamily.VMINI}
+        ),
         value_fn=lambda d: d.error_present,
     ),
     NespressoBinarySensorDescription(
@@ -75,7 +77,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[NespressoBinarySensorDescription, ...] = (
         translation_key="descaling_needed",
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:alert-circle-outline",
-        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        families=frozenset({MachineFamily.VERTUO_NEXT, MachineFamily.VMINI}),
         value_fn=lambda d: d.descaling_needed,
     ),
     NespressoBinarySensorDescription(
