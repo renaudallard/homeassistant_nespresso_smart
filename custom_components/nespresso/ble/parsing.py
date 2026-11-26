@@ -486,3 +486,38 @@ def build_water_hardness(level: int) -> bytes:
             f"Water hardness must be 0 to {WATER_HARDNESS_MAX}, got {level}"
         )
     return bytes((0xFF, 0xFF, level, 0xFF))
+    
+def parse_vmini_asset_versions(text: str | None) -> dict[str, str]:
+    """Parse the VMini asset versions characteristic.
+
+    Semicolon-separated assets, each "name,version,required", as read off a
+    Vertuo Up: "fmw-main,4.5.3,1.1.0;recipe,4.5.0,1.1.0;hmi,1.2.2,1.0.0;
+    fmw-connectivity,3.18.0,2.0.0". Returns {name: version}; the third field
+    is the version the asset requires of something else and is not surfaced.
+    """
+    versions: dict[str, str] = {}
+    if not text:
+        return versions
+    for asset in text.split(";"):
+        parts = asset.split(",")
+        if len(parts) >= 2 and parts[0]:
+            versions[parts[0]] = parts[1]
+    return versions
+
+
+def parse_vmini_shadow(schema_text: str | None, data_text: str | None) -> dict[str, str]:
+    """Zip the VMini shadow schema against the shadow data.
+
+    The schema characteristic is semicolon-separated "name,type" pairs and
+    the data characteristic carries one comma-separated value per field, in
+    the same order. A field holding a list separates its items with ";" of
+    its own, which is why the data splits on "," only. Values stay strings.
+    """
+    if not schema_text or not data_text:
+        return {}
+    fields = []
+    for field in schema_text.split(";"):
+        name = field.split(",")[0].strip()
+        if name:
+            fields.append(name)
+    return dict(zip(fields, data_text.split(",")))    
