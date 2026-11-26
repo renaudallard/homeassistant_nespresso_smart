@@ -1,6 +1,7 @@
-&lt;p align="center"&gt;
-  &lt;img src="images/logo.png" alt="Nespresso Smart" width="120"&gt;
-&lt;/p&gt;
+<p align="center">
+  <img src="images/logo.png" alt="Nespresso Smart" width="120">
+</p>
+
 
 # Nespresso Smart - Home Assistant Integration
 
