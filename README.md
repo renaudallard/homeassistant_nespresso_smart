@@ -1,6 +1,6 @@
-<p align="center">
-  <img src="images/logo.png" alt="Nespresso Smart" width="120">
-</p>
+&lt;p align="center"&gt;
+  &lt;img src="images/logo.png" alt="Nespresso Smart" width="120"&gt;
+&lt;/p&gt;
 
 # Nespresso Smart - Home Assistant Integration
 
@@ -15,13 +15,13 @@ For Nespresso's cloud API, see [piitaya/ha-nespresso-cloud](https://github.com/p
 
 Built by reverse-engineering the Nespresso Smart Android app (v1.2.5).
 
-<p align="center">
-  <img src="images/vertuo-next-device.png" alt="Vertuo Next device page in Home Assistant" width="640">
-</p>
+&lt;p align="center"&gt;
+  &lt;img src="images/vertuo-next-device.png" alt="Vertuo Next device page in Home Assistant" width="640"&gt;
+&lt;/p&gt;
 
 A Vertuo Next device page, taken before 0.5.30 moved Auto power off, Water hardness and Reset descaling counter to Configuration and LED signaling to Diagnostic. Auto power off has been removed since, see [Limitations](#limitations).
 
-> **Screenshot wanted:** If you have a Barista or a Vertuo Mini paired with this integration, please submit a screenshot of the HA device page via a [GitHub issue](https://github.com/renaudallard/homeassistant_nespresso_smart/issues).
+&gt; **Screenshot wanted:** If you have a Barista paired with this integration, please submit a screenshot of the HA device page via a [GitHub issue](https://github.com/renaudallard/homeassistant_nespresso_smart/issues).
 
 ---
 
@@ -30,8 +30,8 @@ A Vertuo Next device page, taken before 0.5.30 moved Auto power off, Water hardn
 | Family | BLE Service UUID | Machines |
 |--------|-----------------|----------|
 | Barista (Original) | `65241910-0253-11E7-93AE-92361F002671` | Barista |
-| Vertuo Next (Venus) | `06AA1910-F22A-11E3-9DAA-0002A5D5C51B` | VertuoNext, VertuoPop, VertuoPopPlus, VertuoLattissima, VertuoCreatista, VertuoUp |
-| VMini | `96600100-526E-4676-A11A-AF1EB848165B` | Vertuo Mini |
+| Vertuo Next (Venus) | `06AA1910-F22A-11E3-9DAA-0002A5D5C51B` | VertuoNext, VertuoPop, VertuoPopPlus, VertuoLattissima, VertuoCreatista |
+| VMini | `96600100-526E-4676-A11A-AF1EB848165B` | Vertuo Up |
 
 Every machine in the Venus family advertises that one service UUID, so the model
 shown on the device page comes from the platform code instead, which appears in
@@ -45,8 +45,12 @@ the serial number and in the BLE name:
 | DV5 | Vertuo Lattissima |
 | CV5 | Vertuo Creatista |
 
-A machine whose code is in neither is shown as Vertuo Next, the family
-default, and keeps its Bluetooth name as the device name.
+The VMini family has platform codes of its own, MC1, MD1, MC2 and MD2, which
+the Nespresso app maps to the Vertuo Up. They identify the family rather than
+separate models, so a Vertuo Up is named by its family.
+
+A Venus machine whose code is not in the table is shown as Vertuo Next, the
+family default, and keeps its Bluetooth name as the device name.
 
 ## Installation
 
@@ -57,7 +61,7 @@ default, and keeps its Bluetooth name as the device name.
 1. Search for **Nespresso Smart** in HACS, or click the button above, and install it
 2. Restart Home Assistant
 
-If the search does not find it, add `https://github.com/renaudallard/homeassistant_nespresso_smart` as a custom repository of category **Integration** (HACS three dots menu > **Custom repositories**) and search again.
+If the search does not find it, add `https://github.com/renaudallard/homeassistant_nespresso_smart` as a custom repository of category **Integration** (HACS three dots menu &gt; **Custom repositories**) and search again.
 
 ### Manual
 
@@ -74,8 +78,8 @@ machine: either the 32 character pairing key from your Nespresso account, which
 the integration converts to the token itself, or the 16 character token read
 off a Bluetooth capture. See below for both.
 
-The token can be changed later without removing the machine: in **Settings >
-Devices & services > Nespresso Smart**, pick **Reconfigure** in the machine
+The token can be changed later without removing the machine: in **Settings &gt;
+Devices & services &gt; Nespresso Smart**, pick **Reconfigure** in the machine
 entry's three dots menu and paste the pairing key or token. The entry reloads
 with it, and the brew counters and entities are kept. A token the integration
 generated itself is the only one the machine knows, so replacing it costs a
@@ -105,10 +109,10 @@ developer console on that page (F12, or Ctrl+Shift+J) and run:
 
 ```js
 const market = location.pathname.split('/')[1];  // fr on www.nespresso.com/fr/fr/
-const get = async p => (await fetch(p, {credentials: 'include'})).json();
+const get = async p =&gt; (await fetch(p, {credentials: 'include'})).json();
 const me = await get(`/ecapi/customers/v7/${market}/b2c/me/personal-info`);
 const res = await get(`/ecapi/machines/v1/${market}/b2c/${me.memberNumber}`);
-console.table((Array.isArray(res) ? res : res.machines ?? []).map(m =>
+console.table((Array.isArray(res) ? res : res.machines ?? []).map(m =&gt;
     ({serial: m.serialNumber, mac: m.macAddress, pairingKey: m.pairingKey})));
 ```
 
@@ -136,7 +140,7 @@ A factory reset clears the stored auth token and all settings. The Bluetooth pai
 After reset, clear the stale Bluetooth bond on the HA host and restart HA:
 
 ```bash
-bluetoothctl remove <MACHINE_MAC_ADDRESS>
+bluetoothctl remove &lt;MACHINE_MAC_ADDRESS&gt;
 ```
 
 Then remove and re-add the integration in HA. The Nespresso app will also need to re-pair.
@@ -145,7 +149,7 @@ Then remove and re-add the integration in HA. The Nespresso app will also need t
 
 Capture the auth token from the Nespresso app using Android's BLE logging:
 
-1. On your Android phone, enable **Developer Options** (Settings > About > tap Build Number 7 times)
+1. On your Android phone, enable **Developer Options** (Settings &gt; About &gt; tap Build Number 7 times)
 2. In Developer Options, enable **Bluetooth HCI snoop log**
 3. Open the Nespresso app and let it connect to the machine
 4. Disable Bluetooth HCI snoop log
@@ -367,7 +371,7 @@ your Home Assistant profile. The names below are the English ones.
 
 | Entity | Barista | Vertuo Next | VMini | Description |
 |--------|---------|-------------|-------|-------------|
-| State | Yes | Yes | No | Machine operational state (enum with 32 translated states). It has no name of its own and shows as the device itself |
+| State | Yes | Yes | Yes | Machine operational state. An enum with 32 translated states on a Barista or Vertuo Next, the readable shadow state on a Vertuo Up. It has no name of its own and shows as the device itself |
 | Firmware version | Yes | Yes | Yes | Current firmware version (diagnostic) |
 | Hardware version | Yes | Yes | No | Hardware revision (diagnostic) |
 | Bootloader version | Yes | Yes | No | Bootloader version (diagnostic) |
@@ -375,17 +379,18 @@ your Home Assistant profile. The names below are the English ones.
 | Bluetooth version | Yes | No | No | Bluetooth module version (diagnostic) |
 | Recipe DB version | No | Yes | No | Recipe database version (diagnostic) |
 | Connectivity FW | No | Yes | No | WiFi/connectivity firmware version (diagnostic) |
-| Error code | No | Yes | No | Current active error code (diagnostic) |
+| Error code | No | Yes | Yes | Current active error code (diagnostic). Numeric on a Vertuo Next, text on a Vertuo Up |
 | Error log code | No | Yes | No | Error from error log (diagnostic) |
 | Milk unit | No | Yes | No | State of the milk system, 16 values from offline to frothing. Reads Cleaning both while a milk cleaning runs and while the machine is asking for one. Only on a Creatista or a Lattissima |
 | IoT market | No | Yes | No | IoT market name (diagnostic) |
 | Recipe slots | Yes | No | No | Maximum recipe slots (diagnostic) |
 | Brewing duration | Yes | Yes | No | Time elapsed since brewing started (seconds) |
-| Total brews | No | Yes | No | Brews counted since the integration was installed |
-| Brews since descaling | No | Yes | No | Brews counted since the descaling counter was last reset, with days since the reset as an attribute |
-| Brews until descaling | No | Yes | No | Brews left before the capsule limit is reached |
-| Days until descaling | No | Yes | No | Days left before the time limit is reached |
-| Device shadow | No | No | Yes | Device shadow JSON data (diagnostic) |
+| Total brews | No | Yes | Yes | Brews counted since the integration was installed |
+| Brews since descaling | No | Yes | Yes | Brews counted since the descaling counter was last reset, with days since the reset as an attribute |
+| Brews until descaling | No | Yes | Yes | Brews left before the capsule limit is reached |
+| Days until descaling | No | Yes | Yes | Days left before the time limit is reached |
+| Water hardness | No | No | Yes | Water hardness level reported by the machine (diagnostic) |
+| Device shadow | No | No | Yes | Device shadow JSON data (diagnostic, disabled by default) |
 | FOTA status | No | No | Yes | Firmware update status (diagnostic) |
 | FOTA progress | No | No | Yes | Firmware update progress (diagnostic) |
 
@@ -393,10 +398,10 @@ your Home Assistant profile. The names below are the English ones.
 
 | Entity | Barista | Vertuo Next | VMini | Description |
 |--------|---------|-------------|-------|-------------|
-| Error | Yes | Yes | No | Machine has an active error |
+| Error | Yes | Yes | Yes | Machine has an active error |
 | Induction heater | Yes | No | No | Induction heater is active |
 | Water tank empty | No | Yes | No | Water tank needs refilling |
-| Descaling needed | No | Yes | No | Machine needs descaling |
+| Descaling needed | No | Yes | Yes | Machine needs descaling |
 | Cleaning needed | No | Yes | No | Machine needs cleaning. This is the brewing side only, a machine asking for a milk cleaning says so through the Milk unit sensor instead |
 | Capsule container full | No | Yes | No | Used capsule container is full |
 | Brewing unit | No | Yes | No | Brewing unit head is open. A Creatista has been seen to open it by itself during the milk cleaning it asks for, so this can change with nobody at the machine |
@@ -414,7 +419,7 @@ your Home Assistant profile. The names below are the English ones.
 | Brew | No | Yes | No | Start brewing (see brewing flow below) |
 | Water hardness | No | Yes | No | Set water hardness level (0-4 slider, the levels the Nespresso app offers) |
 | Capsule counter | No | Yes | No | The machine's own capsule count, and writable so it can be corrected. Only created on machines that have the counter, which the Pop and the Creatista do not |
-| Reset descaling counter | No | Yes | No | Clear the descaling counter after descaling the machine |
+| Reset descaling counter | No | Yes | Yes | Clear the descaling counter after descaling the machine |
 | Check firmware update | No | No | Yes | Trigger firmware update check |
 
 Recipe, the brew settings and the Brew button are the only ones the device page lists under Controls. The others are settings or maintenance actions, so it lists them under Configuration.
@@ -479,15 +484,15 @@ Detailed protocol documentation from the APK decompilation is available under [d
 
 ## Configuration
 
-After adding the machine, go to **Settings > Devices & Services > Nespresso > Configure** to set:
+After adding the machine, go to **Settings &gt; Devices & Services &gt; Nespresso &gt; Configure** to set:
 
 - **Poll interval** (10-600 seconds, default 60): how often to read machine status
 - **Persistent connection** (off by default): keeps the BLE connection open for real-time GATT notifications, and polls, commands and settings changes go over it instead of connecting again. Gives instant status updates but blocks the Nespresso mobile app.
 - **Send the TX level request when onboarding** (on by default): the official app asks the machine to drop its transmit power just before handing over the auth token, and the integration does the same. Leave it on unless you are diagnosing a dropped connection. See [Onboarding drops the connection](#onboarding-drops-the-connection-gatt-error-133).
 The Vertuo family also gets a **WiFi status** and **WiFi network** sensor, both diagnostic. Most machines driven over Bluetooth report `not_configured`, which is normal and not a fault: it means the machine has never been put on WiFi. They matter because Nespresso's own maintenance functions, descaling among them, are cloud calls that reach the machine through AWS IoT, so a machine that is not online cannot receive them at all.
 
-- **Descaling interval (capsules)** (1-10000, default 300): how many brews before descaling is due. Vertuo Next family only.
-- **Descaling interval (days)** (1-3650, default 90): how many days before descaling is due. Vertuo Next family only.
+- **Descaling interval (capsules)** (1-10000, default 300): how many brews before descaling is due. Vertuo Next and Vertuo Up.
+- **Descaling interval (days)** (1-3650, default 90): how many days before descaling is due. Vertuo Next and Vertuo Up.
 - **Offer brewing on a model that is not known to brew** (off by default): brings back the brew button and its two selects on a Vertuo Pop or Creatista, which are believed not to brew over Bluetooth. See [Brewing](#brewing).
 
 Nespresso quotes 300 capsules or 3 months for the Vertuo range, whichever comes first. Both limits are configurable because hard water needs more frequent descaling. Brews are counted from machine state transitions, so they are only counted while Home Assistant is running.
@@ -506,7 +511,7 @@ integration they need an admin user:
 ```yaml
 action: nespresso.configure_wifi
 data:
-  config_entry_id: <your entry>
+  config_entry_id: &lt;your entry&gt;
   market: GB
   ssid: MyNetwork
   password: hunter2
@@ -543,6 +548,7 @@ registered to a Nespresso account through their app as well. See
 - **VMini WiFi**: WiFi current settings characteristic has no handler in the decompiled SDK. Byte layout unknown.
 - **Auto power off**: Not offered. Earlier versions showed the first two bytes of the user settings characteristic as a delay in minutes, but the app never reads them, writes 0xFFFF there when it sets the water hardness, and has no auto power off setting. A Vertuo Next and a Creatista both read 255 there, and the Vertuo Next did not power off after that long, so the value's meaning is unknown. The old entity is removed from the registry on the next setup.
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
+- **Vertuo Up sleep**: A Vertuo Up goes to standby after about 20 minutes idle and stops advertising shortly after. That is sleep, not a fault: the integration keeps its entities available and shows the state as `asleep`, and they update again when the machine wakes. A machine that still advertises but refuses connections is treated as unavailable.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
 - **Single client**: Only one BLE client can connect at a time. If the Nespresso app is connected, HA will retry on the next poll.
 
@@ -553,14 +559,14 @@ registered to a Nespresso account through their app as well. See
 BlueZ has a stale bond from a previous pairing. Clear it:
 
 ```bash
-bluetoothctl remove <MACHINE_MAC_ADDRESS>
+bluetoothctl remove &lt;MACHINE_MAC_ADDRESS&gt;
 ```
 
 Then restart HA. This is needed after a factory reset of the machine.
 
 ### All entities show "unavailable"
 
-The machine is temporarily unreachable via BLE. Ensure it is powered on, within range, and not connected to the Nespresso app. Entities recover automatically on the next successful poll. If the log says `is no longer seen over Bluetooth`, no adapter or proxy has heard the machine advertise for several minutes, so look at its power and at the proxy rather than at the integration.
+The machine is temporarily unreachable via BLE. Ensure it is powered on, within range, and not connected to the Nespresso app. Entities recover automatically on the next successful poll. A Vertuo Up that has gone to sleep shows `asleep` instead. If the log says `is no longer seen over Bluetooth`, no adapter or proxy has heard the machine advertise for several minutes, so look at its power and at the proxy rather than at the integration.
 
 ### "Capsule counter" is unavailable on a Pop or a Creatista
 
@@ -747,7 +753,7 @@ machine's command characteristic and returns what happened. It works on every
 machine, including the models that get no brew button, which is the point: it
 is how a machine gets tested rather than assumed about. It needs an admin user.
 
-From **Developer tools > Actions**, pick the machine and give it a payload in
+From **Developer tools &gt; Actions**, pick the machine and give it a payload in
 hex, for example `03050704000000000002000000000000000000`, a Vertuo lungo at
 medium temperature. The frame goes out exactly as typed. A Vertuo command is 19
 bytes, three header bytes and a 16 byte payload, and a Creatista acknowledges a
@@ -807,7 +813,7 @@ machine is idle and only mean something while it works.
 ```yaml
 action: nespresso.watch
 data:
-  config_entry_id: <your entry>
+  config_entry_id: &lt;your entry&gt;
   seconds: 90
 ```
 
