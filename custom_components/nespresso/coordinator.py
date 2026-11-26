@@ -205,6 +205,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         # across "unknown" reads so a brew running through a read gap is not
         # counted twice, and a brew started inside one is not missed.
         self._brew_track_baseline: str | None = None
+        # Whether the poll in progress applied the status it read.
+        self._status_polled = False
         self.descaling_capsules = 0
         self.descaling_days = 0
         self._counter_store = counter_store(hass, address)
@@ -320,13 +322,26 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             _LOGGER.debug("Failed to parse status %s: %s", data.hex(), err)
         return None
 
-    def _handle_status_update(self, data: bytes) -> None:
-        """Process status notification data on the event loop."""
+    def _handle_status_update(self, data: bytes) -> bool:
+        """Apply a status payload, returning whether it was applied."""
         current = self.data
         status = self._parse_status(data)
         if current is None or status is None:
-            return
+            return False
         self._async_publish(current, replace(current, **self._status_fields(status)))
+        return True
+
+    def _on_polled_status(self, data: bytes) -> None:
+        """Apply the status a poll read, before its other reads.
+
+        Those take a few seconds with debug logging, and a notification or
+        an advertisement landing meanwhile is newer than what the poll read.
+        Applied at the end, the poll's status would put the older state back
+        for a whole poll interval, and a machine put back into a brew it had
+        left would count that brew again. Applied now, both are seen in the
+        order they happened.
+        """
+        self._status_polled = self._handle_status_update(data)
 
     def _device(self) -> BLEDevice:
         """The machine as the Bluetooth stack last saw it."""
@@ -1074,6 +1089,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             self.family.value,
             self.persistent,
         )
+        self._status_polled = False
         raw = await self._async_read_held_link()
         if raw is None:
             if self.family is MachineFamily.VMINI and (
@@ -1092,6 +1108,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         try:
             result = self._parse(raw)
+            if self._status_polled and self.data is not None:
+                # Already applied, and anything since is newer.
+                keys = _STATUS_FIELDS.get(self.family, _COMMON_STATUS_FIELDS)
+                result = replace(
+                    result, **{key: getattr(self.data, key) for key in keys}
+                )
             self._async_note_update(self.data, result)
             _LOGGER.debug(
                 "Parsed %s: state=%s error=%s fw=%s hw=%s serial=%s",
@@ -1124,7 +1146,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             return None
         _LOGGER.debug("Reading over the open link to %s", self.address)
         try:
-            return await get_protocol(self.family).async_read_all(client)
+            return await get_protocol(self.family).async_read_all(
+                client, self._on_polled_status
+            )
         except Exception as err:  # noqa: BLE001
             _LOGGER.debug("Read over the open link failed, reconnecting: %s", err)
             return None
@@ -1238,7 +1262,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 )
 
             protocol = get_protocol(self.family)
-            raw = await protocol.async_read_all(client)
+            raw = await protocol.async_read_all(client, self._on_polled_status)
 
             # Keep connection alive for persistent mode or pending brew
             if self.persistent and self._status_uuid:

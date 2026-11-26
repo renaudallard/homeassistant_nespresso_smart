@@ -464,7 +464,7 @@ Device triggers for automations:
 - **error_occurred**, **ready**, **standby**: the machine entered that state
 - **descaling_needed** / **water_tank_empty**: the machine raised the flag. Each fires once when the flag goes up, not on every poll while it stays up
 
-They fire from whichever path saw the change first: the poll, a notification on a persistent connection, or the advertisement on the Vertuo Next family.
+They fire from whichever path saw the change first: the poll, a notification on a persistent connection, or the advertisement on the Vertuo Next family. A poll applies the status as soon as it has read it, so a notification that arrives while it reads the rest is not undone.
 
 ### Device Info
 

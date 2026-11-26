@@ -1147,15 +1147,24 @@ class AbstractNespressoProtocol(ABC):
     """Base class for BLE protocol implementations."""
 
     @abstractmethod
-    async def async_read_all(self, client: BleakClient) -> RawMachineData:
-        """Read all relevant characteristics in a single session."""
+    async def async_read_all(
+        self, client: BleakClient, on_status: Callable[[bytes], object]
+    ) -> RawMachineData:
+        """Read all relevant characteristics in a single session.
+
+        on_status gets the status as soon as it is read. The reads after it
+        take a while, and a notification arriving meanwhile is newer.
+        """
 
 
 class BaristaProtocol(AbstractNespressoProtocol):
     """BLE protocol for Barista (Original Line) machines."""
 
-    async def async_read_all(self, client: BleakClient) -> RawMachineData:
+    async def async_read_all(
+        self, client: BleakClient, on_status: Callable[[bytes], object]
+    ) -> RawMachineData:
         status = await _read_char(client, BARISTA_CHAR_STATUS, "status")
+        on_status(bytes(status))
         info = await _read_char(client, BARISTA_CHAR_INFO, "machine_info")
         serial = await _read_char(client, BARISTA_CHAR_SERIAL, "serial")
         profile = await _read_char(
@@ -1188,8 +1197,11 @@ class BaristaProtocol(AbstractNespressoProtocol):
 class VertuoNextProtocol(AbstractNespressoProtocol):
     """BLE protocol for Vertuo Next (Venus Line) machines."""
 
-    async def async_read_all(self, client: BleakClient) -> RawMachineData:
+    async def async_read_all(
+        self, client: BleakClient, on_status: Callable[[bytes], object]
+    ) -> RawMachineData:
         status = await _read_char(client, VERTUO_CHAR_STATUS, "status")
+        on_status(bytes(status))
         info = await _read_char(client, VERTUO_CHAR_INFO, "machine_info")
         serial = await _read_char(client, VERTUO_CHAR_SERIAL, "serial")
         profile = await _read_char(
@@ -1269,7 +1281,9 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
 class VMiniProtocol(AbstractNespressoProtocol):
     """BLE protocol for VMini (Vertuo Up) machines."""
 
-    async def async_read_all(self, client: BleakClient) -> RawMachineData:
+    async def async_read_all(
+        self, client: BleakClient, on_status: Callable[[bytes], object]
+    ) -> RawMachineData:
         # No read is mandatory. This characteristic list comes from the
         # APK's VMini SDK, never from hardware, and the first VMini-family
         # machine seen in the wild (a Vertuo Up) exposes no standard Device
@@ -1294,6 +1308,8 @@ class VMiniProtocol(AbstractNespressoProtocol):
                 continue
             values[name] = value
             _LOGGER.debug("Read %s [%s]: %s", name, char, value.hex())
+            if name == "shadow_data":
+                on_status(bytes(value))
         serial = values["serial"]
         fw = values["firmware_rev"]
         sw = values["software_rev"]

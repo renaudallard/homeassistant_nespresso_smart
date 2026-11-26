@@ -965,10 +965,13 @@ config entry, and reused across restarts.
 4. **Authenticate**: `_authenticate()` checks onboard status, onboards if needed, writes CMID with response
 5. **Verify**: Read a protected characteristic to confirm auth succeeded
 6. **Retry** (on failure): Disconnect, reconnect, re-authenticate once (steps 4-5 again)
-7. **Read all characteristics**: status, info, serial, profile, params, settings, errors
+7. **Read all characteristics**: status, info, serial, profile, params, settings, errors.
+   The status is applied as soon as it is read, the same way a notification
+   is, since a notification arriving during the reads after it is newer
 8. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
 9. **Disconnect** (or keep alive in persistent mode)
-10. **Parse**: Convert raw bytes to `NespressoMachineData`
+10. **Parse**: Convert raw bytes to `NespressoMachineData`, keeping the
+    status fields applied in step 7 or by anything after it
 11. **Fire triggers**: Compare old/new state, fire bus events
 
 Any operation in steps 4 to 7 that comes back with ATT error 5, insufficient
