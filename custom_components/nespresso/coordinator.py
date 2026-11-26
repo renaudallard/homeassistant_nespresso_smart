@@ -929,7 +929,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     @callback
     def _async_publish(
-        self, current: NespressoMachineData, updated: NespressoMachineData
+        self, current: NespressoMachineData | None, updated: NespressoMachineData
     ) -> None:
         """Hand a dataset from a fast path to the entities.
 
