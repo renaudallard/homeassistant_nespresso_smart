@@ -193,6 +193,9 @@ service, so the 2A2x characteristics above cannot be read.
 - `machineStatus` seen so far: `ready`, `standby`, `brew/black reading`,
   `brew/running`, `brew/waiting for top up`, `brew/top up`. `errorCode` reads
   `no error` when there is none.
+- One coffee with a top-up went `brew/black reading`, `brew/running`,
+  `brew/waiting for top up`, `brew/top up` when the button was pressed, back
+  to `brew/waiting for top up`, and `ready` once the capsule was ejected.
 
 ---
 

@@ -24,8 +24,8 @@
 """Unit tests for which state changes count as a brew.
 
 The Vertuo Up states are the ones a machine on firmware 4.5.3 reported
-(PR 18). Whether it goes back to "brew/running" after a top-up is not known
-yet, so that change is left out.
+(PR 18). After a top-up it goes back to "brew/waiting for top up", not to
+"brew/running".
 """
 
 from custom_components.nespresso.models import counts_as_brew
@@ -58,6 +58,8 @@ class TestVertuoUp:
     def test_phases_of_one_brew(self) -> None:
         assert not counts_as_brew("brew/running", "brew/waiting for top up")
         assert not counts_as_brew("brew/waiting for top up", "brew/top up")
+        assert not counts_as_brew("brew/top up", "brew/waiting for top up")
+        assert not counts_as_brew("brew/waiting for top up", "ready")
         assert not counts_as_brew("brew/top up", "ready")
 
     def test_other_activities(self) -> None:

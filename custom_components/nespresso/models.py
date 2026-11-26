@@ -91,10 +91,11 @@ def is_brew_state(state: str) -> bool:
     "brewing". A Vertuo Up's shadow namespaces its brew phases instead,
     seen on hardware as "brew/running" and "brew/waiting for top up"
     (fw 4.5.3), so anything under "brew/" counts. The top-up pause has to
-    count as brewing: the machine returns to "brew/running" when the
-    top-up is taken, and treating the pause as finished would report one
-    coffee as two. Other activities keep their own namespaces
-    ("descale/...", "rinse/...") and are not brews.
+    count as brewing: the machine goes from it to "brew/top up" and back
+    to it, and only leaves the namespace when the capsule is ejected, so
+    treating the pause as finished would report one coffee as two. Other
+    activities keep their own namespaces ("descale/...", "rinse/...") and
+    are not brews.
     """
     return state == "brewing" or state.startswith("brew/")
 
