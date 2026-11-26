@@ -299,7 +299,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             if self.family == MachineFamily.VERTUO_NEXT:
                 return parse_vertuonext_status(data)
             if self.family == MachineFamily.VMINI:
-                return self._parse_vmini_status(data)         
+                return self._parse_vmini_status(data)
         except (ValueError, IndexError) as err:
             _LOGGER.debug("Failed to parse status %s: %s", data.hex(), err)
         return None
@@ -825,7 +825,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             self.brew_total = stored.get("brew_total", 0)
             self.brews_since_descaling = stored.get("brews_since_descaling", 0)
             self.last_descaling = stored.get("last_descaling")
-            self._brew_track_baseline = stored.get("machine_state")     
+            self._brew_track_baseline = stored.get("machine_state")
         if self.last_descaling is None:
             # No reference point yet, so start the clock now. Otherwise the
             # time half of the schedule could never trigger.
@@ -859,7 +859,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.last_descaling = time.time()
         self._async_save_counters()
         self.async_update_listeners()
-   
+
     def _asleep_dataset(self) -> NespressoMachineData:
         """Return a dataset marking the machine as asleep.
 
