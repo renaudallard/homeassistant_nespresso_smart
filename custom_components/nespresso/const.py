@@ -219,6 +219,8 @@ VMINI_CHAR_WIFI_MAC: Final = "e0f00205-5c88-455f-98ba-cfe7db1a7d1d"
 VMINI_CHAR_WIFI_CURRENT: Final = "e0f00202-5c88-455f-98ba-cfe7db1a7d1d"
 VMINI_CHAR_FOTA_STATUS: Final = "e0f00302-5c88-455f-98ba-cfe7db1a7d1d"
 VMINI_CHAR_SHADOW_HEADER: Final = "e0f00501-5c88-455f-98ba-cfe7db1a7d1d"
+VMINI_CHAR_SHADOW_DATA: Final = "e0f00502-5c88-455f-98ba-cfe7db1a7d1d"
+VMINI_CHAR_ASSET_VERSIONS: Final = "96600104-526e-4676-a11a-af1eb848165b"
 
 # ---------------------------------------------------------------------------
 # Service UUID to family mapping
@@ -332,7 +334,7 @@ VERTUO_STATE_NAMES: Final[dict[int, str]] = {
 MACHINE_FAMILY_NAMES: Final[dict[MachineFamily, str]] = {
     MachineFamily.BARISTA: "Barista",
     MachineFamily.VERTUO_NEXT: "Vertuo Next",
-    MachineFamily.VMINI: "Vertuo Mini",
+    MachineFamily.VMINI: "Vertuo Up",
 }
 
 # Every machine on the Venus profile answers to the Vertuo Next family, so the
