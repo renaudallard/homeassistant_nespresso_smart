@@ -122,13 +122,9 @@ def machine_triggers(old: NespressoMachineData, new: NespressoMachineData) -> li
     """
     triggers: list[str] = []
     if new.machine_state != old.machine_state:
-        if is_brew_state(new.machine_state) and not is_brew_state(
-            old.machine_state
-        ):
+        if is_brew_state(new.machine_state) and not is_brew_state(old.machine_state):
             triggers.append("brewing_started")
-        if is_brew_state(old.machine_state) and not is_brew_state(
-            new.machine_state
-        ):
+        if is_brew_state(old.machine_state) and not is_brew_state(new.machine_state):
             triggers.append("brewing_finished")
         if new.machine_state == "error":
             triggers.append("error_occurred")
@@ -164,4 +160,3 @@ class RawMachineData:
     fota_status_bytes: bytes | None = None
     wifi_current_bytes: bytes | None = None
     gatt_dump: dict[str, dict[str, str]] | None = None
-    

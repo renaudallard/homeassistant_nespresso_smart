@@ -1319,9 +1319,7 @@ class VMiniProtocol(AbstractNespressoProtocol):
             if asset_versions
             else None,
             shadow_header=_decode_ble_string(bytes(shadow)) if shadow else None,
-            shadow_data=_decode_ble_string(bytes(shadow_data))
-            if shadow_data
-            else None,
+            shadow_data=_decode_ble_string(bytes(shadow_data)) if shadow_data else None,
             fota_status_bytes=bytes(fota_status) if fota_status else None,
             gatt_dump=gatt_dump_result,
         )

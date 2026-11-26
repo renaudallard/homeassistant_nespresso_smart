@@ -487,6 +487,7 @@ def build_water_hardness(level: int) -> bytes:
         )
     return bytes((0xFF, 0xFF, level, 0xFF))
 
+
 def parse_vmini_asset_versions(text: str | None) -> dict[str, str]:
     """Parse the VMini asset versions characteristic.
 
@@ -505,7 +506,9 @@ def parse_vmini_asset_versions(text: str | None) -> dict[str, str]:
     return versions
 
 
-def parse_vmini_shadow(schema_text: str | None, data_text: str | None) -> dict[str, str]:
+def parse_vmini_shadow(
+    schema_text: str | None, data_text: str | None
+) -> dict[str, str]:
     """Zip the VMini shadow schema against the shadow data.
 
     The schema characteristic is semicolon-separated "name,type" pairs and

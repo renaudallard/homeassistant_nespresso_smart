@@ -1438,9 +1438,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             descaling_needed=shadow["descalingAlert"] == "1"
             if "descalingAlert" in shadow
             else None,
-            water_hardness=int(water_hardness)
-            if water_hardness.isdigit()
-            else None,
+            water_hardness=int(water_hardness) if water_hardness.isdigit() else None,
             shadow_data=json.dumps(shadow) if shadow else raw.shadow_header,
             fota_status=fota_status,
             fota_progress=fota_progress,
