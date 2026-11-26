@@ -78,6 +78,18 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         families=frozenset({MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.machine_state,
     ),
+    # Same sensor without the enum device class: a VMini machine reports
+    # readable shadow states ("ready") rather than the numeric states the
+    # other two families decode, and an enum sensor complains about any
+    # option its table does not know.
+    NespressoSensorDescription(
+        key="machine_state",
+        translation_key="machine_state",
+        name=None,
+        icon="mdi:coffee-maker",
+        families=frozenset({MachineFamily.VMINI}),
+        value_fn=lambda d: d.machine_state,
+    ),
     NespressoSensorDescription(
         key="firmware_version",
         translation_key="firmware_version",
@@ -198,8 +210,9 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         translation_key="shadow_data",
         icon="mdi:cloud-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         families=frozenset({MachineFamily.VMINI}),
-        value_fn=lambda d: d.shadow_data,
+        value_fn=lambda d: d.shadow_data[:255] if d.shadow_data else None,
     ),
     NespressoSensorDescription(
         key="fota_status",
@@ -216,6 +229,25 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         families=frozenset({MachineFamily.VMINI}),
         value_fn=lambda d: d.fota_progress,
+    ),
+    NespressoSensorDescription(
+        key="water_hardness",
+        translation_key="water_hardness",
+        icon="mdi:water",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        families=frozenset({MachineFamily.VMINI}),
+        value_fn=lambda d: d.water_hardness,
+    ),
+    NespressoSensorDescription(
+        key="error_code_text",
+        translation_key="error_code_text",
+        icon="mdi:alert-circle-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        families=frozenset({MachineFamily.VMINI}),
+        value_fn=lambda d: (
+            None if d.error_code_text in (None, "no error") else d.error_code_text
+        ),
     ),
 )
 
@@ -234,7 +266,7 @@ COUNTER_DESCRIPTIONS: tuple[NespressoCounterDescription, ...] = (
         translation_key="brew_total",
         icon="mdi:coffee",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        families=frozenset({MachineFamily.VERTUO_NEXT, MachineFamily.VMINI}),
         value_fn=lambda c: c.brew_total,
     ),
     NespressoCounterDescription(
@@ -242,14 +274,14 @@ COUNTER_DESCRIPTIONS: tuple[NespressoCounterDescription, ...] = (
         translation_key="brews_since_descaling",
         icon="mdi:coffee-outline",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        families=frozenset({MachineFamily.VERTUO_NEXT, MachineFamily.VMINI}),
         value_fn=lambda c: c.brews_since_descaling,
     ),
     NespressoCounterDescription(
         key="brews_until_descaling",
         translation_key="brews_until_descaling",
         icon="mdi:coffee-off-outline",
-        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        families=frozenset({MachineFamily.VERTUO_NEXT, MachineFamily.VMINI}),
         value_fn=lambda c: c.brews_until_descaling,
     ),
     NespressoCounterDescription(
@@ -257,7 +289,7 @@ COUNTER_DESCRIPTIONS: tuple[NespressoCounterDescription, ...] = (
         translation_key="days_until_descaling",
         icon="mdi:calendar-clock",
         native_unit_of_measurement="d",
-        families=frozenset({MachineFamily.VERTUO_NEXT}),
+        families=frozenset({MachineFamily.VERTUO_NEXT, MachineFamily.VMINI}),
         value_fn=lambda c: c.days_until_descaling,
     ),
 )
