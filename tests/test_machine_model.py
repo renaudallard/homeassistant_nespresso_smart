@@ -103,9 +103,9 @@ class TestPlatformCode:
             None,
             "Barista",
         )
-        assert resolve(serial="19023DB3Z098612E098", family="vmini") == (
+        assert resolve(serial="00000MC1t000000000Q", family="vmini") == (
             None,
-            "Vertuo Mini",
+            "Vertuo Up",
         )
 
 
@@ -123,7 +123,7 @@ class TestDeviceName:
     def test_names_the_other_families_after_their_model(self) -> None:
         """Each of them is one model, so their family is not a guess."""
         assert name_of(name="Barista_001122334455", family="barista") == "Barista"
-        assert name_of(name="VMini_001122334455", family="vmini") == "Vertuo Mini"
+        assert name_of(name="VL-MC1_00000MC1t000000000Q", family="vmini") == "Vertuo Up"
 
 
 class TestTable:
