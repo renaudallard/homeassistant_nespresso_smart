@@ -196,6 +196,11 @@ service, so the 2A2x characteristics above cannot be read.
 - One coffee with a top-up went `brew/black reading`, `brew/running`,
   `brew/waiting for top up`, `brew/top up` when the button was pressed, back
   to `brew/waiting for top up`, and `ready` once the capsule was ejected.
+- In that coffee `CHAR_SHADOWUPDATE` notified only `brew/waiting for top up`,
+  `brew/top up` and `ready` (fw 4.5.3). `brew/black reading` and
+  `brew/running` were only seen by reading it, so the start of a pour is only
+  known from a poll. `lastCoffeeFamilyID` changed from 4 to 1 between the
+  read that saw `brew/black reading` and the one that saw `brew/running`.
 
 ---
 
