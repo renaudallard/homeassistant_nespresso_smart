@@ -58,6 +58,7 @@ from .ble.parsing import (
     parse_venus_advertisement,
     parse_vertuo_wifi_status,
     parse_vertuonext_machine_info,
+    parse_expert_status,
     parse_vertuonext_status,
     parse_vmini_asset_versions,
     parse_vmini_fota_status,
@@ -178,6 +179,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         )
         self.address = address
         self.family = family
+        # Set by async_setup_entry from the BLE name, as the app's ExpertModule does.
+        self.is_expert = False
+        self._expert_params: bytes | None = None
         self.persistent = persistent
         # Whether onboarding sends the TX level request. See CONF_SEND_TX_LEVEL.
         self.send_tx_level = send_tx_level
@@ -313,6 +317,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             if self.family == MachineFamily.BARISTA:
                 return parse_barista_status(data)
             if self.family == MachineFamily.VERTUO_NEXT:
+                if self.is_expert:
+                    return parse_expert_status(data, self._expert_params)
                 return parse_vertuonext_status(data)
             if self.family == MachineFamily.VMINI:
                 # Bytes after the value's terminator are not part of it.
@@ -1333,7 +1339,13 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         assert raw.status_bytes is not None
         assert raw.info_bytes is not None
 
-        status = parse_vertuonext_status(raw.status_bytes)
+        if self.is_expert and raw.machine_params_bytes:
+            self._expert_params = bytes(raw.machine_params_bytes)
+        status = (
+            parse_expert_status(raw.status_bytes, raw.machine_params_bytes)
+            if self.is_expert
+            else parse_vertuonext_status(raw.status_bytes)
+        )
         info = parse_vertuonext_machine_info(raw.info_bytes)
         serial = parse_serial_number(raw.serial_bytes) if raw.serial_bytes else None
 
@@ -1361,6 +1373,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         caps_counter = None
         if raw.caps_counter_bytes:
             caps_counter = parse_caps_counter(raw.caps_counter_bytes)
+            # 0xFFFF is the app's DEACTIVATION_VALUE: stock tracking is off.
+            if self.is_expert and caps_counter == 0xFFFF:
+                caps_counter = None
 
         return NespressoMachineData(
             machine_state=str(status["machine_state"]),

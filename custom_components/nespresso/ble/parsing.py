@@ -35,6 +35,7 @@ from collections.abc import Mapping
 
 from ..const import (
     BARISTA_STATE_NAMES,
+    EXPERT_STATE_NAMES,
     CAPS_COUNTER_MAX,
     CMID_TYPE_NAMES,
     MILK_UNIT_STATE_NAMES,
@@ -255,6 +256,58 @@ def parse_vertuonext_status(data: bytes) -> dict[str, object]:
         "capsule_container_full": _get_bit(b1, 6),
         "brewing_unit_closed": _get_bit(b1, 7),
     }
+
+
+def _select_bits(data: bytes, first: int, last: int) -> int:
+    """Read bits first..last, counted MSB first. Matches ByteConversion.selectBit."""
+    value = 0
+    for i in range(max(first, 0), min(last, len(data) * 8 - 1) + 1):
+        value = (value << 1) | ((data[i // 8] >> (7 - i % 8)) & 1)
+    return value
+
+
+def parse_expert_status(
+    data: bytes, params: bytes | None = None
+) -> dict[str, object]:
+    """Parse the Nespresso Expert machine status (CHAR_MACHINE_STATUS).
+
+    The Expert shares the Venus service UUID but not the Vertuo layout. The
+    app decodes it with MachineMonitoringOperations.fromByteToBuilder (bits
+    counted MSB first): 0 bootloader, 1-2 pairing key state, 3 error,
+    5 descaling needed, 7 water tank empty, 9 capsule container full,
+    12-15 machine state, 16 capsule stock low, 17-26 capsule stock
+    (above 1000 means stock tracking is off), 46 slider closed (from params).
+    Keys match parse_vertuonext_status so the coordinator needs no other change.
+    """
+    if len(data) < 4:
+        raise ValueError(f"Expert status requires >= 4 bytes, got {len(data)}")
+
+    # The app reads bits 40-47 from byte 0 of CHAR_MACHINE_PARAMS (06aa3a22):
+    # toIncompleteMachineStatusBuilder joins status[0:5] with params[0:1].
+    joined = bytes(data[:5]) + (bytes(params[:1]) if params else b"")
+
+    stock = _select_bits(data, 17, 26)
+    status: dict[str, object] = {
+        "machine_state": EXPERT_STATE_NAMES.get(_select_bits(data, 12, 15), "unknown"),
+        "milk_unit_state": "unknown",
+        "pairing_key_state": _pairing_key_state(data[0]),
+        "water_tank_empty": bool(_select_bits(data, 7, 7)),
+        "cleaning_needed": False,
+        "descaling_needed": bool(_select_bits(data, 5, 5)),
+        "led_signaling": False,
+        "error_present": bool(_select_bits(data, 3, 3)),
+        "bootloader_active": bool(_select_bits(data, 0, 0)),
+        "milk_frother_running": False,
+        "cup_length_prog": False,
+        "capsule_container_full": bool(_select_bits(data, 9, 9)),
+        "capsule_stock_low": bool(_select_bits(data, 16, 16)),
+        "capsule_stock": None if stock > 1000 else stock,
+    }
+    if params:
+        # Slider (lever) closed. Left out without CHAR_MACHINE_PARAMS, so a
+        # status notification keeps the last known value.
+        status["brewing_unit_closed"] = bool(_select_bits(joined, 46, 46))
+    return status
 
 
 def parse_vertuo_wifi_status(data: bytes) -> dict[str, str | None]:

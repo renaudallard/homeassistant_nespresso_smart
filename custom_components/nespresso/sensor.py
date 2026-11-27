@@ -42,6 +42,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     BARISTA_STATE_NAMES,
+    EXPERT_STATE_NAMES,
     DOMAIN,
     MILK_UNIT_STATE_NAMES,
     VERTUO_STATE_NAMES,
@@ -54,7 +55,10 @@ from .models import NespressoMachineData
 from .timer_sensor import NespressoBrewingDuration
 
 ALL_STATE_OPTIONS: list[str] = sorted(
-    set(BARISTA_STATE_NAMES.values()) | set(VERTUO_STATE_NAMES.values()) | {"unknown"}
+    set(BARISTA_STATE_NAMES.values())
+    | set(VERTUO_STATE_NAMES.values())
+    | set(EXPERT_STATE_NAMES.values())
+    | {"unknown"}
 )
 
 
