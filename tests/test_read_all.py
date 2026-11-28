@@ -88,3 +88,10 @@ class TestFlagsTheTriggersLeaveOut:
         )
         assert status["descaling_needed"] is True
         assert "water_tank_empty" not in status
+
+
+def test_no_expert_state_is_standby() -> None:
+    """device_trigger.EXPERT_NEVER_RAISED leaves standby out on an Expert."""
+    from custom_components.nespresso.const import EXPERT_STATE_NAMES
+
+    assert "standby" not in EXPERT_STATE_NAMES.values()

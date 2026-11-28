@@ -72,6 +72,7 @@ from .coordinator import NespressoCoordinator, counter_store
 from .entity import (
     device_versions,
     has_milk_unit,
+    is_expert,
     machine_device_info,
     platform_code,
     supports_brewing,
@@ -316,9 +317,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = NespressoCoordinator(
         hass, address, family, scan_interval, persistent, send_tx_level
     )
-    # The name the machine advertised when it was added. The title would do
-    # until someone renames the entry.
-    coordinator.is_expert = "expert" in (entry.data.get("name") or "").lower()
+    coordinator.is_expert = is_expert(entry)
 
     # Restore or generate auth key (must persist before first_refresh
     # so the same key survives ConfigEntryNotReady retries)

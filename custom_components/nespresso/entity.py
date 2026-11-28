@@ -46,6 +46,15 @@ if TYPE_CHECKING:
     from .coordinator import NespressoCoordinator
 
 
+def is_expert(entry: ConfigEntry) -> bool:
+    """Whether the entry is a Nespresso Expert, as the app's ExpertModule decides.
+
+    From the name the machine advertised when it was added. The title would do
+    until someone renames the entry.
+    """
+    return "expert" in (entry.data.get("name") or "").lower()
+
+
 def platform_code(entry: ConfigEntry, coordinator: NespressoCoordinator) -> str | None:
     """Return the machine's platform code, if anything it told us carries one.
 

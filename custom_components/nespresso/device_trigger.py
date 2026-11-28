@@ -37,6 +37,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, MachineFamily
+from .entity import is_expert
 
 # What each one means, and the code that fires it, is machine_triggers in
 # models.py. A tuple, so the automation editor lists them in this order.
@@ -56,6 +57,9 @@ NEVER_RAISED: dict[MachineFamily, frozenset[str]] = {
     MachineFamily.BARISTA: frozenset({"descaling_needed", "water_tank_empty"}),
     MachineFamily.VMINI: frozenset({"water_tank_empty"}),
 }
+# An Expert runs as the Vertuo Next family but has no standby state: none of
+# its sixteen states is one, and it idles in power_save.
+EXPERT_NEVER_RAISED: frozenset[str] = frozenset({"standby"})
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
@@ -81,7 +85,11 @@ async def async_get_triggers(
     for entry_id in device.config_entries:
         entry = hass.config_entries.async_get_entry(entry_id)
         if entry is not None and entry.domain == DOMAIN:
-            never = NEVER_RAISED.get(MachineFamily(entry.data["family"]), never)
+            never = (
+                EXPERT_NEVER_RAISED
+                if is_expert(entry)
+                else NEVER_RAISED.get(MachineFamily(entry.data["family"]), never)
+            )
     return [
         {
             CONF_PLATFORM: "device",
