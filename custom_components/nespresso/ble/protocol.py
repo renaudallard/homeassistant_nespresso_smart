@@ -893,12 +893,12 @@ def _report_lost_link(address: str, tx_acknowledged: bool) -> None:
     """
     if tx_acknowledged:
         _LOGGER.warning(
-            "%s acknowledged the TX level request and then dropped the link, so the auth token never reached it. That request tells the machine to reduce its radio power for the rest of the exchange, and a Bluetooth adapter or proxy that is not close enough stops hearing it the moment it does. Move the proxy next to the machine, within a metre, and reload. It can go back where it was afterwards, since the machine only goes quiet while it is being paired.",
+            "%s acknowledged the TX level request and then dropped the link before onboarding finished. That request tells the machine to reduce its radio power for the rest of the exchange, and a Bluetooth adapter or proxy that is not close enough stops hearing it the moment it does. Move the proxy next to the machine, within a metre, and reload. It can go back where it was afterwards, since the machine only goes quiet while it is being paired.",
             address,
         )
         return
     _LOGGER.warning(
-        "%s dropped the connection while being onboarded, so the auth token never reached it. The next poll will connect again and try once more.",
+        "%s dropped the connection before onboarding finished. The next poll will connect again and try once more.",
         address,
     )
 
@@ -965,10 +965,10 @@ async def _onboard(
             client, uuids, auth_bytes, address, state, send_tx_level
         )
         if not client.is_connected:
-            # A machine that drops the link mid onboarding never saw the token,
-            # so the state cannot have moved and retrying on this connection is
-            # pointless: bleak has no services left and every call would come
-            # back "characteristic not found".
+            # Retrying on this connection is pointless: bleak has no services
+            # left and every call would come back "characteristic not found".
+            # Whether the token landed first is unknown, so the next poll
+            # reads the state again before deciding anything.
             _report_lost_link(address, tx_acknowledged)
             return state
         if state is None:
