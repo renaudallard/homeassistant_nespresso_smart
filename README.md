@@ -152,7 +152,12 @@ After reset, clear the stale Bluetooth bond on the HA host and restart HA:
 bluetoothctl remove <MACHINE_MAC_ADDRESS>
 ```
 
-Then remove and re-add the integration in HA. The Nespresso app will also need to re-pair.
+If the machine already has an entry in Home Assistant, leave it: after the reset
+it writes the auth token it holds on its next attempt, so the restart is
+enough. To start over instead, delete the entry before the reset, not after,
+or it writes its token first and the new entry's is refused until another
+reset. The machine holds one token, so the Nespresso app loses it from then
+on.
 
 **Option C: Extract the existing token from a Bluetooth capture (Android only)**
 
@@ -646,9 +651,11 @@ least one Vertuo Creatista does not.
 
 Recovering needs a machine with no token and a token of the right shape:
 
-1. Factory reset the machine
-2. Delete the config entry and add the machine again, leaving the auth token
-   field empty so a new token is generated
+1. Delete the config entry first. Left in place, it writes the same token again
+   as soon as the machine comes back from the reset
+2. Factory reset the machine
+3. Add the machine again, leaving the auth token field empty so a new token is
+   generated
 
 Do not paste the old token back in. That is the value the machine rejected.
 

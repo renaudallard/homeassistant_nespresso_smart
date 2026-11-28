@@ -901,7 +901,7 @@ def _explain_refused_read(address: str, state: int | None) -> None:
     """Say why the machine refused a protected read, given its pairing state."""
     if state == CMID_TYPE_UNDEFINED:
         _LOGGER.warning(
-            "%s recorded an auth token it could not make sense of (CMID_TYPE=%s) and refuses every protected read. Every token the official app writes begins with the nibble 8, and tokens this integration generated in the past did not, which is the likeliest cause. The app treats a machine in this state as claimed and sends you to a factory reset, and that is what it needs: factory reset the machine, then delete this entry and add the machine again with the auth token field left empty, so a token in the shape the machine expects is generated.",
+            "%s recorded an auth token it could not make sense of (CMID_TYPE=%s) and refuses every protected read. Every token the official app writes begins with the nibble 8, and tokens this integration generated in the past did not, which is the likeliest cause. The app treats a machine in this state as claimed and sends you to a factory reset, and that is what it needs: delete this entry first, since it would write the same token again, then factory reset the machine and add it again with the auth token field left empty, so a token in the shape the machine expects is generated.",
             address,
             _describe_cmid_type(state),
         )
