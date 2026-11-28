@@ -155,6 +155,18 @@ _STATUS_FIELDS: dict[MachineFamily, tuple[str, ...]] = {
 }
 
 
+async def _close(client: BleakClient) -> None:
+    """Disconnect a link that is being given up.
+
+    bleak can raise here, a TimeoutError after ten seconds on BlueZ, and a
+    raise would replace the error or the result the caller is returning.
+    """
+    try:
+        await client.disconnect()
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("Error disconnecting from %s: %s", client.address, err)
+
+
 def counter_store(hass: HomeAssistant, address: str) -> Store:
     """Return the store holding the brew counters for one machine."""
     return Store(hass, COUNTER_STORAGE_VERSION, f"{DOMAIN}.counters.{address}")
@@ -282,10 +294,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         client = self._client
         self._client = None  # Clear reference first to prevent re-entry
         if client is not None:
-            try:
-                await client.disconnect()
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("Error disconnecting BLE client: %s", err)
+            await _close(client)
 
     def _on_status_notification(self, _sender: object, data: bytearray) -> None:
         """Handle BLE GATT notification for status changes.
@@ -433,7 +442,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             ):
                 raise BleakError("Machine did not accept the auth token")
         except Exception:
-            await client.disconnect()
+            await _close(client)
             raise
         return client
 
@@ -466,7 +475,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             try:
                 yield client
             finally:
-                await client.disconnect()
+                await _close(client)
 
     async def async_scan_wifi(self) -> list[dict[str, object]]:
         """Return the WiFi networks the machine can see."""
@@ -684,7 +693,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 return bytes(response)
             finally:
                 if own_client:
-                    await client.disconnect()
+                    await _close(client)
 
     async def async_watch(self, seconds: float) -> dict[str, Any]:
         """Record everything the machine says and shows for a while.
@@ -830,7 +839,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                             "Watch cannot stop listening on %s: %s", uuid, err
                         )
                 if own_client:
-                    await client.disconnect()
+                    await _close(client)
 
             record["elapsed_seconds"] = stamp()
             _LOGGER.debug(
@@ -863,13 +872,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """Release the temporary connection kept for brew."""
         self._keep_connection = False
         if not self.persistent:
-            client = self._client
-            self._client = None  # Clear first to prevent re-entry
-            if client is not None:
-                try:
-                    await client.disconnect()
-                except Exception as err:  # noqa: BLE001
-                    _LOGGER.debug("Error disconnecting BLE client: %s", err)
+            await self._disconnect()
 
     async def async_load_counters(
         self, descaling_capsules: int, descaling_days: int
@@ -1301,10 +1304,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             )
             if not auth_ok:
                 _LOGGER.info("Auth failed, reconnecting for retry")
-                try:
-                    await client.disconnect()
-                except Exception as err:  # noqa: BLE001
-                    _LOGGER.debug("Error disconnecting before retry: %s", err)
+                await _close(client)
                 client = await establish_connection(
                     BleakClient, device, self.address, max_attempts=3
                 )
@@ -1353,17 +1353,17 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 self._client = client
                 _LOGGER.debug("Keeping connection for pending brew")
             else:
-                await client.disconnect()
+                await _close(client)
         except UpdateFailed:
             # Already carries its own reason, so drop the link and let it
             # through rather than have the catch-all rewrite it.
-            await client.disconnect()
+            await _close(client)
             raise
         except (BleakError, TimeoutError) as err:
-            await client.disconnect()
+            await _close(client)
             raise UpdateFailed(f"BLE read failed: {err}") from err
         except Exception as err:
-            await client.disconnect()
+            await _close(client)
             raise UpdateFailed(f"Unexpected BLE error: {err}") from err
         return raw
 
