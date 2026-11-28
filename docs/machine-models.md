@@ -62,7 +62,7 @@ character code invents matches when it has nothing to gain.
 
 **SDK:** `com.sdataway.vertuonext`
 **BLE Protocol:** Venus protocol with WiFi support
-**Machines:** VertuoNext, VertuoPop, VertuoPopPlus, VertuoLattissima, VertuoCreatista, VertuoUp
+**Machines:** VertuoNext, VertuoPop, VertuoPopPlus, VertuoLattissima, VertuoCreatista
 
 Features:
 - BLE and WiFi connectivity
