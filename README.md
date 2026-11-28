@@ -30,7 +30,7 @@ A Vertuo Next device page, taken before 0.5.30 moved Auto power off, Water hardn
 | Family | BLE Service UUID | Machines |
 |--------|-----------------|----------|
 | Barista (Original) | `65241910-0253-11E7-93AE-92361F002671` | Barista |
-| Vertuo Next (Venus) | `06AA1910-F22A-11E3-9DAA-0002A5D5C51B` | VertuoNext, VertuoPop, VertuoPopPlus, VertuoLattissima, VertuoCreatista |
+| Vertuo Next (Venus) | `06AA1910-F22A-11E3-9DAA-0002A5D5C51B` | VertuoNext, VertuoPop, VertuoPopPlus, VertuoLattissima, VertuoCreatista, Expert |
 | VMini | `96600100-526E-4676-A11A-AF1EB848165B` | Vertuo Up |
 
 Every machine in the Venus family advertises that one service UUID, so the model
@@ -51,6 +51,11 @@ separate models, so a Vertuo Up is named by its family.
 
 A Venus machine whose code is not in the table is shown as Vertuo Next, the
 family default, and keeps its Bluetooth name as the device name.
+
+The Nespresso Expert, an Original line machine, advertises the same service
+UUID and is set up as a Vertuo Next, but its status bytes have a layout of their
+own. It is recognised by its Bluetooth name, `Expert_...`, the test the
+Nespresso app uses, and decoded the way the app decodes it.
 
 ## Installation
 
@@ -373,7 +378,7 @@ your Home Assistant profile. The names below are the English ones.
 
 | Entity | Barista | Vertuo Next | VMini | Description |
 |--------|---------|-------------|-------|-------------|
-| State | Yes | Yes | Yes | Machine operational state. An enum with 32 translated states on a Barista or Vertuo Next. On a Vertuo Up it is the state the machine reports, translated when it matches one of those, such as ready or standby, or is `asleep`, and shown as sent otherwise, like `brew/running`. It has no name of its own and shows as the device itself |
+| State | Yes | Yes | Yes | Machine operational state. An enum with 37 translated states on a Barista, Vertuo Next or Expert. On a Vertuo Up it is the state the machine reports, translated when it matches one of those, such as ready or standby, or is `asleep`, and shown as sent otherwise, like `brew/running`. It has no name of its own and shows as the device itself |
 | Firmware version | Yes | Yes | Yes | Current firmware version (diagnostic) |
 | Hardware version | Yes | Yes | No | Hardware revision (diagnostic) |
 | Bootloader version | Yes | Yes | No | Bootloader version (diagnostic) |
@@ -457,14 +462,14 @@ That verdict rests on a handful of machines, so it is not final. **Offer brewing
 
 ### Events and Triggers
 
-Event entity fires on machine state changes (Barista and Vertuo Next).
+Event entity fires on machine state changes (Barista, Vertuo Next and Expert).
 
 Device triggers for automations:
 - **brewing_started** / **brewing_finished**: the machine entered or left the brewing state. On a Vertuo Up every state under `brew/` is part of the brew, so its top-up pause does not end it
 - **error_occurred**, **ready**, **standby**: the machine entered that state
 - **descaling_needed** / **water_tank_empty**: the machine raised the flag. Each fires once when the flag goes up, not on every poll while it stays up
 
-They fire from whichever path saw the change first: the poll, a notification on a persistent connection, or the advertisement on the Vertuo Next family. A poll applies the status as soon as it has read it, so a notification that arrives while it reads the rest is not undone.
+They fire from whichever path saw the change first: the poll, a notification on a persistent connection, or the advertisement on the Vertuo Next family, apart from the Expert. A poll applies the status as soon as it has read it, so a notification that arrives while it reads the rest is not undone.
 
 ### Device Info
 
@@ -480,7 +485,7 @@ Machine family is detected automatically from the advertised BLE service UUID du
 
 When Home Assistant stops seeing the machine's advertisements, which takes a few minutes after it is switched off or goes out of range, the entities become unavailable and the log gets one info line, `... is no longer seen over Bluetooth`. Polls are not logged as errors while it stays away, and Home Assistant logs `Fetching Nespresso ... data recovered` at info once it is back. A Vertuo Up is the exception: it stops advertising when it sleeps, so it shows `asleep` with its entities available instead, see [Limitations](#limitations). With a persistent connection the machine's advertisements stop reaching Home Assistant while the link is up, so it drops the machine from its cache after a few minutes even though nothing is wrong. Polls read over the open link instead of reconnecting, so the entities stay available, and once the machine drops the link it is handled as above. If it goes quiet while a command is running, the next poll that cannot find it does the same. Connection, pairing and read failures on a machine that is still seen are logged as errors as before.
 
-On the Vertuo Next family the advertisement itself carries the machine status bytes, so state and alarm flags follow the machine within about a second instead of waiting for the next poll. Values that only a connection can read, such as error codes and the capsule counter, still come from the poll.
+On the Vertuo Next family the advertisement itself carries the machine status bytes, so state and alarm flags follow the machine within about a second instead of waiting for the next poll. Values that only a connection can read, such as error codes and the capsule counter, still come from the poll. An Expert's advertisement is read for its pairing state only, as the app does, since nothing yet shows it carries the rest in the status layout.
 
 Authentication is application-level only (CMID write with response), matching the official Nespresso Android app, which does not call `createBond` either. That is separate from link-layer encryption: some characteristics only answer over an encrypted link, and Android negotiates that transparently while neither BlueZ nor a Bluetooth proxy does it unprompted. See [Link encryption](#link-encryption). The auth key is generated once and persisted in the config entry so the same key is reused across restarts. If the machine was previously paired with the Nespresso app, the integration needs the pairing key from your Nespresso account or a factory reset of the machine, see [Machine already paired with the Nespresso app](#machine-already-paired-with-the-nespresso-app).
 
@@ -555,6 +560,7 @@ registered to a Nespresso account through their app as well. See
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
 - **Vertuo Up sleep**: A Vertuo Up goes to standby after about 20 minutes idle and stops advertising shortly after. That is sleep, not a fault: the integration keeps its entities available and shows the state as `asleep`, and they update again when the machine wakes. A Vertuo Up that is unplugged or out of range looks the same over Bluetooth, so it shows `asleep` too. A machine that still advertises but refuses connections is treated as unavailable.
 - **Vertuo Up notifications**: With a persistent connection, a Vertuo Up (firmware 4.5.3) only notifies the top-up pause, the top-up and `ready`. The capsule read and the pour (`brew/black reading`, `brew/running`) are only seen by a poll. Starting from `ready`, **brewing_started** can therefore fire up to one poll interval late, and at the latest when the pour pauses. Brews are still counted while the link is held. Set the poll interval to 10 to 15 seconds to see the pour sooner.
+- **Expert**: Its state, flags and brewing unit are decoded as the Nespresso app does, but the machine has only been seen ready and in power save so far, and brewing has not been tried on it. Cleaning needed and LED signaling are not in its status and stay off. Its brewing unit position comes from a second characteristic that only the poll reads, so it can take up to a poll interval to show a change. There is no Capsule counter while stock tracking is off on the machine, since the count then reads as disabled.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
 - **Single client**: Only one BLE client can connect at a time. If the Nespresso app is connected, HA will retry on the next poll.
 
@@ -604,6 +610,10 @@ when adding the machine back and nothing else is needed.
 The log shows the CMID write failing with `error=133`, and the machine gone
 immediately afterwards. If the line before it says the TX level request was
 acknowledged, this is almost certainly a range problem rather than a fault.
+Through a local adapter the same problem shows up as `UNLIKELY_ERROR (14)` on
+the TX level write, or on the read after the CMID write. An Expert seen at
+-91 dBm failed this way through both a local adapter and a proxy, and paired
+on the first try once the proxy was moved to -71 dBm.
 
 That request tells the machine to reduce its radio power for the rest of the
 exchange. The official app relies on it too, which is why its pairing screen
