@@ -733,7 +733,7 @@ class TestExpertStatus:
     REAL = bytes.fromhex("44027fec80000000")
 
     def test_real_capture(self) -> None:
-        result = parse_expert_status(self.REAL, b"")
+        result = parse_expert_status(self.REAL, b"\x02")
         assert result["machine_state"] == "ready"
         assert result["pairing_key_state"] == "final"
         assert result["descaling_needed"] is True
@@ -756,7 +756,7 @@ class TestExpertStatus:
     def test_brewing_with_stock(self) -> None:
         # tank empty, container full, state 4, 42 capsules
         data = bytes((0x01, 0x44, 42 >> 3, (42 & 0x07) << 5, 0, 0, 0, 0))
-        result = parse_expert_status(data, b"")
+        result = parse_expert_status(data, b"\x02")
         assert result["machine_state"] == "brewing"
         assert result["water_tank_empty"] is True
         assert result["capsule_container_full"] is True

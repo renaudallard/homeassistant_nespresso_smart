@@ -42,8 +42,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     BARISTA_STATE_NAMES,
-    EXPERT_STATE_NAMES,
     DOMAIN,
+    EXPERT_STATE_NAMES,
     MILK_UNIT_STATE_NAMES,
     VERTUO_STATE_NAMES,
     WIFI_STATUS_NAMES,

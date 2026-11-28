@@ -35,9 +35,9 @@ from collections.abc import Mapping
 
 from ..const import (
     BARISTA_STATE_NAMES,
-    EXPERT_STATE_NAMES,
     CAPS_COUNTER_MAX,
     CMID_TYPE_NAMES,
+    EXPERT_STATE_NAMES,
     MILK_UNIT_STATE_NAMES,
     VERTUO_STATE_NAMES,
     WATER_HARDNESS_MAX,
@@ -266,9 +266,7 @@ def _select_bits(data: bytes, first: int, last: int) -> int:
     return value
 
 
-def parse_expert_status(
-    data: bytes, params: bytes | None = None
-) -> dict[str, object]:
+def parse_expert_status(data: bytes, params: bytes | None = None) -> dict[str, object]:
     """Parse the Nespresso Expert machine status (CHAR_MACHINE_STATUS).
 
     The Expert shares the Venus service UUID but not the Vertuo layout. The
