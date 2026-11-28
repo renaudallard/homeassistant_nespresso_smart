@@ -102,6 +102,12 @@ class TestGenerateAuthKey:
         assert len(keys) == 50
         assert len({k[1:] for k in keys}) == 50
 
+    def test_no_other_nibble_is_fixed(self) -> None:
+        """A uuid4 carries its version, which pinned the fourteenth nibble."""
+        keys = [generate_auth_key() for _ in range(200)]
+        for position in range(1, 16):
+            assert len({k[position] for k in keys}) > 1, position
+
 
 class TestNormalizeAuthKey:
     def test_reads_a_pairing_key_from_the_account(self) -> None:

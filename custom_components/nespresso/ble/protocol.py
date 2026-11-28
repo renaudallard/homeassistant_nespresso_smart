@@ -33,7 +33,7 @@ import asyncio
 import binascii
 import logging
 import re
-import uuid
+import secrets
 import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
@@ -120,7 +120,7 @@ def generate_auth_key() -> str:
     holds whatever was written to it, and rewriting those in the app's shape
     would send a value no existing machine has ever seen.
     """
-    return CMID_MARKER_NIBBLE + uuid.uuid4().hex[:15]
+    return CMID_MARKER_NIBBLE + secrets.token_hex(8)[1:]
 
 
 def normalize_auth_key(text: str) -> str | None:
