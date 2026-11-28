@@ -157,6 +157,15 @@ _STATUS_FIELDS: dict[MachineFamily, tuple[str, ...]] = {
 }
 
 
+async def _stop_listening(client: BleakClient, uuids: list[str]) -> None:
+    """Drop the subscriptions a command or a watch made on a link it keeps."""
+    for uuid in uuids:
+        try:
+            await client.stop_notify(uuid)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Cannot stop listening on %s: %s", uuid, err)
+
+
 async def _close(client: BleakClient) -> None:
     """Disconnect a link that is being given up.
 
@@ -576,6 +585,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """
         async with self._ble_lock:
             client, own_client = await self._acquire_client()
+            # Undone in the finally too. On a held link nothing else would,
+            # and a refused write would leave every subscription in place.
+            listening: list[str] = []
 
             try:
                 response: bytearray | None = None
@@ -609,7 +621,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     if rsp_char
                     else None,
                     "subscribed": False,
-                    "listening": [],
+                    "listening": listening,
                     "write": None,
                     "waited_seconds": 0.0,
                     "notifications": notifications,
@@ -643,10 +655,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                         continue
                     try:
                         await client.start_notify(uuid, handler(uuid))
-                        record["listening"].append(uuid)
+                        listening.append(uuid)
                     except Exception as err:  # noqa: BLE001
                         _LOGGER.debug("Cannot listen on %s: %s", uuid, err)
-                record["subscribed"] = rsp_uuid in record["listening"]
+                record["subscribed"] = rsp_uuid in listening
                 if not record["subscribed"]:
                     _LOGGER.debug(
                         "%s cannot notify on %s, sending the command anyway",
@@ -681,11 +693,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                         await asyncio.sleep(1)
                 record["waited_seconds"] = round(time.monotonic() - started, 1)
 
-                for uuid in record["listening"]:
-                    try:
-                        await client.stop_notify(uuid)
-                    except Exception as err:  # noqa: BLE001
-                        _LOGGER.debug("Cannot stop listening on %s: %s", uuid, err)
+                await _stop_listening(client, listening)
+                listening = []
 
                 record["status_after"] = await self._read_hex(client)
                 if record["status_before"] and record["status_after"]:
@@ -701,6 +710,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             finally:
                 if own_client:
                     await _close(client)
+                else:
+                    await _stop_listening(client, listening)
 
     async def async_watch(self, seconds: float) -> dict[str, Any]:
         """Record everything the machine says and shows for a while.
@@ -838,13 +849,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     # back, and it would also hammer the machine.
                     await asyncio.sleep(WATCH_SAMPLE_PAUSE)
             finally:
-                for uuid in listening:
-                    try:
-                        await client.stop_notify(uuid)
-                    except Exception as err:  # noqa: BLE001
-                        _LOGGER.debug(
-                            "Watch cannot stop listening on %s: %s", uuid, err
-                        )
+                await _stop_listening(client, listening)
                 if own_client:
                     await _close(client)
 
