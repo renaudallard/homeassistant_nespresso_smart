@@ -441,7 +441,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 client, self.auth_key, self.family, self.send_tx_level
             ):
                 raise BleakError("Machine did not accept the auth token")
-        except Exception:
+        except BaseException:
             await _close(client)
             raise
         return client
@@ -1365,6 +1365,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         except Exception as err:
             await _close(client)
             raise UpdateFailed(f"Unexpected BLE error: {err}") from err
+        except BaseException:
+            # Cancelled, which an unload does to the interval poll. Nothing
+            # else would ever close this link.
+            await _close(client)
+            raise
         return raw
 
     def _parse(self, raw: RawMachineData) -> NespressoMachineData:
