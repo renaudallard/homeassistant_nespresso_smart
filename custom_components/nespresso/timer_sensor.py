@@ -41,8 +41,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import NespressoCoordinator
 from .entity import machine_device_info
-
-BREWING_STATES = {"brewing"}
+from .models import is_brew_state
 
 
 class NespressoBrewingDuration(CoordinatorEntity[NespressoCoordinator], SensorEntity):
@@ -79,7 +78,7 @@ class NespressoBrewingDuration(CoordinatorEntity[NespressoCoordinator], SensorEn
         """Check if machine is currently brewing."""
         if self.coordinator.data is None:
             return False
-        return self.coordinator.data.machine_state in BREWING_STATES
+        return is_brew_state(self.coordinator.data.machine_state)
 
     def _start_timer(self) -> None:
         """Start ticking every second."""
