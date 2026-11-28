@@ -464,7 +464,6 @@ AUTH_CHARS: Final[frozenset[str]] = frozenset(
     {
         BARISTA_CHAR_AUTH,
         VERTUO_CHAR_AUTH,
-        VMINI_CHAR_PAIRING,
         VMINI_CHAR_MACHINE_TOKEN,
     }
 )
