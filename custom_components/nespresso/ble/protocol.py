@@ -475,7 +475,8 @@ async def _pair(client: BleakClient) -> bool:
             level,
             "The Bluetooth proxy serving %s cannot pair. Set 'active: true' under "
             "bluetooth_proxy in the proxy configuration, update its ESPHome "
-            "firmware, then reload the integration.",
+            "firmware, then restart Home Assistant. A reload is not enough, "
+            "since only a restart clears the count of failed requests.",
             address,
         )
         return False
