@@ -92,7 +92,8 @@ Devices & services > Nespresso Smart**, pick **Reconfigure** in the machine
 entry's three dots menu and paste the pairing key or token. The entry reloads
 with it, and the brew counters and entities are kept. A token the integration
 generated itself is the only one the machine knows, so replacing it costs a
-factory reset of the machine.
+factory reset of the machine. Reconfigure first and reset after: the other way
+round, the entry writes its old token again before it reloads with the new one.
 
 ### Machine already paired with the Nespresso app
 
@@ -143,6 +144,12 @@ cookies that pass the check.
 
 A factory reset clears the stored auth token and all settings. The Bluetooth pairing button alone is not sufficient; a full factory reset is required.
 
+If the machine already has an entry in Home Assistant, leave it: after the reset
+it writes the auth token it holds on its next attempt. To start over instead,
+delete the entry before the reset, not after, or it writes its token first and
+the new entry's is refused until another reset. The machine holds one token, so
+the Nespresso app loses it from then on.
+
 - **Vertuo Next / Vertuo Pop**: Close the head, press the button 3 times within 2 seconds. The light blinks orange to confirm.
 - **Barista**: Consult the Nespresso support page for your model's reset procedure.
 
@@ -151,13 +158,6 @@ After reset, clear the stale Bluetooth bond on the HA host and restart HA:
 ```bash
 bluetoothctl remove <MACHINE_MAC_ADDRESS>
 ```
-
-If the machine already has an entry in Home Assistant, leave it: after the reset
-it writes the auth token it holds on its next attempt, so the restart is
-enough. To start over instead, delete the entry before the reset, not after,
-or it writes its token first and the new entry's is refused until another
-reset. The machine holds one token, so the Nespresso app loses it from then
-on.
 
 **Option C: Extract the existing token from a Bluetooth capture (Android only)**
 
@@ -603,7 +603,9 @@ now refuse every read. Nothing can be done about that over Bluetooth, but the ke
 the app used is registered against your Nespresso account and can be recovered
 and pasted in, which is Option A of [Machine already paired with the Nespresso
 app](#machine-already-paired-with-the-nespresso-app). Failing that, factory reset
-the machine and add the integration again leaving the auth token field empty.
+the machine: this entry then writes its own token on its next attempt. Do not
+delete and add it again after the reset, since the old entry would have written
+its token first and the new one's would be refused.
 
 If the machine is already added, paste the pairing key into **Reconfigure** in
 its entry's three dots menu rather than deleting the entry.
