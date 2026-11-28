@@ -877,8 +877,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     @property
     def is_connected(self) -> bool:
-        """Whether a connection is being held open right now."""
-        return self._client is not None
+        """Whether a connection is being held open right now.
+
+        The link is asked, since a persistent client stays set after the
+        machine drops it.
+        """
+        return self._held_link() is not None
 
     async def async_release_kept_connection(self) -> None:
         """Release the temporary connection kept for brew.
