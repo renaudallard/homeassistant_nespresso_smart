@@ -437,6 +437,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         "connection abort" is usually a stale bond on a factory reset machine,
         which the README covers when the retry does not help either.
         """
+        if self._closed:
+            # A write or a watch queued on the lock when the entry unloaded.
+            raise BleakError("The entry has been unloaded")
         device = self._device()
         try:
             client = await establish_connection(
@@ -1317,7 +1320,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             device = bluetooth.async_ble_device_from_address(
                 self.hass, self.address, connectable=True
             )
-            if device is None:
+            if device is None or self._closed:
                 raise UpdateFailed(f"BLE connection failed: {err}") from err
             try:
                 client = await establish_connection(
@@ -1354,6 +1357,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             if not auth_ok:
                 _LOGGER.info("Auth failed, reconnecting for retry")
                 await _close(client)
+                if self._closed:
+                    raise UpdateFailed("The entry has been unloaded")
                 client = await establish_connection(
                     BleakClient, device, self.address, max_attempts=3
                 )
