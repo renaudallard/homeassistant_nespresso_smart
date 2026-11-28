@@ -311,7 +311,8 @@ EXPERT_STATE_NAMES: Final[dict[int, str]] = {
     4: "brewing",
     5: "advanced_menu",
     6: "descaling",
-    7: "steam_out",
+    # STEAM_OUT in the app, which counts it as emptying the system.
+    7: "emptying",
     8: "error",
     9: "power_save",
     10: "overheated",
