@@ -156,6 +156,13 @@ _STATUS_FIELDS: dict[MachineFamily, tuple[str, ...]] = {
 }
 
 
+class _Unloaded(UpdateFailed):
+    """The entry unloaded while a poll was on its way to the machine."""
+
+    def __init__(self) -> None:
+        super().__init__("The entry has been unloaded")
+
+
 async def _stop_listening(client: BleakClient, uuids: list[str]) -> None:
     """Drop the subscriptions a command or a watch made on a link it keeps."""
     for uuid in uuids:
@@ -464,6 +471,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 err,
             )
             await asyncio.sleep(3)
+            if self._closed:
+                raise BleakError("The entry has been unloaded")
             client = await establish_connection(
                 BleakClient, self._device(), self.address, max_attempts=2
             )
@@ -1213,16 +1222,14 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 asleep = self._asleep_dataset()
                 self._async_note_update(self.data, asleep)
                 return asleep
-            if self._closed:
-                # A poll that waited on the lock, or whose held link the
-                # shutdown cut, would otherwise reach the machine from a dead
-                # entry, and could even onboard a removed entry's token. The
-                # data it had is returned, since a failure here would be
+            try:
+                raw = await self._async_connect_and_read()
+            except _Unloaded:
+                # The data it had is returned, since a failure here would be
                 # logged as an error on every reload.
                 if self.data is not None:
                     return self.data
-                raise UpdateFailed("The entry has been unloaded")
-            raw = await self._async_connect_and_read()
+                raise
 
         try:
             result = self._parse(raw)
@@ -1278,7 +1285,16 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             return None
 
     async def _async_connect_and_read(self) -> RawMachineData:
-        """Connect, authenticate and read, keeping the link if it is wanted."""
+        """Connect, authenticate and read, keeping the link if it is wanted.
+
+        Raises _Unloaded at every step that would reach the machine once the
+        entry has gone: a poll that waited on the lock, or whose held link
+        the shutdown cut, or one that was connecting when it happened, would
+        otherwise talk to it from a dead entry, and could even onboard a
+        removed entry's token.
+        """
+        if self._closed:
+            raise _Unloaded
         # Disconnect any stale persistent client before reconnecting
         await self._disconnect()
 
@@ -1322,7 +1338,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             device = bluetooth.async_ble_device_from_address(
                 self.hass, self.address, connectable=True
             )
-            if device is None or self._closed:
+            if self._closed:
+                raise _Unloaded from err
+            if device is None:
                 raise UpdateFailed(f"BLE connection failed: {err}") from err
             try:
                 client = await establish_connection(
@@ -1338,6 +1356,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             )
 
         _LOGGER.debug("Connected to %s, MTU=%s", self.address, client.mtu_size)
+        if self._closed:
+            await _close(client)
+            raise _Unloaded
 
         # Dump GATT characteristic properties for diagnostics. These say what
         # an attribute supports, not what it demands: ATT permissions are not
@@ -1360,7 +1381,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 _LOGGER.info("Auth failed, reconnecting for retry")
                 await _close(client)
                 if self._closed:
-                    raise UpdateFailed("The entry has been unloaded")
+                    raise _Unloaded
                 client = await establish_connection(
                     BleakClient, device, self.address, max_attempts=3
                 )
