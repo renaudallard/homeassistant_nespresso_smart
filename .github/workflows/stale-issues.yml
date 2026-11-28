@@ -41,11 +41,14 @@ jobs:
                 per_page: 100,
               });
 
-              // Find last non-bot activity
+              // Find last non-bot activity. An open issue holding the close
+              // notice was reopened after it, which counts as activity even
+              // without a comment, or the next run would close it again.
               let lastActivity = new Date(issue.created_at);
 
               for (const c of comments) {
-                if (c.user.type === 'Bot' || c.body.includes('<!-- stale-reminder')) {
+                const reopened = c.body.includes('<!-- stale-close');
+                if (!reopened && (c.user.type === 'Bot' || c.body.includes('<!-- stale-reminder'))) {
                   continue;
                 }
                 const d = new Date(c.created_at);
