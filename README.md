@@ -762,8 +762,10 @@ at debug, under `custom_components.nespresso.ble.protocol`.
 
 The advertisement carries the pairing state in bits 5-6 of its first byte, so it
 stays readable even while the machine refuses every connected read. Turn on
-debug logging and look for `Pairing key state for ... is now`, or download the
-integration's diagnostics and read `debug_info.pairing_key_state`.
+debug logging and look for `Pairing key state for ... is now`. Once the machine
+has set up, the integration's diagnostics also carry it, under
+`debug_info.pairing_key_state`; a machine refusing every read never gets that
+far, so there the log is the only place.
 
 ### Sending a raw command
 
