@@ -25,7 +25,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -132,31 +132,58 @@ def has_milk_unit(entry: ConfigEntry, coordinator: NespressoCoordinator) -> bool
     return platform_code(entry, coordinator) in MILK_PLATFORM_CODES
 
 
-def machine_device_info(
+class DeviceVersions(TypedDict, total=False):
+    """What the machine reports about itself, each key only once known."""
+
+    serial_number: str
+    sw_version: str
+    hw_version: str
+
+
+class DeviceFields(DeviceVersions):
+    """The machine as keyword arguments for the device registry.
+
+    DeviceInfo is a dataclass from 2026.12 on, where reading or unpacking it
+    as a mapping is deprecated, so the registry gets this instead.
+    """
+
+    identifiers: set[tuple[str, str]]
+    name: str
+    manufacturer: str
+    model: str
+
+
+def device_fields(
     entry: ConfigEntry, coordinator: NespressoCoordinator
-) -> DeviceInfo:
+) -> DeviceFields:
     """Describe the machine to the device registry.
 
     Twelve entities spelled this out identically, which was eleven chances for
     two of them to disagree about what the device is called.
     """
-    info = DeviceInfo(
+    return DeviceFields(
         identifiers={(DOMAIN, entry.data["address"])},
         name=device_name(entry, coordinator),
         manufacturer="Nespresso",
         model=machine_model(entry, coordinator),
+        **device_versions(coordinator),
     )
-    info.update(device_versions(coordinator))
-    return info
 
 
-def device_versions(coordinator: NespressoCoordinator) -> DeviceInfo:
+def machine_device_info(
+    entry: ConfigEntry, coordinator: NespressoCoordinator
+) -> DeviceInfo:
+    """The same description as the device info an entity hands over."""
+    return DeviceInfo(**device_fields(entry, coordinator))
+
+
+def device_versions(coordinator: NespressoCoordinator) -> DeviceVersions:
     """The serial and versions the machine has told us, and only those.
 
     A field passed as None clears what the registry holds, so a Vertuo Up set
     up while asleep, which reports none of them, would lose them for good.
     """
-    info = DeviceInfo()
+    info = DeviceVersions()
     data = coordinator.data
     if data is None:
         return info
