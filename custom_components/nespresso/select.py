@@ -142,9 +142,6 @@ class NespressoRecipeSelect(CoordinatorEntity[NespressoCoordinator], SelectEntit
 
     async def async_select_option(self, option: str) -> None:
         """Write recipe index to machine via BLE."""
-        if option not in BARISTA_RECIPES:
-            _LOGGER.debug("Invalid recipe option: %r", option)
-            return
         index = BARISTA_RECIPES.index(option)
         _LOGGER.debug("Writing recipe: option=%s index=%d", option, index)
 
@@ -181,20 +178,14 @@ class NespressoLanguageSelect(CoordinatorEntity[NespressoCoordinator], SelectEnt
         self._attr_device_info = machine_device_info(entry, coordinator)
 
     async def async_select_option(self, option: str) -> None:
-        """Write language code to machine via BLE."""
-        if option not in BARISTA_LANGUAGES:
-            _LOGGER.debug("Invalid language option: %r", option)
-            return
+        """Write the two letter language code to the machine.
 
-        _LOGGER.debug(
-            "Writing language: option=%s bytes=%s char=%s",
-            option,
-            option.encode("utf-8")[:2].hex(),
-            BARISTA_CHAR_LANGUAGE,
-        )
-
+        Home Assistant has already checked the option is one of ours, and
+        every one of them is two ASCII letters.
+        """
+        lang_bytes = option.encode("ascii")
+        _LOGGER.debug("Writing language: option=%s bytes=%s", option, lang_bytes.hex())
         try:
-            lang_bytes = option.encode("utf-8")[:2].ljust(2, b"\x00")
             await self.coordinator.async_write_char(BARISTA_CHAR_LANGUAGE, lang_bytes)
             self._attr_current_option = option
             self.async_write_ha_state()
@@ -226,8 +217,6 @@ class NespressoVertuoBrewTypeSelect(
 
     async def async_select_option(self, option: str) -> None:
         """Select brew type (stored on coordinator, used by brew button)."""
-        if option not in VERTUO_BREW_TYPES:
-            return
         self.coordinator.brew_type = option
         self._attr_current_option = option
         self.async_write_ha_state()
@@ -246,8 +235,6 @@ class NespressoVertuoTemperatureSelect(
 
     async def async_select_option(self, option: str) -> None:
         """Select brew temperature (stored on coordinator, used by brew button)."""
-        if option not in VERTUO_TEMPERATURES:
-            return
         self.coordinator.brew_temperature = option
         self._attr_current_option = option
         self.async_write_ha_state()
