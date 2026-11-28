@@ -61,6 +61,7 @@ from custom_components.nespresso.ble.parsing import (
     parse_barista_status,
     parse_caps_counter,
     parse_error_information,
+    parse_expert_lever,
     parse_expert_status,
     parse_general_user_settings,
     parse_serial_number,
@@ -752,6 +753,18 @@ class TestExpertStatus:
 
     def test_lever_unknown_without_params(self) -> None:
         assert "brewing_unit_closed" not in parse_expert_status(self.REAL)
+
+    def test_lever_from_params_alone(self) -> None:
+        """A params notification carries the lever without the status."""
+        assert parse_expert_lever(b"\x02") is True
+        assert parse_expert_lever(b"\x02\x00\x00") is True
+        assert parse_expert_lever(b"\x00") is False
+        # Only bit 1 of byte 0 counts.
+        assert parse_expert_lever(b"\xfd\xff") is False
+
+    def test_lever_needs_params(self) -> None:
+        with pytest.raises(ValueError):
+            parse_expert_lever(b"")
 
     def test_brewing_with_stock(self) -> None:
         # tank empty, container full, state 4, 42 capsules

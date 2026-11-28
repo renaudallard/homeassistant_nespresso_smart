@@ -52,6 +52,7 @@ from .ble.parsing import (
     parse_barista_status,
     parse_caps_counter,
     parse_error_information,
+    parse_expert_lever,
     parse_expert_status,
     parse_general_user_settings,
     parse_profile_version,
@@ -82,6 +83,7 @@ from .const import (
     COUNTER_STORAGE_VERSION,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    VERTUO_CHAR_MACHINE_PARAMS,
     VERTUO_CHAR_STATUS,
     VMINI_CHAR_SHADOW_DATA,
     WATCH_MAX_EVENTS,
@@ -210,6 +212,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self._brew_track_baseline: str | None = None
         # Whether the poll in progress applied the status it read.
         self._status_polled = False
+        # Whether the Expert notified its lever during the poll in progress.
+        self._lever_notified = False
         self.descaling_capsules = 0
         self.descaling_days = 0
         self._counter_store = counter_store(hass, address)
@@ -287,6 +291,37 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """
         _LOGGER.debug("BLE notification received: %s (len=%d)", data.hex(), len(data))
         self.hass.loop.call_soon_threadsafe(self._handle_status_update, bytes(data))
+
+    def _on_params_notification(self, _sender: object, data: bytearray) -> None:
+        """Handle a notification of the Expert's params, which hold its lever."""
+        _LOGGER.debug("BLE params notification received: %s", data.hex())
+        self.hass.loop.call_soon_threadsafe(self._handle_params_update, bytes(data))
+
+    def _handle_params_update(self, data: bytes) -> None:
+        """Apply the lever an Expert notified."""
+        current = self.data
+        if current is None:
+            return
+        try:
+            closed = parse_expert_lever(data)
+        except ValueError as err:
+            _LOGGER.debug("Failed to parse params %s: %s", data.hex(), err)
+            return
+        self._lever_notified = True
+        self._async_publish(current, replace(current, brewing_unit_closed=closed))
+
+    def _notify_handlers(self) -> dict[str, Callable[[object, bytearray], None]]:
+        """The characteristics a persistent link listens on, and their handlers.
+
+        The Expert's lever is not in its status but in its params, and the app
+        listens on both.
+        """
+        handlers: dict[str, Callable[[object, bytearray], None]] = {}
+        if self._status_uuid:
+            handlers[self._status_uuid] = self._on_status_notification
+        if self.is_expert:
+            handlers[VERTUO_CHAR_MACHINE_PARAMS] = self._on_params_notification
+        return handlers
 
     def _note_pairing_key_state(self, status: dict[str, object]) -> None:
         """Record the pairing state an advertisement carries, and log changes.
@@ -576,10 +611,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 # come back.
                 targets = [rsp_uuid] if not probe else self._notifiable_chars(client)
                 # A persistent connection already listens on the status
-                # characteristic. Subscribing again would take the handler over
-                # and unsubscribing afterwards would leave the poll deaf.
-                if not own_client and self.persistent and self._status_uuid in targets:
-                    targets.remove(self._status_uuid)
+                # characteristic, and on an Expert on its params. Subscribing
+                # again would take the handler over and unsubscribing
+                # afterwards would leave the poll deaf.
+                if not own_client and self.persistent:
+                    held = self._notify_handlers()
+                    targets = [uuid for uuid in targets if uuid not in held]
                 for uuid in targets:
                     char = client.services.get_characteristic(uuid)
                     if char is None or "notify" not in char.properties:
@@ -692,6 +729,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 status = self._parse_status(raw)
                 return {"decoded": status} if status is not None else {}
 
+            held = self._notify_handlers()
+
             def handler(uuid: str) -> Callable[[object, bytearray], None]:
                 def on_notify(_sender: object, data: bytearray) -> None:
                     raw = bytes(data)
@@ -706,10 +745,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     # without this the entities keep the values they had when
                     # it started and whoever is standing at the machine using
                     # it sees nothing move. In persistent mode the poll owns
-                    # this subscription and is already fed, and the loop above
-                    # left it alone.
-                    if uuid == self._status_uuid:
-                        self._on_status_notification(_sender, data)
+                    # these subscriptions and is already fed, and the loop
+                    # below leaves them alone.
+                    on_held = held.get(uuid)
+                    if on_held is not None:
+                        on_held(_sender, data)
 
                 return on_notify
 
@@ -728,9 +768,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                         readable.append(char.uuid)
 
             for uuid in self._notifiable_chars(client):
-                # The poll owns this subscription in persistent mode. Taking it
-                # over and handing it back would leave the poll deaf.
-                if not own_client and self.persistent and uuid == self._status_uuid:
+                # The poll owns these subscriptions in persistent mode. Taking
+                # one over and handing it back would leave the poll deaf.
+                if not own_client and self.persistent and uuid in held:
                     continue
                 try:
                     await client.start_notify(uuid, handler(uuid))
@@ -1102,6 +1142,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             self.persistent,
         )
         self._status_polled = False
+        self._lever_notified = False
         raw = await self._async_read_held_link()
         if raw is None:
             if self.family is MachineFamily.VMINI and (
@@ -1123,9 +1164,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             if self._status_polled and self.data is not None:
                 # Already applied, and anything since is newer.
                 keys = _STATUS_FIELDS.get(self.family, _COMMON_STATUS_FIELDS)
-                if self.is_expert:
+                if self.is_expert and not self._lever_notified:
                     # Its lever is not in the status bytes but in the params
-                    # read after them, so the one in the data is a poll old.
+                    # read after them, so the one in the data is a poll old,
+                    # unless the machine notified it since the poll began. The
+                    # app learns of a move only from that notification.
                     keys = tuple(k for k in keys if k != "brewing_unit_closed")
                 result = replace(
                     result, **{key: getattr(self.data, key) for key in keys}
@@ -1282,9 +1325,15 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
             # Keep connection alive for persistent mode or pending brew
             if self.persistent and self._status_uuid:
-                await client.start_notify(
-                    self._status_uuid, self._on_status_notification
-                )
+                notifiable = self._notifiable_chars(client)
+                for uuid, on_notify in self._notify_handlers().items():
+                    if uuid != self._status_uuid and uuid not in notifiable:
+                        # No capture shows the Expert's flags yet. Without
+                        # notify its lever follows the poll, which beats
+                        # losing the persistent link over it.
+                        _LOGGER.debug("%s cannot notify on %s", self.address, uuid)
+                        continue
+                    await client.start_notify(uuid, on_notify)
                 self._client = client
             elif self._keep_connection:
                 self._client = client

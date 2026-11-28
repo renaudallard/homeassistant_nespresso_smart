@@ -429,8 +429,9 @@ but the app gives it the default Original line layout. `ExpertModule` takes any
 machine whose Bluetooth name contains "Expert", ignoring case. The app reads the
 status (`06AA3A12`) and byte 0 of the machine params (`06AA3A22`) and joins
 them, status bytes 0 to 4 then that one byte, before decoding. It subscribes to
-both. Bits are counted from the most significant bit of byte 0
-(`ByteConversion.selectBit`):
+both, and so does a persistent connection here. Of the params, only the slider
+is used here, so a params notification on its own updates it. Bits are counted
+from the most significant bit of byte 0 (`ByteConversion.selectBit`):
 
 ```
 Bit 0:      bootloaderActive
@@ -1040,10 +1041,12 @@ config entry, and reused across restarts.
 7. **Read all characteristics**: status, info, serial, profile, params, settings, errors.
    The status is applied as soon as it is read, the same way a notification
    is, since a notification arriving during the reads after it is newer
-8. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications
+8. **Persistent mode** (optional): Subscribe to `CHAR_MACHINE_STATUS` notifications,
+   and on an Expert to `CHAR_MACHINE_SPECIFIC_PARAMS` as well, which holds its slider
 9. **Disconnect** (or keep alive in persistent mode)
 10. **Parse**: Convert raw bytes to `NespressoMachineData`, keeping the
-    status fields applied in step 7 or by anything after it
+    status fields applied in step 7 or by anything after it, and an Expert's
+    slider if it was notified during the poll
 11. **Fire triggers**: Compare old/new state, fire bus events
 
 Any operation in steps 4 to 7 that comes back with ATT error 5, insufficient

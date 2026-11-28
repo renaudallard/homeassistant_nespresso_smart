@@ -280,10 +280,6 @@ def parse_expert_status(data: bytes, params: bytes | None = None) -> dict[str, o
     if len(data) < 4:
         raise ValueError(f"Expert status requires >= 4 bytes, got {len(data)}")
 
-    # The app reads bits 40-47 from byte 0 of CHAR_MACHINE_PARAMS (06aa3a22):
-    # toIncompleteMachineStatusBuilder joins status[0:5] with params[0:1].
-    joined = bytes(data[:5]) + (bytes(params[:1]) if params else b"")
-
     stock = _select_bits(data, 17, 26)
     status: dict[str, object] = {
         "machine_state": EXPERT_STATE_NAMES.get(_select_bits(data, 12, 15), "unknown"),
@@ -302,10 +298,23 @@ def parse_expert_status(data: bytes, params: bytes | None = None) -> dict[str, o
         "capsule_stock": None if stock > 1000 else stock,
     }
     if params:
-        # Slider (lever) closed. Left out without CHAR_MACHINE_PARAMS, so a
-        # status notification keeps the last known value.
-        status["brewing_unit_closed"] = bool(_select_bits(joined, 46, 46))
+        # Left out without CHAR_MACHINE_PARAMS, so a status notification
+        # keeps the last known lever.
+        status["brewing_unit_closed"] = parse_expert_lever(params)
     return status
+
+
+def parse_expert_lever(params: bytes) -> bool:
+    """Whether the Expert's slider (lever) is closed, from CHAR_MACHINE_PARAMS.
+
+    The app's toIncompleteMachineStatusBuilder joins status[0:5] with
+    params[0:1] and reads bit 46 of that, counted MSB first, as slider closed.
+    That is bit 1 of params[0], so it reads the same on its own, as a
+    notification of the params delivers it.
+    """
+    if not params:
+        raise ValueError("Expert params are empty")
+    return bool(_select_bits(params[:1], 6, 6))
 
 
 def parse_vertuo_wifi_status(data: bytes) -> dict[str, str | None]:
