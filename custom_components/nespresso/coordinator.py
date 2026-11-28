@@ -731,91 +731,96 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """
         async with self._ble_lock:
             client, own_client = await self._acquire_client()
-            started = time.monotonic()
-            record: dict[str, Any] = {
-                "seconds": seconds,
-                "samples": 0,
-                "characteristics": {},
-                "changes": [],
-                "notifications": [],
-                "truncated": False,
-            }
-            self.last_watch = record
-
-            def stamp() -> float:
-                return round(time.monotonic() - started, 1)
-
-            def note(bucket: str, entry: dict[str, Any]) -> None:
-                if len(record[bucket]) >= WATCH_MAX_EVENTS:
-                    record["truncated"] = True
-                    return
-                record[bucket].append(entry)
-
-            def status_of(uuid: str, raw: bytes) -> dict[str, Any]:
-                """Decoded status to merge into an entry, empty for the rest.
-
-                Only the status characteristic gets this. Every capture so far
-                has had its status bytes read out by hand before anyone could
-                say what the machine was doing at that second.
-                """
-                if uuid != self._status_uuid:
-                    return {}
-                status = self._parse_status(raw)
-                return {"decoded": status} if status is not None else {}
-
-            held = self._notify_handlers()
-
-            def handler(uuid: str) -> Callable[[object, bytearray], None]:
-                def on_notify(_sender: object, data: bytearray) -> None:
-                    raw = bytes(data)
-                    value = raw.hex()
-                    note(
-                        "notifications",
-                        {"at": stamp(), "uuid": uuid, "value": value}
-                        | status_of(uuid, raw),
-                    )
-                    _LOGGER.debug("Watch %s notified %s", uuid, value)
-                    # The poll waits on _ble_lock for the whole watch, so
-                    # without this the entities keep the values they had when
-                    # it started and whoever is standing at the machine using
-                    # it sees nothing move. In persistent mode the poll owns
-                    # these subscriptions and is already fed, and the loop
-                    # below leaves them alone.
-                    on_held = held.get(uuid)
-                    if on_held is not None:
-                        on_held(_sender, data)
-
-                return on_notify
-
-            readable: list[str] = []
+            # Covers the subscriptions too: a cancel during one of them would
+            # otherwise leave a link this opened behind.
             listening: list[str] = []
-            for service in client.services:
-                for char in service.characteristics:
-                    record["characteristics"][char.uuid] = {
-                        "service": service.uuid,
-                        "properties": ",".join(sorted(char.properties)),
-                    }
-                    if (
-                        "read" in char.properties
-                        and char.uuid.lower() not in AUTH_CHARS
-                    ):
-                        readable.append(char.uuid)
-
-            for uuid in self._notifiable_chars(client):
-                # The poll owns these subscriptions in persistent mode. Taking
-                # one over and handing it back would leave the poll deaf.
-                if not own_client and self.persistent and uuid in held:
-                    continue
-                try:
-                    await client.start_notify(uuid, handler(uuid))
-                    listening.append(uuid)
-                except Exception as err:  # noqa: BLE001
-                    _LOGGER.debug("Watch cannot listen on %s: %s", uuid, err)
-            record["listening"] = listening
-
             try:
+                started = time.monotonic()
+                record: dict[str, Any] = {
+                    "seconds": seconds,
+                    "samples": 0,
+                    "characteristics": {},
+                    "changes": [],
+                    "notifications": [],
+                    "truncated": False,
+                }
+                self.last_watch = record
+
+                def stamp() -> float:
+                    return round(time.monotonic() - started, 1)
+
+                def note(bucket: str, entry: dict[str, Any]) -> None:
+                    if len(record[bucket]) >= WATCH_MAX_EVENTS:
+                        record["truncated"] = True
+                        return
+                    record[bucket].append(entry)
+
+                def status_of(uuid: str, raw: bytes) -> dict[str, Any]:
+                    """Decoded status to merge into an entry, empty for the rest.
+
+                    Only the status characteristic gets this. Every capture so far
+                    has had its status bytes read out by hand before anyone could
+                    say what the machine was doing at that second.
+                    """
+                    if uuid != self._status_uuid:
+                        return {}
+                    status = self._parse_status(raw)
+                    return {"decoded": status} if status is not None else {}
+
+                held = self._notify_handlers()
+
+                def handler(uuid: str) -> Callable[[object, bytearray], None]:
+                    def on_notify(_sender: object, data: bytearray) -> None:
+                        raw = bytes(data)
+                        value = raw.hex()
+                        note(
+                            "notifications",
+                            {"at": stamp(), "uuid": uuid, "value": value}
+                            | status_of(uuid, raw),
+                        )
+                        _LOGGER.debug("Watch %s notified %s", uuid, value)
+                        # The poll waits on _ble_lock for the whole watch, so
+                        # without this the entities keep the values they had when
+                        # it started and whoever is standing at the machine using
+                        # it sees nothing move. In persistent mode the poll owns
+                        # these subscriptions and is already fed, and the loop
+                        # below leaves them alone.
+                        on_held = held.get(uuid)
+                        if on_held is not None:
+                            on_held(_sender, data)
+
+                    return on_notify
+
+                readable: list[str] = []
+                for service in client.services:
+                    for char in service.characteristics:
+                        record["characteristics"][char.uuid] = {
+                            "service": service.uuid,
+                            "properties": ",".join(sorted(char.properties)),
+                        }
+                        if (
+                            "read" in char.properties
+                            and char.uuid.lower() not in AUTH_CHARS
+                        ):
+                            readable.append(char.uuid)
+
+                for uuid in self._notifiable_chars(client):
+                    # The poll owns these subscriptions in persistent mode. Taking
+                    # one over and handing it back would leave the poll deaf.
+                    if not own_client and self.persistent and uuid in held:
+                        continue
+                    try:
+                        await client.start_notify(uuid, handler(uuid))
+                        listening.append(uuid)
+                    except Exception as err:  # noqa: BLE001
+                        _LOGGER.debug("Watch cannot listen on %s: %s", uuid, err)
+                record["listening"] = listening
+
                 previous: dict[str, str] = {}
                 while time.monotonic() - started < seconds:
+                    if self._closed:
+                        record["ended_early"] = "the integration unloaded"
+                        break
                     if not client.is_connected:
                         record["ended_early"] = "the machine dropped the link"
                         _LOGGER.debug("Watch ended early, link gone")
