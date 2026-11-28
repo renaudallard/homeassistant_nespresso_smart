@@ -298,10 +298,6 @@
         "data": {
           "auth_token": "โทเค็นยืนยันตัวตนหรือคีย์จับคู่"
         }
-      },
-      "user": {
-        "title": "Nespresso Smart",
-        "description": "การผสานรวมนี้ต้องใช้ Bluetooth เครื่องจะถูกค้นพบโดยอัตโนมัติ"
       }
     },
     "error": {

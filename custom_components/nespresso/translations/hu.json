@@ -298,10 +298,6 @@
         "data": {
           "auth_token": "Hitelesítési token vagy párosítási kulcs"
         }
-      },
-      "user": {
-        "title": "Nespresso Smart",
-        "description": "Ehhez az integrációhoz Bluetooth szükséges. A készülékeket a rendszer automatikusan felfedezi."
       }
     },
     "error": {

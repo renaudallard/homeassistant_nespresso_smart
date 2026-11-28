@@ -298,10 +298,6 @@
         "data": {
           "auth_token": "Token de autentificare sau cheie de asociere"
         }
-      },
-      "user": {
-        "title": "Nespresso Smart",
-        "description": "Această integrare necesită Bluetooth. Espressoarele sunt descoperite automat."
       }
     },
     "error": {

@@ -298,10 +298,6 @@
         "data": {
           "auth_token": "Jeton ou clé d'association"
         }
-      },
-      "user": {
-        "title": "Nespresso Smart",
-        "description": "Cette intégration nécessite le Bluetooth. Les machines sont découvertes automatiquement."
       }
     },
     "error": {

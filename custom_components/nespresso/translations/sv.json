@@ -298,10 +298,6 @@
         "data": {
           "auth_token": "Autentiseringstoken eller parkopplingsnyckel"
         }
-      },
-      "user": {
-        "title": "Nespresso Smart",
-        "description": "Den här integrationen kräver Bluetooth. Maskiner upptäcks automatiskt."
       }
     },
     "error": {

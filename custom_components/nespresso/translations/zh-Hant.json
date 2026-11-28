@@ -298,10 +298,6 @@
         "data": {
           "auth_token": "驗證權杖或配對金鑰"
         }
-      },
-      "user": {
-        "title": "Nespresso Smart",
-        "description": "此整合需要藍牙。咖啡機會自動被發現。"
       }
     },
     "error": {

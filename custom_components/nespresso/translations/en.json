@@ -298,10 +298,6 @@
         "data": {
           "auth_token": "Auth token or pairing key"
         }
-      },
-      "user": {
-        "title": "Nespresso Smart",
-        "description": "This integration requires Bluetooth. Machines are discovered automatically."
       }
     },
     "error": {

@@ -298,10 +298,6 @@
         "data": {
           "auth_token": "Token ελέγχου ταυτότητας ή κλειδί σύζευξης"
         }
-      },
-      "user": {
-        "title": "Nespresso Smart",
-        "description": "Αυτή η ενσωμάτωση απαιτεί Bluetooth. Οι μηχανές εντοπίζονται αυτόματα."
       }
     },
     "error": {

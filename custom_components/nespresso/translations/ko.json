@@ -298,10 +298,6 @@
         "data": {
           "auth_token": "인증 토큰 또는 페어링 키"
         }
-      },
-      "user": {
-        "title": "Nespresso Smart",
-        "description": "이 통합에는 Bluetooth가 필요합니다. 머신은 자동으로 검색됩니다."
       }
     },
     "error": {
