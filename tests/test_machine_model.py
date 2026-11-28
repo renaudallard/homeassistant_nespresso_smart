@@ -55,6 +55,7 @@ class FakeEntry:
 @dataclass
 class FakeCoordinator:
     data: object | None = None
+    is_expert: bool = False
 
 
 @dataclass
@@ -107,6 +108,15 @@ class TestPlatformCode:
             None,
             "Vertuo Up",
         )
+
+    def test_names_the_expert(self) -> None:
+        """It shares the Venus profile but is not a Vertuo Next."""
+        entry = FakeEntry(
+            {"family": "vertuo_next", "name": "Expert_001122334455", "address": ""}
+        )
+        coordinator = FakeCoordinator(FakeMachineData(), is_expert=True)
+        assert machine_model(entry, coordinator) == "Expert"
+        assert device_name(entry, coordinator) == "Expert_001122334455"
 
 
 class TestDeviceName:

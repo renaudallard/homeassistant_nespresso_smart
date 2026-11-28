@@ -50,12 +50,14 @@ the Nespresso app maps to the Vertuo Up. They identify the family rather than
 separate models, so a Vertuo Up is named by its family.
 
 A Venus machine whose code is not in the table is shown as Vertuo Next, the
-family default, and keeps its Bluetooth name as the device name.
+family default, unless it is an Expert, and keeps its Bluetooth name as the
+device name.
 
 The Nespresso Expert, an Original line machine, advertises the same service
 UUID and is set up as a Vertuo Next, but its status bytes have a layout of their
 own. It is recognised by its Bluetooth name, `Expert_...`, the test the
-Nespresso app uses, and decoded the way the app decodes it.
+Nespresso app uses, decoded the way the app decodes it, and shown as Expert on
+its device page.
 
 ## Installation
 

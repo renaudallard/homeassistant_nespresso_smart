@@ -73,8 +73,11 @@ def machine_model(entry: ConfigEntry, coordinator: NespressoCoordinator) -> str:
 
     Only the Venus profile needs this. A Barista and a Vertuo Up are already
     named by their family, and searching their serials for a three character
-    code would only invent matches.
+    code would only invent matches. The Expert shares the profile but is not a
+    Vertuo, and its name already says what it is.
     """
+    if coordinator.is_expert:
+        return "Expert"
     code = platform_code(entry, coordinator)
     if code is not None:
         return VERTUO_PLATFORM_NAMES[code]
