@@ -1379,11 +1379,13 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             error_code = err.get("error_code")
 
         caps_counter = None
+        caps_counter_off = False
         if raw.caps_counter_bytes:
             caps_counter = parse_caps_counter(raw.caps_counter_bytes)
             # 0xFFFF is the app's DEACTIVATION_VALUE: stock tracking is off.
             if self.is_expert and caps_counter == 0xFFFF:
                 caps_counter = None
+                caps_counter_off = True
 
         return NespressoMachineData(
             machine_state=str(status["machine_state"]),
@@ -1413,6 +1415,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             wifi_ssid=wifi_ssid,
             error_code=error_code,
             caps_counter=caps_counter,
+            caps_counter_off=caps_counter_off,
             error_list_code=parse_error_information(raw.error_list_bytes).get(
                 "error_code"
             )

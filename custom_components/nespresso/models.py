@@ -59,6 +59,8 @@ class NespressoMachineData:
     wifi_ssid: str | None = None
     error_code: int | None = None
     caps_counter: int | None = None
+    # An Expert reads FF FF there when its capsule stock tracking is off.
+    caps_counter_off: bool = False
     iot_market_name: str | None = None
     error_list_code: int | None = None
 
