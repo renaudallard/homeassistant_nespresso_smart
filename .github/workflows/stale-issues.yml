@@ -6,6 +6,8 @@ on:
   workflow_dispatch:  # Manual trigger for testing
   issue_comment:
     types: [created]
+  issues:
+    types: [reopened]
 
 permissions:
   issues: write
@@ -115,18 +117,19 @@ jobs:
             }
 
   remove-stale-label:
-    if: github.event_name == 'issue_comment'
+    if: github.event_name == 'issue_comment' || github.event_name == 'issues'
     runs-on: ubuntu-latest
     steps:
-      - name: Remove stale label on human comment
+      - name: Remove stale label on human comment or reopen
         uses: actions/github-script@v9
         with:
           script: |
+            // No comment on a reopen, which is activity in itself.
             const comment = context.payload.comment;
             const issue = context.payload.issue;
 
-            if (comment.user.type === 'Bot') return;
-            if (comment.body.includes('<!-- stale-')) return;
+            if (comment && comment.user.type === 'Bot') return;
+            if (comment && comment.body.includes('<!-- stale-')) return;
 
             const hasStale = issue.labels.some(l => l.name === 'stale');
             if (!hasStale) return;
