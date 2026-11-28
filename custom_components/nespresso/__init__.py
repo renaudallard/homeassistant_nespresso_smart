@@ -26,8 +26,11 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 
 import voluptuous as vol
+from bleak import BleakError
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +42,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -146,9 +150,18 @@ def _coordinator(hass: HomeAssistant, entry_id: str) -> NespressoCoordinator:
     """Look up the coordinator a service call is aimed at."""
     data = hass.data.get(DOMAIN, {}).get(entry_id)
     if data is None:
-        raise ValueError(f"No Nespresso machine configured under {entry_id}")
+        raise ServiceValidationError(f"No Nespresso machine is loaded under {entry_id}")
     coordinator: NespressoCoordinator = data["coordinator"]
     return coordinator
+
+
+@contextmanager
+def _reported(action: str) -> Iterator[None]:
+    """Hand a Bluetooth failure to the caller as an error it can show."""
+    try:
+        yield
+    except (BleakError, TimeoutError) as err:
+        raise HomeAssistantError(f"{action} failed: {err}") from err
 
 
 async def _async_register_services(hass: HomeAssistant) -> None:
@@ -162,18 +175,24 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
     async def _scan(call: ServiceCall) -> ServiceResponse:
         coordinator = _coordinator(hass, call.data[ATTR_ENTRY_ID])
-        networks = await coordinator.async_scan_wifi()
+        with _reported("WiFi scan"):
+            networks = await coordinator.async_scan_wifi()
         return {"networks": networks}
 
     async def _configure(call: ServiceCall) -> None:
         coordinator = _coordinator(hass, call.data[ATTR_ENTRY_ID])
-        await coordinator.async_configure_wifi(
-            call.data["market"],
-            call.data["ssid"],
-            call.data["password"],
-            WIFI_SECURITY_TYPES[call.data["security"]],
-            call.data["connection_index"],
-        )
+        with _reported("WiFi setup"):
+            try:
+                await coordinator.async_configure_wifi(
+                    call.data["market"],
+                    call.data["ssid"],
+                    call.data["password"],
+                    WIFI_SECURITY_TYPES[call.data["security"]],
+                    call.data["connection_index"],
+                )
+            except ValueError as err:
+                # An SSID or a passphrase longer than the frame holds.
+                raise ServiceValidationError(str(err)) from err
 
     async_register_admin_service(
         hass,
@@ -188,17 +207,24 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         coordinator = _coordinator(hass, call.data[ATTR_ENTRY_ID])
         channel = COMMAND_CHANNELS.get(coordinator.family)
         if channel is None:
-            raise ValueError(f"{coordinator.family.value} has no command channel")
+            raise ServiceValidationError(
+                f"{coordinator.family.value} has no command channel"
+            )
         text = call.data["payload"].replace(" ", "").replace(":", "")
         try:
             payload = bytes.fromhex(text)
         except ValueError as err:
-            raise ValueError(f"payload is not hex: {call.data['payload']}") from err
+            raise ServiceValidationError(
+                f"payload is not hex: {call.data['payload']}"
+            ) from err
         if not payload:
-            raise ValueError("payload is empty")
+            raise ServiceValidationError("payload is empty")
 
         cmd_uuid, rsp_uuid = channel
-        await coordinator.async_send_command(cmd_uuid, rsp_uuid, payload, probe=True)
+        with _reported("Command"):
+            await coordinator.async_send_command(
+                cmd_uuid, rsp_uuid, payload, probe=True
+            )
         # async_send_command returns the answer, but the record says more: what
         # the two characteristics offer, and whether anything could have come
         # back at all. That distinction is the whole point of asking.
@@ -210,7 +236,8 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
     async def _watch(call: ServiceCall) -> ServiceResponse:
         coordinator = _coordinator(hass, call.data[ATTR_ENTRY_ID])
-        return await coordinator.async_watch(call.data["seconds"])
+        with _reported("Watch"):
+            return await coordinator.async_watch(call.data["seconds"])
 
     async_register_admin_service(
         hass,

@@ -42,6 +42,7 @@ for _name in (
     "homeassistant.config_entries",
     "homeassistant.const",
     "homeassistant.core",
+    "homeassistant.exceptions",
     "homeassistant.helpers",
     "homeassistant.helpers.device_registry",
     "homeassistant.helpers.entity_platform",

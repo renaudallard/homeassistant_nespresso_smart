@@ -32,6 +32,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -156,7 +157,7 @@ class NespressoRecipeSelect(CoordinatorEntity[NespressoCoordinator], SelectEntit
             _LOGGER.info("Recipe set to %s (index %d)", option, index)
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
-            _LOGGER.error("Failed to set recipe: %s", err)
+            raise HomeAssistantError(f"Could not set the recipe: {err}") from err
 
 
 class NespressoLanguageSelect(CoordinatorEntity[NespressoCoordinator], SelectEntity):
@@ -199,7 +200,7 @@ class NespressoLanguageSelect(CoordinatorEntity[NespressoCoordinator], SelectEnt
             self.async_write_ha_state()
             _LOGGER.info("Language set to %s", option)
         except (BleakError, TimeoutError) as err:
-            _LOGGER.error("Failed to set language: %s", err)
+            raise HomeAssistantError(f"Could not set the language: {err}") from err
 
 
 class NespressoVertuoBrewTypeSelect(

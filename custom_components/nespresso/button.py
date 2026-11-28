@@ -34,6 +34,7 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -133,7 +134,9 @@ class NespressoFotaCheckButton(CoordinatorEntity[NespressoCoordinator], ButtonEn
             _LOGGER.info("FOTA check command sent to %s", self._address)
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
-            _LOGGER.error("Failed to send FOTA check: %s", err)
+            raise HomeAssistantError(
+                f"Could not ask for an update check: {err}"
+            ) from err
 
 
 class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonEntity):
@@ -324,4 +327,4 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
                 )
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
-            _LOGGER.error("Failed to send brew command: %s", err)
+            raise HomeAssistantError(f"Could not send the brew command: {err}") from err

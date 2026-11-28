@@ -32,6 +32,7 @@ from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -117,7 +118,9 @@ class NespressoCapsuleCounter(CoordinatorEntity[NespressoCoordinator], NumberEnt
             _LOGGER.info("Capsule counter set to %d", count)
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
-            _LOGGER.error("Failed to set the capsule counter: %s", err)
+            raise HomeAssistantError(
+                f"Could not set the capsule counter: {err}"
+            ) from err
 
 
 class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEntity):
@@ -164,4 +167,6 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
             _LOGGER.info("Water hardness set to %d", level)
             await self.coordinator.async_request_refresh()
         except (BleakError, TimeoutError) as err:
-            _LOGGER.error("Failed to set water hardness: %s", err)
+            raise HomeAssistantError(
+                f"Could not set the water hardness: {err}"
+            ) from err
