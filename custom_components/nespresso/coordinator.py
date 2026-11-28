@@ -926,8 +926,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """Restore brew counters from disk. Call once before the first refresh."""
         self.descaling_capsules = descaling_capsules
         self.descaling_days = descaling_days
+        # Raises on a read error other than a corrupt file, and then the
+        # defaults must not be written over the counters on disk.
+        stored = await self._counter_store.async_load()
         self._counters_loaded = True
-        if stored := await self._counter_store.async_load():
+        if stored:
             self.brew_total = stored.get("brew_total", 0)
             self.brews_since_descaling = stored.get("brews_since_descaling", 0)
             self.last_descaling = stored.get("last_descaling")
