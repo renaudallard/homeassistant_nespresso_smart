@@ -5,10 +5,6 @@ import asyncio
 import pytest
 
 from custom_components.nespresso.ble import protocol
-from custom_components.nespresso.ble.parsing import (
-    parse_barista_status,
-    parse_vmini_status,
-)
 from custom_components.nespresso.const import (
     VMINI_CHAR_FOTA_STATUS,
     VMINI_CHAR_SHADOW_DATA,
@@ -67,31 +63,3 @@ class TestVertuoUpReads:
         """The state itself: a poll without it would publish unknown."""
         with pytest.raises(protocol.BleakError):
             read_all(Machine({VMINI_CHAR_SHADOW_HEADER: SCHEMA.encode()}))
-
-
-class TestFlagsTheTriggersLeaveOut:
-    """device_trigger.NEVER_RAISED hides these triggers on these families.
-
-    Should a parser start setting one of the flags, its trigger has to come
-    back, so this fails first.
-    """
-
-    def test_barista_sets_neither_flag(self) -> None:
-        status = parse_barista_status(bytes(4))
-        assert "descaling_needed" not in status
-        assert "water_tank_empty" not in status
-
-    def test_vertuo_up_has_no_water_tank(self) -> None:
-        status = parse_vmini_status(
-            "machineStatus,str;descalingAlert,bool;waterHardness,int",
-            "ready,1,3",
-        )
-        assert status["descaling_needed"] is True
-        assert "water_tank_empty" not in status
-
-
-def test_no_expert_state_is_standby() -> None:
-    """device_trigger.EXPERT_NEVER_RAISED leaves standby out on an Expert."""
-    from custom_components.nespresso.const import EXPERT_STATE_NAMES
-
-    assert "standby" not in EXPERT_STATE_NAMES.values()

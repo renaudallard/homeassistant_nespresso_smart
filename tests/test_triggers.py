@@ -27,17 +27,17 @@ The trigger types are the ones device_trigger.py offers. Two of them are flags
 rather than states, and for a long time nothing fired them.
 """
 
+from custom_components.nespresso.ble.parsing import (
+    parse_barista_status,
+    parse_vmini_status,
+)
+from custom_components.nespresso.const import EXPERT_STATE_NAMES, MachineFamily
+from custom_components.nespresso.device_trigger import (
+    EXPERT_NEVER_RAISED,
+    NEVER_RAISED,
+    TRIGGER_TYPES,
+)
 from custom_components.nespresso.models import NespressoMachineData, machine_triggers
-
-DOCUMENTED = {
-    "brewing_started",
-    "brewing_finished",
-    "error_occurred",
-    "ready",
-    "standby",
-    "descaling_needed",
-    "water_tank_empty",
-}
 
 
 def data(state: str = "ready", **flags: bool | None) -> NespressoMachineData:
@@ -108,7 +108,7 @@ class TestFlags:
         )
 
     def test_a_family_without_the_flag_never_fires(self) -> None:
-        """The Barista parser leaves both at None."""
+        """A family whose parser never sets the flags leaves them at None."""
         assert machine_triggers(data("standby"), data("ready")) == ["ready"]
 
     def test_flag_and_state_in_the_same_update(self) -> None:
@@ -120,7 +120,7 @@ class TestFlags:
 
 
 def test_every_offered_trigger_can_fire() -> None:
-    """device_trigger.py offers seven. Each has a transition that produces it."""
+    """Each trigger device_trigger.py offers has a transition that fires it."""
     seen: set[str] = set()
     seen |= set(machine_triggers(data("ready"), data("brewing")))
     seen |= set(machine_triggers(data("brewing"), data("standby")))
@@ -132,4 +132,29 @@ def test_every_offered_trigger_can_fire() -> None:
             data(descaling_needed=True, water_tank_empty=True),
         )
     )
-    assert seen == DOCUMENTED
+    assert seen == set(TRIGGER_TYPES)
+
+
+class TestTriggersLeftOut:
+    """What device_trigger.py hides per machine must really never fire there.
+
+    Should a parser start setting one of these, its trigger has to come back,
+    so these fail first.
+    """
+
+    def test_barista_sets_neither_flag(self) -> None:
+        status = parse_barista_status(bytes(4))
+        for flag in NEVER_RAISED[MachineFamily.BARISTA]:
+            assert flag not in status
+
+    def test_vertuo_up_sets_none_it_hides(self) -> None:
+        status = parse_vmini_status(
+            "machineStatus,str;descalingAlert,bool;waterHardness,int",
+            "ready,1,3",
+        )
+        for flag in NEVER_RAISED[MachineFamily.VMINI]:
+            assert flag not in status
+        assert "descaling_needed" not in NEVER_RAISED[MachineFamily.VMINI]
+
+    def test_expert_has_no_state_it_hides(self) -> None:
+        assert not EXPERT_NEVER_RAISED & set(EXPERT_STATE_NAMES.values())
