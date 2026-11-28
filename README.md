@@ -170,7 +170,7 @@ This method is not available on iOS.
 
 ### Requirements
 
-- Home Assistant 2026.03 or newer
+- Home Assistant 2026.6 or newer
 - A Bluetooth adapter attached to Home Assistant, or an ESPHome Bluetooth
   proxy with `active: true`
 - Nespresso machine powered on and within BLE range
