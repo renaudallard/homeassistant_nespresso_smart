@@ -301,6 +301,27 @@ BARISTA_STATE_NAMES: Final[dict[int, str]] = {
     BaristaState.RECIPE_PAUSED: "paused",
 }
 
+# Expert state table, from MachineStateBuilder.defaultMachineStateFrom in the
+# Nespresso app (3.36.0); the Expert reads its state from byte[1] & 0x0F only.
+EXPERT_STATE_NAMES: Final[dict[int, str]] = {
+    0: "reset",
+    1: "heating",
+    2: "ready",
+    3: "descaling_ready",
+    4: "brewing",
+    5: "advanced_menu",
+    6: "descaling",
+    7: "steam_out",
+    8: "error",
+    9: "power_save",
+    10: "overheated",
+    11: "service_mode",
+    12: "ble_settings",
+    13: "factory_reset",
+    14: "water_hardness_settings",
+    15: "standby_delay_settings",
+}
+
 VERTUO_STATE_NAMES: Final[dict[int, str]] = {
     VertuoNextState.FACTORY_RESET: "factory_reset",
     VertuoNextState.HEATUP: "heating",

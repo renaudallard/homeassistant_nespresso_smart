@@ -156,7 +156,10 @@ class NespressoWaterHardness(CoordinatorEntity[NespressoCoordinator], NumberEnti
         _LOGGER.debug("Writing water hardness: %d", level)
         try:
             await self.coordinator.async_write_char(
-                VERTUO_CHAR_USER_SETTINGS, build_water_hardness(level)
+                VERTUO_CHAR_USER_SETTINGS,
+                build_water_hardness(level)[:3]
+                if self.coordinator.is_expert
+                else build_water_hardness(level),
             )
             _LOGGER.info("Water hardness set to %d", level)
             await self.coordinator.async_request_refresh()

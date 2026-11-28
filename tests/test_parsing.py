@@ -61,6 +61,7 @@ from custom_components.nespresso.ble.parsing import (
     parse_barista_status,
     parse_caps_counter,
     parse_error_information,
+    parse_expert_status,
     parse_general_user_settings,
     parse_serial_number,
     parse_venus_advertisement,
@@ -719,3 +720,44 @@ def _milk(payload: str) -> str:
 
 def _closed(payload: str) -> bool:
     return bool(parse_vertuonext_status(bytes.fromhex(payload))["brewing_unit_closed"])
+
+
+# ---------------------------------------------------------------------------
+# Expert status (MachineMonitoringOperations.fromByteToBuilder, bits MSB first,
+# bits 40-47 from byte 0 of CHAR_MACHINE_PARAMS)
+# ---------------------------------------------------------------------------
+
+
+class TestExpertStatus:
+    # Captured from a Nespresso Expert, firmware 5.0, after onboarding.
+    REAL = bytes.fromhex("44027fec80000000")
+
+    def test_real_capture(self) -> None:
+        result = parse_expert_status(self.REAL, b"")
+        assert result["machine_state"] == "ready"
+        assert result["pairing_key_state"] == "final"
+        assert result["descaling_needed"] is True
+        assert result["water_tank_empty"] is False
+        assert result["error_present"] is False
+        assert result["capsule_container_full"] is False
+        # 1023 is above the app's 1000 limit: stock tracking is off.
+        assert result["capsule_stock"] is None
+        assert result["brewing_unit_closed"] is True
+
+    def test_vertuo_parser_misreads_expert(self) -> None:
+        assert parse_vertuonext_status(self.REAL)["machine_state"] == "unknown"
+
+    def test_lever_open(self) -> None:
+        assert parse_expert_status(self.REAL, bytes(1))["brewing_unit_closed"] is False
+
+    def test_lever_unknown_without_params(self) -> None:
+        assert "brewing_unit_closed" not in parse_expert_status(self.REAL)
+
+    def test_brewing_with_stock(self) -> None:
+        # tank empty, container full, state 4, 42 capsules
+        data = bytes((0x01, 0x44, 42 >> 3, (42 & 0x07) << 5, 0, 0, 0, 0))
+        result = parse_expert_status(data, b"")
+        assert result["machine_state"] == "brewing"
+        assert result["water_tank_empty"] is True
+        assert result["capsule_container_full"] is True
+        assert result["capsule_stock"] == 42
