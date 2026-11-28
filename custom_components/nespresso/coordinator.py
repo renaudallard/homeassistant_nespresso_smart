@@ -1091,7 +1091,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     def _async_track_brew(self, current: str) -> None:
         """Count one brew per extraction.
 
-        Two edges count. Entry into a pour: a Vertuo Up only reports
+        Three edges count, as counts_as_brew decides. Entry into a pour: a
+        Vertuo Up only reports
         "brew/running" while a fresh extraction pours, and everything around
         it stays inside the brew namespace - the barcode read when a capsule
         is loaded ("brew/black reading"), the pause waiting for the button
@@ -1100,7 +1101,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         that never reaches a pour never counts, and a new capsule started
         from the pause always does. And entry into the brew namespace from
         outside it: a whole pour can fit between two polls, so the pause that
-        follows it may be the first sign of the brew.
+        follows it may be the first sign of the brew. And for the same reason
+        a barcode read followed straight by the pause or the top-up, which
+        only ever come after a pour.
 
         The baseline is the last state that was actually read. It is
         persisted with the counters, so a restart or reload keeps it: a
