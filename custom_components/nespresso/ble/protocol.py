@@ -60,7 +60,6 @@ from ..const import (
     COMMAND_FRAME_LEN,
     VERTUO_CHAR_AUTH,
     VERTUO_CHAR_CAPS_COUNTER,
-    VERTUO_CHAR_COMMAND_RSP,
     VERTUO_CHAR_ERROR_INFO,
     VERTUO_CHAR_ERROR_SELECTION,
     VERTUO_CHAR_INFO,
@@ -1248,11 +1247,9 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         )
         iot_market = await _read_optional(client, VERTUO_CHAR_IOT_MARKET, "iot_market")
 
-        # Only logged, so only read when debug logging would show it: any
-        # unsolicited data on the command response, and the GATT dump.
+        # With debug logging on, this also logs any unsolicited data on the
+        # command response, which is readable.
         gatt_dump = await _debug_dump(client)
-        if gatt_dump is not None:
-            await _read_optional(client, VERTUO_CHAR_COMMAND_RSP, "command_rsp")
 
         return RawMachineData(
             status_bytes=bytes(status),
