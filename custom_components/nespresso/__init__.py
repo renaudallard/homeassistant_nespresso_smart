@@ -288,6 +288,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.options.get(CONF_DESCALING_DAYS, DEFAULT_DESCALING_DAYS),
     )
 
+    # Passive fast path. The Venus advertisement carries the same MachineStatus
+    # bytes as the connected characteristic, roughly twice a second, so state
+    # and flags update almost instantly instead of once per scan interval.
+    # Registered with connectable=False so advertisements seen by
+    # non-connectable scanners (ESPHome proxies) count too, and before the
+    # first refresh: it also carries the pairing key state, which matters most
+    # on a machine refusing every read, whose first refresh fails. A failed
+    # setup runs the unload callbacks, so nothing is left registered.
+    @callback
+    def _async_on_advertisement(
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: BluetoothChange,
+    ) -> None:
+        raw = nespresso_manufacturer_data(service_info.manufacturer_data)
+        if not coordinator.async_apply_advertisement(raw):
+            return
+        # The state moved, so pull what the advertisement cannot carry -
+        # counters, error codes, settings. async_request_refresh is debounced
+        # by DataUpdateCoordinator, so a burst of transitions still results in
+        # a single connection.
+        hass.async_create_task(coordinator.async_request_refresh())
+
+    entry.async_on_unload(
+        bluetooth.async_register_callback(
+            hass,
+            _async_on_advertisement,
+            bluetooth.BluetoothCallbackMatcher(address=address, connectable=False),
+            bluetooth.BluetoothScanningMode.PASSIVE,
+        )
+    )
+
     await coordinator.async_config_entry_first_refresh()
 
     # Register device and set device_id for trigger events
@@ -334,36 +365,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         bluetooth.async_track_unavailable(
             hass, _async_on_ble_unavailable, address, connectable=True
-        )
-    )
-
-    # Passive fast path. The Venus advertisement carries the same MachineStatus
-    # bytes as the connected characteristic, roughly twice a second, so state
-    # and flags update almost instantly instead of once per scan interval.
-    # Registered separately from the availability callback above so the
-    # existing behaviour is untouched, and with connectable=False so
-    # advertisements seen by non-connectable scanners (ESPHome proxies) count
-    # too.
-    @callback
-    def _async_on_advertisement(
-        service_info: bluetooth.BluetoothServiceInfoBleak,
-        change: BluetoothChange,
-    ) -> None:
-        raw = nespresso_manufacturer_data(service_info.manufacturer_data)
-        if not coordinator.async_apply_advertisement(raw):
-            return
-        # The state moved, so pull what the advertisement cannot carry -
-        # counters, error codes, settings. async_request_refresh is debounced
-        # by DataUpdateCoordinator, so a burst of transitions still results in
-        # a single connection.
-        hass.async_create_task(coordinator.async_request_refresh())
-
-    entry.async_on_unload(
-        bluetooth.async_register_callback(
-            hass,
-            _async_on_advertisement,
-            bluetooth.BluetoothCallbackMatcher(address=address, connectable=False),
-            bluetooth.BluetoothScanningMode.PASSIVE,
         )
     )
 
