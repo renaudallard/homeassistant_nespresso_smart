@@ -69,9 +69,8 @@ from .const import (
 )
 from .coordinator import NespressoCoordinator, counter_store
 from .entity import (
-    device_name,
     has_milk_unit,
-    machine_model,
+    machine_device_info,
     platform_code,
     supports_brewing,
 )
@@ -374,11 +373,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register device and set device_id for trigger events
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, address)},
-        name=device_name(entry, coordinator),
-        manufacturer="Nespresso",
-        model=machine_model(entry, coordinator),
+        config_entry_id=entry.entry_id, **machine_device_info(entry, coordinator)
     )
     coordinator.set_device_id(device_entry.id)
 
