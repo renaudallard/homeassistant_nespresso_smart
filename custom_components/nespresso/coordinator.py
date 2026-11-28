@@ -214,6 +214,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.brew_temperature: str = "medium"
         self._keep_connection = False
         self._ble_lock = asyncio.Lock()
+        # Set once the entry unloads. A poll started from async_request_refresh
+        # is not the entry's task, so the unload does not cancel it, and it
+        # must neither keep its link nor publish, count or save when it ends.
+        self._closed = False
 
         # Brew counters. Persisted separately from the config entry so a
         # reload does not reset them.
@@ -286,6 +290,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     async def async_shutdown(self) -> None:
         """Disconnect persistent client on shutdown."""
+        self._closed = True
         await self._disconnect()
         await super().async_shutdown()
 
@@ -1011,6 +1016,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         all three come through here. Whichever sees a change first updates the
         data, and the others then see no change.
         """
+        if self._closed:
+            return
         self._async_track_brew(new.machine_state)
         self._fire_triggers(old, new)
 
@@ -1079,15 +1086,19 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     @callback
     def _async_save_counters(self) -> None:
         """Write counters with a delay so bursts do not thrash the disk."""
+        if self._closed:
+            return
         self._counter_store.async_delay_save(self._counters, COUNTER_SAVE_DELAY)
 
-    async def async_save_counters(self) -> None:
-        """Write counters now, in place of any delayed write still pending.
+    async def async_close(self) -> None:
+        """Stop taking updates and write the counters now.
 
-        A reload reads the store before a pending write would land, so the
-        coordinator it creates starts from the counts on disk and the brews
-        of the last COUNTER_SAVE_DELAY seconds are lost.
+        Written in place of any delayed write still pending: a reload reads
+        the store before that write would land, so the coordinator it creates
+        would start from older counts. Nothing is saved after this, or a poll
+        still running could bring the file back after a removal.
         """
+        self._closed = True
         await self._counter_store.async_save(self._counters())
 
     @callback
@@ -1338,7 +1349,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             raw = await protocol.async_read_all(client, self._on_polled_status)
 
             # Keep connection alive for persistent mode or pending brew
-            if self.persistent and self._status_uuid:
+            if self._closed:
+                await _close(client)
+            elif self.persistent and self._status_uuid:
                 notifiable = self._notifiable_chars(client)
                 for uuid, on_notify in self._notify_handlers().items():
                     if uuid != self._status_uuid and uuid not in notifiable:

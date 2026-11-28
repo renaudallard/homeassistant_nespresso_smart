@@ -392,5 +392,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         data = hass.data[DOMAIN].pop(entry.entry_id, None)
         if data is not None:
-            await data["coordinator"].async_save_counters()
+            await data["coordinator"].async_close()
     return unload_ok
