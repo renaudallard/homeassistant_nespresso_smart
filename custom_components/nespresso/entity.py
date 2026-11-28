@@ -131,13 +131,30 @@ def machine_device_info(
     Twelve entities spelled this out identically, which was eleven chances for
     two of them to disagree about what the device is called.
     """
-    data = coordinator.data
-    return DeviceInfo(
+    info = DeviceInfo(
         identifiers={(DOMAIN, entry.data["address"])},
         name=device_name(entry, coordinator),
         manufacturer="Nespresso",
         model=machine_model(entry, coordinator),
-        serial_number=data.serial_number if data else None,
-        sw_version=data.firmware_version if data else None,
-        hw_version=data.hardware_version if data else None,
     )
+    info.update(device_versions(coordinator))
+    return info
+
+
+def device_versions(coordinator: NespressoCoordinator) -> DeviceInfo:
+    """The serial and versions the machine has told us, and only those.
+
+    A field passed as None clears what the registry holds, so a Vertuo Up set
+    up while asleep, which reports none of them, would lose them for good.
+    """
+    info = DeviceInfo()
+    data = coordinator.data
+    if data is None:
+        return info
+    if data.serial_number is not None:
+        info["serial_number"] = data.serial_number
+    if data.firmware_version is not None:
+        info["sw_version"] = data.firmware_version
+    if data.hardware_version is not None:
+        info["hw_version"] = data.hardware_version
+    return info
