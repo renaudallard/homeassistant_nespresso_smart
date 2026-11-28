@@ -189,10 +189,10 @@ class NespressoConfigFlow(ConfigFlow, domain=DOMAIN):
             if token and auth_key is None:
                 errors["auth_token"] = "invalid_auth_token"
             else:
+                # Only async_step_bluetooth leads here, and it sets this.
+                assert self._discovery_info is not None
                 data: dict[str, Any] = {
-                    "address": self._discovery_info.address  # type: ignore[union-attr]
-                    if self._discovery_info
-                    else "",
+                    "address": self._discovery_info.address,
                     "family": self._family.value
                     if self._family
                     else MachineFamily.VERTUO_NEXT.value,
