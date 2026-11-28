@@ -741,8 +741,10 @@ The token is the auth key encoded as UTF-8 and zero-padded to 36 bytes.
 
 ### A machine only takes a token once
 
-A machine stores a CMID while it holds none, which is `CMID_TYPE` `0` (NONE) or
-`3` (UNDEFINED), and never again once one has taken. Write a
+A machine stores a CMID while it holds none, `CMID_TYPE` `0` (NONE), and never
+again once one has taken. The app and the integration also write one at `3`
+(UNDEFINED), but no machine has been seen to take it there: the one seen in that
+state only left it through a factory reset. Write a
 different key to a machine already at `FINAL` and it acknowledges the write, keeps
 the key it has, and then refuses every protected read with ATT `0x02`, which
 reaches a local adapter as `org.bluez.Error.NotPermitted`. This is confirmed on a
