@@ -1208,6 +1208,15 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 asleep = self._asleep_dataset()
                 self._async_note_update(self.data, asleep)
                 return asleep
+            if self._closed:
+                # A poll that waited on the lock, or whose held link the
+                # shutdown cut, would otherwise reach the machine from a dead
+                # entry, and could even onboard a removed entry's token. The
+                # data it had is returned, since a failure here would be
+                # logged as an error on every reload.
+                if self.data is not None:
+                    return self.data
+                raise UpdateFailed("The entry has been unloaded")
             raw = await self._async_connect_and_read()
 
         try:
@@ -1265,11 +1274,6 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     async def _async_connect_and_read(self) -> RawMachineData:
         """Connect, authenticate and read, keeping the link if it is wanted."""
-        if self._closed:
-            # A poll that waited on the lock, or whose held link the shutdown
-            # cut, would otherwise reach the machine from a dead entry, and
-            # could even onboard a removed entry's token.
-            raise UpdateFailed("The entry has been unloaded")
         # Disconnect any stale persistent client before reconnecting
         await self._disconnect()
 
