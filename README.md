@@ -418,7 +418,7 @@ Most Vertuo Next family machines driven over Bluetooth report **WiFi status** `n
 | Cleaning needed | No | Yes | No | Machine needs cleaning. This is the brewing side only, a machine asking for a milk cleaning says so through the Milk unit sensor instead. Not on an Expert |
 | Capsule container full | No | Yes | No | Used capsule container is full |
 | Brewing unit | No | Yes | No | Brewing unit head is open. A Creatista has been seen to open it by itself during the milk cleaning it asks for, so this can change with nobody at the machine |
-| Milk frother | No | Yes | No | Milk frother is running. Only on a Creatista or a Lattissima, and driven by the milk unit state below rather than the documented status bit, which does not fire on a Creatista |
+| Milk frother | No | Yes | No | Milk frother is running. Only on a Creatista or a Lattissima. On when the milk unit state below says frothing or the documented status bit is set, since that bit does not fire on a Creatista |
 | LED signaling | No | Yes | No | LED signaling is active (diagnostic). Not on an Expert |
 
 ### Controls
@@ -497,7 +497,7 @@ Detailed protocol documentation from the APK decompilation is available under [d
 
 ## Configuration
 
-After adding the machine, go to **Settings > Devices & Services > Nespresso > Configure** to set:
+After adding the machine, go to **Settings > Devices & services > Nespresso Smart > Configure** to set:
 
 - **Poll interval** (10-600 seconds, default 60): how often to read machine status
 - **Persistent connection** (off by default): keeps the BLE connection open for real-time GATT notifications, and polls, commands and settings changes go over it instead of connecting again. Gives instant status updates but blocks the Nespresso mobile app.
