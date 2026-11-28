@@ -315,9 +315,9 @@ the default, and without `web_server`.
 ### Through a local Bluetooth adapter
 
 BlueZ raises the link security itself and then waits for a pairing agent that
-nothing in Home Assistant registers, so the operation hangs instead of
-failing: the config entry stays stuck in "initializing" and nothing says why.
-The symptom in the log is:
+nothing in Home Assistant registers, so the operation gets no answer. Each one
+runs into the integration's ten second timeout and setup keeps retrying. The
+symptom in the log is:
 
 ```
 Reading onboard status from AA:BB:CC:DD:EE:FF timed out, so the link is not
