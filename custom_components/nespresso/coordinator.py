@@ -477,6 +477,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 BleakClient, self._device(), self.address, max_attempts=2
             )
         try:
+            if self._closed:
+                # The entry went while the connect was under way, and the
+                # auth below could onboard its token.
+                raise BleakError("The entry has been unloaded")
             if self.auth_key and not await _authenticate(
                 client, self.auth_key, self.family, self.send_tx_level
             ):
@@ -1385,6 +1389,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 client = await establish_connection(
                     BleakClient, device, self.address, max_attempts=3
                 )
+                if self._closed:
+                    raise _Unloaded
                 auth_ok = await _authenticate(
                     client, self.auth_key, self.family, self.send_tx_level
                 )
