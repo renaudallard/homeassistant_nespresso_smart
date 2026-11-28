@@ -104,8 +104,8 @@ This follows RFC 7636 (PKCE) for preventing authorization code interception atta
    third-party client running against the live service
 3. **Rotation**: the refresh token rotates on every refresh. A client that does
    not persist the rotated value locks the account out on its next start
-3. **Refresh**: When access_token expires, refresh_token obtains new pair
-4. **Revocation**: On logout, refresh_token is revoked server-side
+4. **Refresh**: When access_token expires, refresh_token obtains new pair
+5. **Revocation**: On logout, refresh_token is revoked server-side
 
 ---
 
