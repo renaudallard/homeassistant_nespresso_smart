@@ -107,6 +107,19 @@ class TestPrepareLink:
         assert second.pair_calls == 1
 
 
+class TestRememberedAcrossRestarts:
+    def test_restored_machine_is_encrypted_up_front(self) -> None:
+        """What the coordinator restores from disk drives the first read."""
+        client = FakeClient()
+        protocol.remember_encryption(client.address)
+        assert protocol.needs_encryption(client.address)
+        asyncio.run(protocol._prepare_link(client))
+        assert client.pair_calls == 1
+
+    def test_unknown_machine_is_not_reported(self) -> None:
+        assert not protocol.needs_encryption(FakeClient().address)
+
+
 class TestElevateRecordsTheAddress:
     def _err(self, code: int) -> Exception:
         inner = type("Inner", (), {"error": code})()

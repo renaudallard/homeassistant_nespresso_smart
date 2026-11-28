@@ -251,9 +251,8 @@ _ENCRYPTED: weakref.WeakSet[BleakClient] = weakref.WeakSet()
 # on a machine already known to want it is the same pairing request, one failed
 # read earlier.
 #
-# Lost on restart by design, so the first poll after one goes back to learning
-# it the noisy way. Persisting it would mean writing to the config entry from
-# the BLE layer for the sake of one log line.
+# The coordinator keeps it on disk with the brew counters, through the two
+# functions below, so a restart does not go back to learning it the noisy way.
 _NEEDS_ENCRYPTION: set[str] = set()
 
 # How many pairing requests may fail for an address before we stop asking on
@@ -275,7 +274,7 @@ PAIR_RETRY_EVERY = 20
 # Failed pairing requests per address. Keyed on the address and not on the
 # client, because establish_connection builds a fresh BleakClient for every
 # connection, so anything hanging off the client resets twice a poll and can
-# never count. Lost on restart, like _NEEDS_ENCRYPTION above.
+# never count. Lost on restart, unlike _NEEDS_ENCRYPTION above.
 _PAIR_FAILURES: dict[str, int] = {}
 
 # The pairing failure reasons worth naming, from esp_ble_auth_fail_rsn_t.
@@ -380,13 +379,23 @@ def _is_read_not_permitted(err: BaseException) -> bool:
     return getattr(err, "dbus_error_details", None) == "Read not permitted"
 
 
+def needs_encryption(address: str) -> bool:
+    """True when this machine has refused an operation over a plain link."""
+    return address in _NEEDS_ENCRYPTION
+
+
+def remember_encryption(address: str) -> None:
+    """Restore what needs_encryption said before a restart."""
+    _NEEDS_ENCRYPTION.add(address)
+
+
 async def _prepare_link(client: BleakClient) -> bool:
     """Encrypt the link before the first read, on a machine known to want it.
 
-    Only ever fires for an address that has already answered ATT 5 or 15, which
-    keeps it away from a local adapter: BlueZ raises security by itself and
-    never surfaces those codes, so nothing here can start waiting on a pairing
-    agent that nobody registers.
+    Only ever fires for an address that has answered ATT 5 or 15, in this run
+    or one before it, which keeps it away from a local adapter: BlueZ raises
+    security by itself and never surfaces those codes, so nothing here can
+    start waiting on a pairing agent that nobody registers.
 
     Returns True when protected characteristics are worth attempting. False
     means this machine has already refused a plain read at least once and the

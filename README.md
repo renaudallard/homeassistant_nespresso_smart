@@ -681,8 +681,9 @@ once per poll.
 
 The integration remembers which machines have asked for an encrypted link and
 raises it before the first read on the next connection, so the warning stops
-after the first poll. It starts again once after a Home Assistant restart,
-because that memory is not persisted.
+after the first poll. That memory is saved with the brew counters, so a reload
+or a Home Assistant restart does not bring the warning back. Removing the
+machine from Home Assistant deletes it along with the counters.
 
 ### "Could not encrypt the link"
 

@@ -73,6 +73,8 @@ from .ble.protocol import (
     generate_auth_key,
     get_protocol,
     link_is_plain,
+    needs_encryption,
+    remember_encryption,
 )
 from .ble.recipe import parse_recipe_info
 from .const import (
@@ -217,6 +219,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self.descaling_capsules = 0
         self.descaling_days = 0
         self._counter_store = counter_store(hass, address)
+        # Whether the store already says this machine wants an encrypted link.
+        self._encryption_saved = False
         self._client: BleakClient | None = None
         self._status_uuid = self._get_status_uuid()
         # Schema of the VMini device shadow, cached from the last full read
@@ -878,6 +882,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             self.brews_since_descaling = stored.get("brews_since_descaling", 0)
             self.last_descaling = stored.get("last_descaling")
             self._brew_track_baseline = stored.get("machine_state")
+            if stored.get("needs_encryption"):
+                remember_encryption(self.address)
+                self._encryption_saved = True
         if self.last_descaling is None:
             # No reference point yet, so start the clock now. Otherwise the
             # time half of the schedule could never trigger.
@@ -1063,6 +1070,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             "brews_since_descaling": self.brews_since_descaling,
             "last_descaling": self.last_descaling,
             "machine_state": self._brew_track_baseline,
+            "needs_encryption": needs_encryption(self.address),
         }
 
     @callback
@@ -1305,6 +1313,12 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 )
                 if not auth_ok:
                     _LOGGER.debug("Auth failed on the second attempt")
+
+            # Learnt from a refusal, so save it now rather than repeat that
+            # refusal after the next restart.
+            if needs_encryption(self.address) and not self._encryption_saved:
+                self._encryption_saved = True
+                self._async_save_counters()
 
             # Two pairing requests have failed and nothing here can ask for a
             # third: _pair marks the client either way, so the read below would
