@@ -300,10 +300,14 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         return None
 
     async def async_shutdown(self) -> None:
-        """Disconnect persistent client on shutdown."""
+        """Disconnect persistent client on shutdown.
+
+        The timers stop first, so none starts a poll while the disconnect
+        runs, which can take ten seconds on BlueZ.
+        """
         self._closed = True
-        await self._disconnect()
         await super().async_shutdown()
+        await self._disconnect()
 
     async def _disconnect(self) -> None:
         """Disconnect the persistent BLE client if connected."""
@@ -1257,6 +1261,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
     async def _async_connect_and_read(self) -> RawMachineData:
         """Connect, authenticate and read, keeping the link if it is wanted."""
+        if self._closed:
+            # A poll that waited on the lock, or whose held link the shutdown
+            # cut, would otherwise reach the machine from a dead entry, and
+            # could even onboard a removed entry's token.
+            raise UpdateFailed("The entry has been unloaded")
         # Disconnect any stale persistent client before reconnecting
         await self._disconnect()
 
