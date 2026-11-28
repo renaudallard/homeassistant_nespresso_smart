@@ -47,6 +47,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.typing import UNDEFINED
 
 from .ble.parsing import nespresso_manufacturer_data
 from .ble.protocol import generate_auth_key
@@ -69,6 +70,7 @@ from .const import (
 )
 from .coordinator import NespressoCoordinator, counter_store
 from .entity import (
+    device_versions,
     has_milk_unit,
     machine_device_info,
     platform_code,
@@ -376,6 +378,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_id=entry.entry_id, **machine_device_info(entry, coordinator)
     )
     coordinator.set_device_id(device_entry.id)
+
+    # Entities hand the registry their device info only when they are added,
+    # so a firmware update would not reach the device page until a reload.
+    @callback
+    def _async_update_device() -> None:
+        known = device_versions(coordinator)
+        device_registry.async_update_device(
+            device_entry.id,
+            serial_number=known.get("serial_number", UNDEFINED),
+            sw_version=known.get("sw_version", UNDEFINED),
+            hw_version=known.get("hw_version", UNDEFINED),
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_update_device))
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {

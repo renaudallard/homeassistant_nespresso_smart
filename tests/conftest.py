@@ -47,6 +47,7 @@ for _name in (
     "homeassistant.helpers.device_registry",
     "homeassistant.helpers.entity_platform",
     "homeassistant.helpers.service",
+    "homeassistant.helpers.typing",
     "homeassistant.helpers.update_coordinator",
     "homeassistant.helpers.storage",
     "homeassistant.data_entry_flow",
