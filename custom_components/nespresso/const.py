@@ -323,6 +323,10 @@ EXPERT_STATE_NAMES: Final[dict[int, str]] = {
     15: "standby_delay_settings",
 }
 
+# Binary sensors the Expert has nothing for. Its status in the app carries no
+# cleaning or LED flag, so both would only ever read off.
+EXPERT_ABSENT_BINARY_SENSORS: Final = frozenset({"cleaning_needed", "led_signaling"})
+
 VERTUO_STATE_NAMES: Final[dict[int, str]] = {
     VertuoNextState.FACTORY_RESET: "factory_reset",
     VertuoNextState.HEATUP: "heating",

@@ -59,6 +59,7 @@ from .const import (
     DEFAULT_DESCALING_DAYS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    EXPERT_ABSENT_BINARY_SENSORS,
     WIFI_SECURITY_TYPES,
     MachineFamily,
 )
@@ -224,10 +225,16 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
 
 @callback
-def _async_remove_stale_entities(hass: HomeAssistant, address: str) -> None:
+def _async_remove_stale_entities(
+    hass: HomeAssistant, address: str, is_expert: bool
+) -> None:
     """Drop registry entries left behind by entities we no longer create."""
     registry = er.async_get(hass)
-    for platform, key in REMOVED_ENTITIES:
+    stale = list(REMOVED_ENTITIES)
+    if is_expert:
+        # An Expert had both up to v0.5.38.
+        stale += [(Platform.BINARY_SENSOR, k) for k in EXPERT_ABSENT_BINARY_SENSORS]
+    for platform, key in stale:
         entity_id = registry.async_get_entity_id(platform, DOMAIN, f"{address}_{key}")
         if entity_id is None:
             continue
@@ -359,7 +366,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_register_services(hass)
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
-    _async_remove_stale_entities(hass, address)
+    _async_remove_stale_entities(hass, address, coordinator.is_expert)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _LOGGER.debug("Nespresso %s setup complete, device_id=%s", address, device_entry.id)
     return True

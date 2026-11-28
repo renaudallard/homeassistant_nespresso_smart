@@ -415,11 +415,11 @@ Most Vertuo Next family machines driven over Bluetooth report **WiFi status** `n
 | Induction heater | Yes | No | No | Induction heater is active |
 | Water tank empty | No | Yes | No | Water tank needs refilling |
 | Descaling needed | No | Yes | Yes | Machine needs descaling |
-| Cleaning needed | No | Yes | No | Machine needs cleaning. This is the brewing side only, a machine asking for a milk cleaning says so through the Milk unit sensor instead |
+| Cleaning needed | No | Yes | No | Machine needs cleaning. This is the brewing side only, a machine asking for a milk cleaning says so through the Milk unit sensor instead. Not on an Expert |
 | Capsule container full | No | Yes | No | Used capsule container is full |
 | Brewing unit | No | Yes | No | Brewing unit head is open. A Creatista has been seen to open it by itself during the milk cleaning it asks for, so this can change with nobody at the machine |
 | Milk frother | No | Yes | No | Milk frother is running. Only on a Creatista or a Lattissima, and driven by the milk unit state below rather than the documented status bit, which does not fire on a Creatista |
-| LED signaling | No | Yes | No | LED signaling is active (diagnostic) |
+| LED signaling | No | Yes | No | LED signaling is active (diagnostic). Not on an Expert |
 
 ### Controls
 
@@ -562,7 +562,7 @@ registered to a Nespresso account through their app as well. See
 - **Power save**: The machine cannot be woken up over BLE. It must be physically awake (press the button, light steady green) before brewing or certain commands work. The Nespresso app can wake WiFi-connected machines through the cloud, but BLE has no wake command.
 - **Vertuo Up sleep**: A Vertuo Up goes to standby after about 20 minutes idle and stops advertising shortly after. That is sleep, not a fault: the integration keeps its entities available and shows the state as `asleep`, and they update again when the machine wakes. A Vertuo Up that is unplugged or out of range looks the same over Bluetooth, so it shows `asleep` too. A machine that still advertises but refuses connections is treated as unavailable.
 - **Vertuo Up notifications**: With a persistent connection, a Vertuo Up (firmware 4.5.3) only notifies the top-up pause, the top-up and `ready`. The capsule read and the pour (`brew/black reading`, `brew/running`) are only seen by a poll. Starting from `ready`, **brewing_started** can therefore fire up to one poll interval late, and at the latest when the pour pauses. Brews are still counted while the link is held. Set the poll interval to 10 to 15 seconds to see the pour sooner.
-- **Expert**: Its state, flags and brewing unit are decoded as the Nespresso app does, but the machine has only been seen ready and in power save so far, and brewing has not been tried on it. Cleaning needed and LED signaling are not in its status and stay off. Its brewing unit position comes from a second characteristic that only the poll reads, so it can take up to a poll interval to show a change. There is no Capsule counter while stock tracking is off on the machine, since the count then reads as disabled.
+- **Expert**: Its state, flags and brewing unit are decoded as the Nespresso app does, but the machine has only been seen ready and in power save so far, and brewing has not been tried on it. Cleaning needed and LED signaling are not in its status, so it has neither. Its brewing unit position comes from a second characteristic that only the poll reads, so it can take up to a poll interval to show a change. There is no Capsule counter while stock tracking is off on the machine, since the count then reads as disabled.
 - **BLE range**: The machine must be within Bluetooth range of the Home Assistant host.
 - **Single client**: Only one BLE client can connect at a time. If the Nespresso app is connected, HA will retry on the next poll.
 

@@ -39,7 +39,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MachineFamily
+from .const import DOMAIN, EXPERT_ABSENT_BINARY_SENSORS, MachineFamily
 from .coordinator import NespressoCoordinator
 from .entity import has_milk_unit, machine_device_info
 from .models import NespressoMachineData
@@ -147,10 +147,13 @@ async def async_setup_entry(
     family = MachineFamily(entry.data["family"])
 
     milk = has_milk_unit(entry, coordinator)
+    absent = EXPERT_ABSENT_BINARY_SENSORS if coordinator.is_expert else frozenset()
     entities = [
         NespressoBinarySensor(coordinator, entry, desc)
         for desc in BINARY_SENSOR_DESCRIPTIONS
-        if family in desc.families and (milk or not desc.milk_only)
+        if family in desc.families
+        and (milk or not desc.milk_only)
+        and desc.key not in absent
     ]
     async_add_entities(entities)
 
