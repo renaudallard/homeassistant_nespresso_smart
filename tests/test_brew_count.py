@@ -55,6 +55,11 @@ class TestVertuoUp:
         """The pause after it is the first sign of the brew."""
         assert counts_as_brew("ready", "brew/waiting for top up")
 
+    def test_a_pour_missed_after_the_barcode_read(self) -> None:
+        """A poll saw the read, the pour went unseen, then the pause notified."""
+        assert counts_as_brew("brew/black reading", "brew/waiting for top up")
+        assert counts_as_brew("brew/black reading", "brew/top up")
+
     def test_phases_of_one_brew(self) -> None:
         assert not counts_as_brew("brew/running", "brew/waiting for top up")
         assert not counts_as_brew("brew/waiting for top up", "brew/top up")

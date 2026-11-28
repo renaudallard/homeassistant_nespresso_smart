@@ -115,19 +115,29 @@ def is_brew_run_state(state: str) -> bool:
     return state in ("brewing", "brew/running")
 
 
+# Phases a Vertuo Up only reaches after a pour (fw 4.5.3): the pause waiting
+# for the top-up button, and the top-up pour itself.
+AFTER_POUR_STATES: tuple[str, ...] = ("brew/waiting for top up", "brew/top up")
+
+
 def counts_as_brew(previous: str, current: str) -> bool:
     """Return whether a change from previous to current is a new brew.
 
     Entering a pour always is. So is entering the brew namespace from
     outside it, since a whole pour can fit between two polls, except into a
-    barcode read, which may never reach a pour. A phase change inside one
+    barcode read, which may never reach a pour. For the same reason a barcode
+    read followed straight by a phase that only comes after a pour is one:
+    the pour is never notified, so a poll that saw the read and missed the
+    pour would otherwise lose the coffee. Any other phase change inside one
     brew is not.
     """
     if previous == current or not is_brew_state(current):
         return False
     if is_brew_run_state(current):
         return True
-    return not is_brew_state(previous) and not current.endswith(" reading")
+    if not is_brew_state(previous):
+        return not current.endswith(" reading")
+    return previous.endswith(" reading") and current in AFTER_POUR_STATES
 
 
 def machine_triggers(old: NespressoMachineData, new: NespressoMachineData) -> list[str]:
