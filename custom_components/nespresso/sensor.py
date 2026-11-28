@@ -41,11 +41,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    BARISTA_STATE_NAMES,
+    ALL_STATE_NAMES,
     DOMAIN,
-    EXPERT_STATE_NAMES,
     MILK_UNIT_STATE_NAMES,
-    VERTUO_STATE_NAMES,
     WIFI_STATUS_NAMES,
     MachineFamily,
 )
@@ -53,13 +51,6 @@ from .coordinator import NespressoCoordinator
 from .entity import has_milk_unit, machine_device_info
 from .models import NespressoMachineData
 from .timer_sensor import NespressoBrewingDuration
-
-ALL_STATE_OPTIONS: list[str] = sorted(
-    set(BARISTA_STATE_NAMES.values())
-    | set(VERTUO_STATE_NAMES.values())
-    | set(EXPERT_STATE_NAMES.values())
-    | {"unknown"}
-)
 
 
 @dataclass(frozen=True)
@@ -78,7 +69,7 @@ SENSOR_DESCRIPTIONS: tuple[NespressoSensorDescription, ...] = (
         name=None,
         icon="mdi:coffee-maker",
         device_class=SensorDeviceClass.ENUM,
-        options=ALL_STATE_OPTIONS,
+        options=ALL_STATE_NAMES,
         families=frozenset({MachineFamily.BARISTA, MachineFamily.VERTUO_NEXT}),
         value_fn=lambda d: d.machine_state,
     ),

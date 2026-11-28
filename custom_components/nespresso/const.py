@@ -352,6 +352,15 @@ VERTUO_STATE_NAMES: Final[dict[int, str]] = {
     VertuoNextState.RINSING_PAUSED: "rinsing_paused",
 }
 
+# Every state the Barista, Vertuo Next and Expert tables can report, shared by
+# the state sensor and the state change event so that neither lacks one.
+ALL_STATE_NAMES: Final[list[str]] = sorted(
+    set(BARISTA_STATE_NAMES.values())
+    | set(VERTUO_STATE_NAMES.values())
+    | set(EXPERT_STATE_NAMES.values())
+    | {"unknown"}
+)
+
 MACHINE_FAMILY_NAMES: Final[dict[MachineFamily, str]] = {
     MachineFamily.BARISTA: "Barista",
     MachineFamily.VERTUO_NEXT: "Vertuo Next",
