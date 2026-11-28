@@ -392,3 +392,59 @@ class TestLinkIsPlain:
         protocol._NEEDS_ENCRYPTION.add(first.address)
         asyncio.run(protocol._prepare_link(first))
         assert protocol.link_is_plain(FakeClient()) is True
+
+
+class UnpairedClient(TalkingClient):
+    """A machine at CMID_TYPE NONE, which stores whatever token comes first."""
+
+    async def read_gatt_char(self, char: str) -> bytearray:
+        self.reads += 1
+        return bytearray(b"\x00")
+
+
+class TestStopBeforeTheToken:
+    """An entry removed while auth runs must not leave its token behind.
+
+    A pairing request alone can take BLE_PAIR_TIMEOUT, and an unpaired machine
+    keeps the first token written to it, locking out the entry that replaces
+    the removed one.
+    """
+
+    def test_stopped_before_auth_writes_nothing(self) -> None:
+        client = UnpairedClient()
+        assert (
+            asyncio.run(
+                protocol._authenticate(
+                    client,
+                    "8" + "0" * 15,
+                    protocol.MachineFamily.VERTUO_NEXT,
+                    stop=lambda: True,
+                )
+            )
+            is False
+        )
+        assert client.writes == 0
+
+    def test_stopped_during_the_pairing_writes_nothing(self) -> None:
+        client = UnpairedClient()
+        protocol._NEEDS_ENCRYPTION.add(client.address)
+        stopped = False
+
+        async def pair() -> bool:
+            nonlocal stopped
+            stopped = True
+            return True
+
+        client.pair = pair
+        assert (
+            asyncio.run(
+                protocol._authenticate(
+                    client,
+                    "8" + "0" * 15,
+                    protocol.MachineFamily.VERTUO_NEXT,
+                    stop=lambda: stopped,
+                )
+            )
+            is False
+        )
+        assert client.writes == 0

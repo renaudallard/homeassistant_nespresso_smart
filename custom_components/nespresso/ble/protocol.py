@@ -577,11 +577,16 @@ _AUTH_UUIDS: dict[str, dict[str, str]] = {
 }
 
 
+def _never() -> bool:
+    return False
+
+
 async def _authenticate(
     client: BleakClient,
     auth_key: str,
     family: MachineFamily,
     send_tx_level: bool = True,
+    stop: Callable[[], bool] = _never,
 ) -> bool:
     """Authenticate with the Nespresso machine.
 
@@ -594,9 +599,14 @@ async def _authenticate(
     _gatt_op asks the proxy to pair. Through a local adapter BlueZ raises the
     security itself and then waits for a pairing agent nobody registers, so
     the operation hangs instead.
+
+    stop says the entry this runs for has gone. It is asked before every
+    write of the token, since a pairing request alone can take
+    BLE_PAIR_TIMEOUT, and a removed entry's token written to an unpaired
+    machine would lock out the entry that replaces it.
     """
     address = client.address
-    if not await _prepare_link(client):
+    if not await _prepare_link(client) or stop():
         # Stop here rather than spend BLE_OP_TIMEOUT apiece finding out.
         #
         # We only get a False from a machine that has already refused a plain
@@ -635,7 +645,7 @@ async def _authenticate(
     # all, just write the CMID and let the verify decide.
     if state in CMID_TYPE_UNPAIRED:
         state = await _onboard(
-            client, uuids, auth_bytes, address, family, state, send_tx_level
+            client, uuids, auth_bytes, address, family, state, send_tx_level, stop
         )
         if not client.is_connected:
             # Everything below would fail with "characteristic not found",
@@ -643,6 +653,8 @@ async def _authenticate(
             # the machine did. _onboard has already said what happened.
             return False
 
+    if stop():
+        return False
     # Write CMID with response (matches APK and bulldog)
     try:
         await _write(client, uuids["auth"], auth_bytes)
@@ -939,6 +951,7 @@ async def _onboard(
     family: MachineFamily,
     state: int | None,
     send_tx_level: bool = True,
+    stop: Callable[[], bool] = _never,
 ) -> int | None:
     """Give the machine our auth token and wait until it accepts it.
 
@@ -955,6 +968,8 @@ async def _onboard(
     _LOGGER.info("Onboarding %s (%s) with new auth key", address, family.value)
 
     for attempt in range(1, ONBOARD_ATTEMPTS + 1):
+        if stop():
+            return state
         state, tx_acknowledged = await _onboard_once(
             client, uuids, auth_bytes, address, state, send_tx_level
         )

@@ -482,7 +482,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 # auth below could onboard its token.
                 raise BleakError("The entry has been unloaded")
             if self.auth_key and not await _authenticate(
-                client, self.auth_key, self.family, self.send_tx_level
+                client,
+                self.auth_key,
+                self.family,
+                self.send_tx_level,
+                self._unloaded,
             ):
                 raise BleakError("Machine did not accept the auth token")
         except BaseException:
@@ -911,6 +915,10 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     @property
     def closed(self) -> bool:
         """Whether the entry this coordinator served has unloaded."""
+        return self._closed
+
+    def _unloaded(self) -> bool:
+        """The same, as the stop check _authenticate takes."""
         return self._closed
 
     @property
@@ -1379,7 +1387,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 _LOGGER.debug("Generated new auth key: %s****", self.auth_key[:4])
 
             auth_ok = await _authenticate(
-                client, self.auth_key, self.family, self.send_tx_level
+                client,
+                self.auth_key,
+                self.family,
+                self.send_tx_level,
+                self._unloaded,
             )
             if not auth_ok:
                 _LOGGER.info("Auth failed, reconnecting for retry")
@@ -1392,10 +1404,16 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 if self._closed:
                     raise _Unloaded
                 auth_ok = await _authenticate(
-                    client, self.auth_key, self.family, self.send_tx_level
+                    client,
+                    self.auth_key,
+                    self.family,
+                    self.send_tx_level,
+                    self._unloaded,
                 )
                 if not auth_ok:
                     _LOGGER.debug("Auth failed on the second attempt")
+            if self._closed:
+                raise _Unloaded
 
             # Learnt from a refusal, so save it now rather than repeat that
             # refusal after the next restart.
