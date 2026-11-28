@@ -68,6 +68,8 @@ from .ble.parsing import (
 from .ble.protocol import (
     _authenticate,
     _decode_ble_string,
+    _read,
+    _write,
     async_configure_wifi,
     async_scan_wifi,
     generate_auth_key,
@@ -512,7 +514,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     async def async_write_char(self, char_uuid: str, data: bytes) -> None:
         """Write one characteristic on a fresh authenticated session."""
         async with self._session() as client:
-            await client.write_gatt_char(char_uuid, data, response=True)
+            await _write(client, char_uuid, data)
             _LOGGER.debug("Write %s: %s", char_uuid, data.hex())
 
     @staticmethod
@@ -530,7 +532,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         if self._status_uuid is None:
             return None
         try:
-            return bytes(await client.read_gatt_char(self._status_uuid)).hex()
+            return bytes(await _read(client, self._status_uuid)).hex()
         except Exception as err:  # noqa: BLE001
             _LOGGER.debug("Status read failed: %s", err)
             return None
@@ -664,7 +666,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 # been asked three times over.
                 started = time.monotonic()
                 try:
-                    await client.write_gatt_char(cmd_uuid, data, response=True)
+                    await _write(client, cmd_uuid, data)
                     record["write"] = "accepted"
                 except Exception as err:
                     record["write"] = f"refused: {err}"
@@ -807,7 +809,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                     record["samples"] += 1
                     for uuid in readable:
                         try:
-                            raw = bytes(await client.read_gatt_char(uuid))
+                            raw = bytes(await _read(client, uuid))
                         except Exception as err:  # noqa: BLE001
                             _LOGGER.debug("Watch read of %s failed: %s", uuid, err)
                             continue
