@@ -1061,14 +1061,21 @@ sees anything, so the request never happens there.
 
 ### Write Operation Flow
 
-All write operations (recipe, language, water hardness, FOTA) use the same pattern:
+All write operations (recipe, language, water hardness, capsule counter, FOTA)
+use the same pattern:
 
 1. **Acquire BLE lock**: Same lock as read, prevents concurrent access
-2. **Connect**: `establish_connection()` with 2 retry attempts
-3. **Authenticate**: `_authenticate()` writes CMID with response
-4. **Write**: `write_gatt_char()` with `response=True`
-5. **Disconnect**: Always, even on error
-6. **Refresh**: `async_request_refresh()` to update sensors
+2. **Reuse or connect**: a link held open by a persistent connection or a brew
+   is used as it stands; otherwise `establish_connection()` with 2 retry
+   attempts
+3. **Authenticate**: `_authenticate()` writes CMID with response, on a fresh
+   connection only
+4. **Write**: `_write()`, a write with response bounded by `BLE_OP_TIMEOUT`,
+   which encrypts the link and retries once if the machine asks for it
+5. **Disconnect**: a fresh connection always, even on error; a held link stays
+   open
+6. **Refresh**: `async_request_refresh()` to update sensors, except after the
+   language, which no poll reads back
 
 ### Thread Safety
 
