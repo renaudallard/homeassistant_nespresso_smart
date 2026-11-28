@@ -1260,15 +1260,15 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         except Exception:  # noqa: BLE001
             _LOGGER.debug("IoT market name not available")
 
-        # Read command response for any unsolicited data (debugging)
-        try:
-            cmd_rsp = await _read(client, VERTUO_CHAR_COMMAND_RSP)
-            _LOGGER.debug("VertuoNext command response: %s", cmd_rsp.hex())
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("VertuoNext command response not readable")
-        # GATT dump only when debug logging is active
+        # Only logged, so only read when debug logging would show it: any
+        # unsolicited data on the command response, and the GATT dump.
         gatt_dump = None
         if _LOGGER.isEnabledFor(logging.DEBUG):
+            try:
+                cmd_rsp = await _read(client, VERTUO_CHAR_COMMAND_RSP)
+                _LOGGER.debug("VertuoNext command response: %s", cmd_rsp.hex())
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug("VertuoNext command response not readable")
             gatt_dump = await _dump_all_characteristics(client)
 
         return RawMachineData(
