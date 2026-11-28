@@ -769,8 +769,9 @@ at debug, under `custom_components.nespresso.ble.protocol`.
 
 ### Reading the pairing state without connecting
 
-The advertisement carries the pairing state in bits 5-6 of its first byte, so it
-stays readable even while the machine refuses every connected read. Turn on
+On the Vertuo Next family, the Expert included, the advertisement carries the
+pairing state in bits 5-6 of its first byte, so it stays readable even while the
+machine refuses every connected read. A Barista's and a Vertuo Up's are not read. Turn on
 debug logging and look for `Pairing key state for ... is now`. Once the machine
 has set up, the integration's diagnostics also carry it, under
 `debug_info.pairing_key_state`; a machine refusing every read never gets that
