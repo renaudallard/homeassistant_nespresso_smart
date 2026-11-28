@@ -403,7 +403,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
-        if not coordinator.last_update_success:
+        # A Vertuo Up that fell asleep still counts as a successful update, and
+        # its first advertisement is the only sign it woke: a capsule loaded
+        # then would otherwise run its pour before the next poll looks.
+        if not coordinator.last_update_success or coordinator.asleep:
             _LOGGER.debug("Machine %s detected, triggering refresh", address)
             hass.async_create_task(coordinator.async_request_refresh())
 

@@ -913,6 +913,15 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self._keep_connection = True
 
     @property
+    def asleep(self) -> bool:
+        """Whether the data says a Vertuo Up is asleep.
+
+        That counts as a successful update, so it is the one state in which a
+        machine that comes back would otherwise wait for the next poll.
+        """
+        return self.data is not None and self.data.machine_state == "asleep"
+
+    @property
     def closed(self) -> bool:
         """Whether the entry this coordinator served has unloaded."""
         return self._closed
