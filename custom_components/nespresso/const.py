@@ -394,9 +394,6 @@ VERTUO_PLATFORM_NAMES: Final[dict[str, str]] = {
     "CV5": "Vertuo Creatista",
 }
 
-# A watch session records only the values that move, but a machine with a
-# chatty characteristic could still fill memory over a long run. Changes and
-# notifications are capped separately, and the record says when it was cut.
 # The capsule counter is two bytes on the wire, so this is the widest value the
 # machine can hold, not a policy of ours.
 CAPS_COUNTER_MAX: Final = 0xFFFF
@@ -405,6 +402,9 @@ CAPS_COUNTER_MAX: Final = 0xFFFF
 # Bluetooth.
 WATER_HARDNESS_MAX: Final = 4
 
+# A watch session records only the values that move, but a machine with a
+# chatty characteristic could still fill memory over a long run. Changes and
+# notifications are capped separately, and the record says when it was cut.
 WATCH_MAX_EVENTS: Final = 500
 
 # How long a command waits for the machine's answer on the response
@@ -425,8 +425,8 @@ WATCH_SAMPLE_PAUSE: Final = 0.5
 # as long as the frother ran.
 #
 # The names are the cloud's own milkUnitStatus enum, which runs 0 to 15 and so
-# fits the nibble exactly. Only 0, 1 and 2 have been seen on a machine; the rest
-# are the cloud's meanings for values we have not yet observed over Bluetooth.
+# fits the nibble exactly. Only 0, 1, 2, 4 and 10 have been seen on a machine;
+# the rest are the cloud's meanings for values not yet observed over Bluetooth.
 MILK_UNIT_STATE_NAMES: Final[dict[int, str]] = {
     0: "offline",
     1: "ready",

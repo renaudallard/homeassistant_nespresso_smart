@@ -1228,7 +1228,8 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
             _LOGGER.debug("Error selection write not available")
         error_info = await _read_char(client, VERTUO_CHAR_ERROR_INFO, "error_info")
 
-        # Also read error at index 1 (error present in list) for diagnostics
+        # Also read error at index 1 (error present in list), which feeds the
+        # error list code sensor
         error_list_entry = None
         try:
             await _write(client, VERTUO_CHAR_ERROR_SELECTION, bytes([1]))

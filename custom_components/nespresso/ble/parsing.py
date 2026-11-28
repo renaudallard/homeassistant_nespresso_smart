@@ -477,7 +477,6 @@ def parse_error_information(data: bytes) -> dict[str, int]:
     Source: com.sdataway.vertuonext.sdk.characteristics.CharacErrorInformation
       byte 0: errorSelectionIndex (unsigned)
       bytes 1-2: errorCode (2-byte unsigned LSB)
-      category = (errorCode & 0xF0) >> 4
     """
     if len(data) < 3:
         raise ValueError(f"Error information requires >= 3 bytes, got {len(data)}")

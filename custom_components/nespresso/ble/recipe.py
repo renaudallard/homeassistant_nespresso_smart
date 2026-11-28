@@ -24,8 +24,8 @@
 """Barista recipe slot information.
 
 CHAR_RECIPE_INFO says how many recipes the machine can hold and how big each
-may be, verified against RecipeCommand.java in the APK. Recipe editing itself
-is not implemented.
+may be, verified against CharacRecipeInformation.updateValues in the APK.
+Recipe editing itself is not implemented.
 """
 
 from __future__ import annotations
