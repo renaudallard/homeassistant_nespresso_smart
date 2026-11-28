@@ -386,8 +386,8 @@ your Home Assistant profile. The names below are the English ones.
 | Bootloader version | Yes | Yes | No | Bootloader version (diagnostic) |
 | Profile version | Yes | Yes | No | BLE profile version (diagnostic) |
 | Bluetooth version | Yes | No | No | Bluetooth module version (diagnostic) |
-| Recipe DB version | No | Yes | No | Recipe database version (diagnostic) |
-| Connectivity FW | No | Yes | No | WiFi/connectivity firmware version (diagnostic) |
+| Recipe database version | No | Yes | No | Recipe database version (diagnostic) |
+| Connectivity firmware | No | Yes | No | WiFi/connectivity firmware version (diagnostic) |
 | Error code | No | Yes | Yes | Current active error code (diagnostic). Numeric on a Vertuo Next, text on a Vertuo Up, where it is unknown while the machine reports no error |
 | Error log code | No | Yes | No | Error from error log (diagnostic) |
 | Milk unit | No | Yes | No | State of the milk system, 16 values from offline to frothing. Reads Cleaning both while a milk cleaning runs and while the machine is asking for one. Only on a Creatista or a Lattissima |
@@ -402,8 +402,8 @@ your Home Assistant profile. The names below are the English ones.
 | Days until descaling | No | Yes | Yes | Days left before the time limit is reached |
 | Water hardness | No | No | Yes | Water hardness level reported by the machine (diagnostic) |
 | Device shadow | No | No | Yes | Device shadow JSON data, cut to the 255 characters a state can hold. The diagnostics download has all of it (diagnostic, disabled by default) |
-| FOTA status | No | No | Yes | Firmware update status (diagnostic) |
-| FOTA progress | No | No | Yes | Firmware update progress (diagnostic) |
+| Firmware update status | No | No | Yes | Whether an update is available, downloading or verifying (diagnostic) |
+| Firmware update progress | No | No | Yes | Download progress of a firmware update (diagnostic) |
 
 Most Vertuo Next family machines driven over Bluetooth report **WiFi status** `not_configured`, which is normal and not a fault: it means the machine has never been put on WiFi. It matters because Nespresso's own maintenance functions, descaling among them, are cloud calls that reach the machine through AWS IoT, so a machine that is not online cannot receive them at all.
 
