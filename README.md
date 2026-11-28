@@ -469,7 +469,7 @@ Event entity fires on machine state changes (Barista, Vertuo Next and Expert).
 Device triggers for automations:
 - **brewing_started** / **brewing_finished**: the machine entered or left the brewing state. On a Vertuo Up every state under `brew/` is part of the brew, so its top-up pause does not end it
 - **error_occurred**, **ready**, **standby**: the machine entered that state
-- **descaling_needed** / **water_tank_empty**: the machine raised the flag. Each fires once when the flag goes up, not on every poll while it stays up
+- **descaling_needed** / **water_tank_empty**: the machine raised the flag. Each fires once when the flag goes up, not on every poll while it stays up. A Barista reports neither flag and a Vertuo Up no water tank, so those machines are not offered them
 
 They fire from whichever path saw the change first: the poll, a notification on a persistent connection, or the advertisement on the Vertuo Next family, apart from the Expert. A poll applies the status as soon as it has read it, so a notification that arrives while it reads the rest is not undone.
 

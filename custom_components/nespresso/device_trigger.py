@@ -36,11 +36,11 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, MachineFamily
 
 # What each one means, and the code that fires it, is machine_triggers in
-# models.py.
-TRIGGER_TYPES = {
+# models.py. A tuple, so the automation editor lists them in this order.
+TRIGGER_TYPES: tuple[str, ...] = (
     "brewing_started",
     "brewing_finished",
     "error_occurred",
@@ -48,6 +48,13 @@ TRIGGER_TYPES = {
     "standby",
     "descaling_needed",
     "water_tank_empty",
+)
+
+# Flags a family never reports, so a trigger on them could never fire. A
+# Barista's status has neither, a Vertuo Up's shadow no water tank.
+NEVER_RAISED: dict[MachineFamily, frozenset[str]] = {
+    MachineFamily.BARISTA: frozenset({"descaling_needed", "water_tank_empty"}),
+    MachineFamily.VMINI: frozenset({"water_tank_empty"}),
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -70,6 +77,11 @@ async def async_get_triggers(
     if not has_nespresso:
         return []
 
+    never: frozenset[str] = frozenset()
+    for entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry is not None and entry.domain == DOMAIN:
+            never = NEVER_RAISED.get(MachineFamily(entry.data["family"]), never)
     return [
         {
             CONF_PLATFORM: "device",
@@ -78,6 +90,7 @@ async def async_get_triggers(
             CONF_TYPE: trigger_type,
         }
         for trigger_type in TRIGGER_TYPES
+        if trigger_type not in never
     ]
 
 
