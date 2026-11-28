@@ -500,17 +500,19 @@ VMINI_FOTA_STATUS_NAMES: dict[int, str] = {
 def parse_vmini_fota_status(data: bytes) -> dict[str, object]:
     """Parse VMini FOTA status bytes.
 
-    Source: com.sdataway.vmini.sdk.models.FotaStatus
+    Source: com.sdataway.vmini.sdk.characteristics.CharacFotaStatus, which
+    reads one unsigned byte per field although FotaStatus declares them short.
+    A Vertuo Up answers with exactly these three bytes.
       byte 0: currentStatus (FOTAStatusEnum: 0=NO_UPDATE, 1=AVAILABLE, 2=DOWNLOADING, 3=VERIFYING)
-      bytes 1-2: target (short)
-      bytes 3-4: progress (short)
+      byte 1: target
+      byte 2: progress
     """
     if len(data) < 1:
         raise ValueError(f"FOTA status requires >= 1 byte, got {len(data)}")
 
     status_val = data[0] & 0xFF
     status_name = VMINI_FOTA_STATUS_NAMES.get(status_val, "unknown")
-    progress = _get_2bytes_unsigned_msb(data, 3) if len(data) >= 5 else 0
+    progress = data[2] if len(data) >= 3 else 0
 
     return {
         "fota_status": status_name,

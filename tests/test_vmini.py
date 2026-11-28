@@ -30,6 +30,7 @@ import json
 
 from custom_components.nespresso.ble.parsing import (
     parse_vmini_asset_versions,
+    parse_vmini_fota_status,
     parse_vmini_shadow,
     parse_vmini_status,
 )
@@ -111,3 +112,17 @@ class TestStatus:
     def test_no_schema_yet(self) -> None:
         """A notification before the first poll has nothing to zip against."""
         assert parse_vmini_status(None, DATA) == {}
+
+
+class TestFotaStatus:
+    def test_idle_as_read_on_hardware(self) -> None:
+        assert parse_vmini_fota_status(bytes.fromhex("000000")) == {
+            "fota_status": "no_update",
+            "fota_progress": 0,
+        }
+
+    def test_progress_is_the_third_byte(self) -> None:
+        """CharacFotaStatus reads one byte per field, progress at offset 2."""
+        result = parse_vmini_fota_status(bytes([2, 1, 42]))
+        assert result["fota_status"] == "downloading"
+        assert result["fota_progress"] == 42
