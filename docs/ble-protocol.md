@@ -419,6 +419,70 @@ for and stayed clear for the remaining 167 seconds, and the owner confirmed
 they never touched the head. That has been seen once, so it is not a rule, but
 anything reading the bit has to expect it to move with nobody at the machine.
 
+### Expert Machine Status
+
+Source: the Nespresso app for Original line machines (`com.nespresso.activities`
+3.43.0), `com.nestle.connecteddevices.nespresso.operations.coffeemachine.MachineMonitoringOperations.fromByteToBuilder`
+
+The Expert advertises the Venus service UUID, so it is set up as a Vertuo Next,
+but the app gives it the default Original line layout. `ExpertModule` takes any
+machine whose Bluetooth name contains "Expert", ignoring case. The app reads the
+status (`06AA3A12`) and byte 0 of the machine params (`06AA3A22`) and joins
+them, status bytes 0 to 4 then that one byte, before decoding. It subscribes to
+both. Bits are counted from the most significant bit of byte 0
+(`ByteConversion.selectBit`):
+
+```
+Bit 0:      bootloaderActive
+Bits 1-2:   pairingKeyState (the same bits as byte 0 & 0x60 on a Vertuo)
+Bit 3:      errorPresent
+Bit 5:      descalingNeeded
+Bit 7:      waterTankEmpty
+Bit 9:      capsuleContainerFull
+Bits 12-15: machine state (low nibble of byte 1 only)
+Bit 16:     capsuleStockLow
+Bits 17-26: capsule stock, tracking off above 1000
+Bit 27:     programmedBrewingActive
+Bits 28-29: programmed brew event counter
+Bits 30-31: capsule stock event counter
+Bits 32-33: blocked machine event counter
+Bit 46:     slider (brewing unit) closed, byte 0 of 06AA3A22 & 0x02
+Bit 47:     obstacleDetected
+```
+
+States, from `MachineStateBuilder.defaultMachineStateFrom`, with the names used
+here:
+
+| Value | App | Here |
+|-------|-----|------|
+| 0 | RESET | reset |
+| 1 | HEAT_UP | heating |
+| 2 | READY | ready |
+| 3 | DESCALING_READY | descaling_ready |
+| 4 | BREWING | brewing |
+| 5 | ADVANCED_SELECTION_MENU | advanced_menu |
+| 6 | DESCALING | descaling |
+| 7 | STEAM_OUT | emptying |
+| 8 | ERROR | error |
+| 9 | POWER_SAVE | power_save |
+| 10 | OVER_HEAT | overheated |
+| 11 | DIAGNOSTIC_MODE | service_mode |
+| 12 | BLE_SETTINGS | ble_settings |
+| 13 | FACTORY_RESET | factory_reset |
+| 14 | WATER_HARDNESS_SETTINGS | water_hardness_settings |
+| 15 | STAND_BY_DELAY_SETTINGS | standby_delay_settings |
+
+The app reports STEAM_OUT as emptying, and the Expert's help screen says the
+espresso light in its advanced menu means emptying the system. The capsule
+counter (`06AA3A15`) reads `FF FF` while stock tracking is off
+(`StockOperations.DEACTIVATION_VALUE`). Water hardness is written as three bytes,
+`FF FF level`, to `06AA3A44` (`GeneralUserOperations.writeLevel`), levels 0 to 4.
+
+A capture from an Expert on firmware 5.0, `44 02 7f ec 80 00 00 00`, reads as
+ready, pairing key final, descaling needed and tracking off. Read with the
+Vertuo layout it is state 114, which is not a Vertuo state. The app takes only
+the pairing key state from an Expert's advertisement.
+
 ### VMini Pairing Status
 
 Source: `com.sdataway.vmini.sdk.models.PairingStatus`
