@@ -604,8 +604,10 @@ Source: `com.sdataway.vertuonext.sdk.models.CCMIDType.CMIDTypeEnum`
 
 `NONE` and `UNDEFINED` are the same condition as far as the app is concerned:
 no usable key. `VertuoNextMachine.j` polls until the value is neither of them
-and treats anything else as paired. A machine sitting on `UNDEFINED` has not
-been claimed by anyone, so a factory reset does nothing for it.
+and treats anything else as paired. A machine sitting on `UNDEFINED` holds a
+key it cannot use and takes no other, and a factory reset is what clears it:
+the one seen in that state went to `NONE` after the reset and to `FINAL` on the
+next onboarding.
 
 The same enum appears as `MachineStatus.machineBound`, decoded from bits 5-6 of
 the first status byte, in both the Vertuo and the Barista SDK. Those bytes also

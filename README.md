@@ -672,8 +672,8 @@ wants, the transmit power is not it.
 
 A different problem with the same ATT `0x02` symptom, and the remedy is the
 opposite one. The machine took the write but did not commit the token, and
-reports `CMID_TYPE=0x03 UNDEFINED`. It holds nobody's token, so a factory reset
-changes nothing.
+still reports `CMID_TYPE=0x00 NONE`. It holds nobody's token, so a factory
+reset changes nothing.
 
 The machine settles on its answer a few seconds after the write, so the
 integration writes the token and then reads the state back once a second for
