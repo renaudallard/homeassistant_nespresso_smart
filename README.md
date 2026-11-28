@@ -505,7 +505,7 @@ After adding the machine, go to **Settings > Devices & Services > Nespresso > Co
 
 - **Descaling interval (capsules)** (1-10000, default 300): how many brews before descaling is due. Vertuo Next and Vertuo Up.
 - **Descaling interval (days)** (1-3650, default 90): how many days before descaling is due. Vertuo Next and Vertuo Up.
-- **Offer brewing on a model that is not known to brew** (off by default): brings back the brew button and its two selects on a Vertuo Pop or Creatista, which are believed not to brew over Bluetooth. See [Brewing](#brewing).
+- **Offer brewing on a model that is not known to brew** (off by default): brings back the brew button and its two selects on a Vertuo Pop or Creatista, which are believed not to brew over Bluetooth. Turning it off again removes them. See [Brewing](#brewing).
 
 Nespresso quotes 300 capsules or 3 months for the Vertuo range, whichever comes first. Both limits are configurable because hard water needs more frequent descaling. Brews are counted from machine state transitions, so they are only counted while Home Assistant is running.
 

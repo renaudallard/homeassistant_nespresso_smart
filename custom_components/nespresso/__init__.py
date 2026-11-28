@@ -64,7 +64,13 @@ from .const import (
     MachineFamily,
 )
 from .coordinator import NespressoCoordinator, counter_store
-from .entity import device_name, machine_model
+from .entity import (
+    device_name,
+    has_milk_unit,
+    machine_model,
+    platform_code,
+    supports_brewing,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -226,11 +232,28 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
 @callback
 def _async_remove_stale_entities(
-    hass: HomeAssistant, address: str, coordinator: NespressoCoordinator
+    hass: HomeAssistant, entry: ConfigEntry, coordinator: NespressoCoordinator
 ) -> None:
     """Drop registry entries left behind by entities we no longer create."""
     registry = er.async_get(hass)
+    address = entry.data["address"]
     stale = list(REMOVED_ENTITIES)
+    # Every Venus machine had the frother sensor up to v0.5.15. Only a known
+    # model loses it, since an unknown one may still turn out to have milk.
+    if platform_code(entry, coordinator) is not None and not has_milk_unit(
+        entry, coordinator
+    ):
+        stale.append((Platform.BINARY_SENSOR, "milk_frother_running"))
+    # Every Venus machine had the two brew settings up to v0.5.10, and turning
+    # force_brew_button off leaves all three behind.
+    if MachineFamily(entry.data["family"]) is MachineFamily.VERTUO_NEXT and not (
+        supports_brewing(entry, coordinator)
+    ):
+        stale += [
+            (Platform.BUTTON, "vertuo_brew"),
+            (Platform.SELECT, "vertuo_brew_type"),
+            (Platform.SELECT, "vertuo_brew_temp"),
+        ]
     if coordinator.is_expert:
         # An Expert had both up to v0.5.38.
         stale += [(Platform.BINARY_SENSOR, k) for k in EXPERT_ABSENT_BINARY_SENSORS]
@@ -371,7 +394,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_register_services(hass)
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
-    _async_remove_stale_entities(hass, address, coordinator)
+    _async_remove_stale_entities(hass, entry, coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _LOGGER.debug("Nespresso %s setup complete, device_id=%s", address, device_entry.id)
     return True
