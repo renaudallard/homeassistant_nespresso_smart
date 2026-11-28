@@ -1051,7 +1051,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         Deliberately conservative: this only refines data we already have. It
         never creates the first dataset, so a machine whose connection fails
         still surfaces as unavailable instead of silently reporting partial
-        data. Other machine families are ignored entirely.
+        data. Other machine families are ignored entirely, and so is an Expert
+        beyond its pairing key state.
 
         Returns True when the machine state itself changed, so the caller can
         pull fresh connected data immediately rather than waiting for the next
@@ -1063,6 +1064,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         if parsed is None:
             return False
         self._note_pairing_key_state(parsed)
+        if self.is_expert:
+            # The Vertuo layout reads its state as unknown and its lever as
+            # open. The app takes only the pairing key state from it, which
+            # sits in the same bits, and no capture shows the rest.
+            return False
         current = self.data
         if current is None:
             return False
