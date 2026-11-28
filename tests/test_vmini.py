@@ -29,12 +29,12 @@ The values are the ones a Vertuo Up on firmware 4.5.3 returned (PR 18).
 import json
 
 from custom_components.nespresso.ble.parsing import (
+    decode_ble_string,
     parse_vmini_asset_versions,
     parse_vmini_fota_status,
     parse_vmini_shadow,
     parse_vmini_status,
 )
-from custom_components.nespresso.ble.protocol import _decode_ble_string
 
 ASSETS = (
     "fmw-main,4.5.3,1.1.0;recipe,4.5.0,1.1.0;hmi,1.2.2,1.0.0;"
@@ -105,7 +105,7 @@ class TestStatus:
         reads the value through the same helper.
         """
         raw = DATA.encode() + b"\x00 temp\x00temp" + b"\x00" * 20
-        assert parse_vmini_status(SCHEMA, _decode_ble_string(raw)) == (
+        assert parse_vmini_status(SCHEMA, decode_ble_string(raw)) == (
             parse_vmini_status(SCHEMA, DATA)
         )
 

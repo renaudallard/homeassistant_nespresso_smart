@@ -93,8 +93,8 @@ def parse_profile_version(data: bytes) -> str:
     return parse_version_v2(_get_2bytes_unsigned_msb(data, 0))
 
 
-def parse_serial_number(data: bytes) -> str:
-    """Decode null-terminated UTF-8 serial number. All families use this."""
+def decode_ble_string(data: bytes) -> str:
+    """Decode a null-terminated UTF-8 string characteristic."""
     return data.split(b"\x00", 1)[0].decode("utf-8", errors="replace")
 
 

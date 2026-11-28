@@ -56,6 +56,7 @@ from custom_components.nespresso.ble.parsing import (
     _get_bit,
     build_caps_counter,
     build_water_hardness,
+    decode_ble_string,
     nespresso_manufacturer_data,
     parse_barista_machine_info,
     parse_barista_status,
@@ -64,7 +65,6 @@ from custom_components.nespresso.ble.parsing import (
     parse_expert_lever,
     parse_expert_status,
     parse_general_user_settings,
-    parse_serial_number,
     parse_venus_advertisement,
     parse_version_v2,
     parse_version_v3,
@@ -114,19 +114,19 @@ class TestVersionParsing:
 class TestSerialNumber:
     def test_null_terminated(self) -> None:
         data = b"ABC1234567890\x00\x00\x00\x00\x00\x00"
-        assert parse_serial_number(data) == "ABC1234567890"
+        assert decode_ble_string(data) == "ABC1234567890"
 
     def test_no_null(self) -> None:
         data = b"SN12345"
-        assert parse_serial_number(data) == "SN12345"
+        assert decode_ble_string(data) == "SN12345"
 
     def test_empty(self) -> None:
         data = b"\x00\x00\x00"
-        assert parse_serial_number(data) == ""
+        assert decode_ble_string(data) == ""
 
     def test_full_19_bytes(self) -> None:
         data = b"1234567890123456789"
-        assert parse_serial_number(data) == "1234567890123456789"
+        assert decode_ble_string(data) == "1234567890123456789"
 
 
 # ---------------------------------------------------------------------------

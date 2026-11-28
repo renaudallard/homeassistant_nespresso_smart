@@ -86,14 +86,9 @@ from ..const import (
     MachineFamily,
 )
 from ..models import RawMachineData
-from .parsing import WIFI_SCAN_MAX_ENTRIES, parse_wifi_scan_entry
+from .parsing import WIFI_SCAN_MAX_ENTRIES, decode_ble_string, parse_wifi_scan_entry
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _decode_ble_string(data: bytes) -> str:
-    """Decode a null-terminated BLE string characteristic."""
-    return data.split(b"\x00", 1)[0].decode("utf-8", errors="replace")
 
 
 # First nibble of every CMID the official app writes.
@@ -1297,13 +1292,13 @@ class VMiniProtocol(AbstractNespressoProtocol):
 
         return RawMachineData(
             serial_bytes=bytes(serial) if serial else None,
-            firmware_version=_decode_ble_string(bytes(fw)) if fw else None,
-            software_version=_decode_ble_string(bytes(sw)) if sw else None,
-            asset_versions=_decode_ble_string(bytes(asset_versions))
+            firmware_version=decode_ble_string(bytes(fw)) if fw else None,
+            software_version=decode_ble_string(bytes(sw)) if sw else None,
+            asset_versions=decode_ble_string(bytes(asset_versions))
             if asset_versions
             else None,
-            shadow_header=_decode_ble_string(bytes(shadow)) if shadow else None,
-            shadow_data=_decode_ble_string(bytes(shadow_data)),
+            shadow_header=decode_ble_string(bytes(shadow)) if shadow else None,
+            shadow_data=decode_ble_string(bytes(shadow_data)),
             fota_status_bytes=bytes(fota_status) if fota_status else None,
             gatt_dump=gatt_dump_result,
         )

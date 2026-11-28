@@ -47,6 +47,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .ble.parsing import (
+    decode_ble_string,
     parse_barista_machine_info,
     parse_barista_machine_params,
     parse_barista_status,
@@ -56,7 +57,6 @@ from .ble.parsing import (
     parse_expert_status,
     parse_general_user_settings,
     parse_profile_version,
-    parse_serial_number,
     parse_venus_advertisement,
     parse_vertuo_wifi_status,
     parse_vertuonext_machine_info,
@@ -67,7 +67,6 @@ from .ble.parsing import (
 )
 from .ble.protocol import (
     _authenticate,
-    _decode_ble_string,
     _read,
     _write,
     async_configure_wifi,
@@ -390,7 +389,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                 return parse_vertuonext_status(data)
             if self.family == MachineFamily.VMINI:
                 # Bytes after the value's terminator are not part of it.
-                text = _decode_ble_string(data)
+                text = decode_ble_string(data)
                 return parse_vmini_status(self._vmini_shadow_schema, text) or None
         except (ValueError, IndexError) as err:
             _LOGGER.debug("Failed to parse status %s: %s", data.hex(), err)
@@ -1432,7 +1431,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
 
         status = parse_barista_status(raw.status_bytes)
         info = parse_barista_machine_info(raw.info_bytes)
-        serial = parse_serial_number(raw.serial_bytes) if raw.serial_bytes else None
+        serial = decode_ble_string(raw.serial_bytes) if raw.serial_bytes else None
 
         return NespressoMachineData(
             machine_state=str(status["machine_state"]),
@@ -1469,7 +1468,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             else parse_vertuonext_status(raw.status_bytes)
         )
         info = parse_vertuonext_machine_info(raw.info_bytes)
-        serial = parse_serial_number(raw.serial_bytes) if raw.serial_bytes else None
+        serial = decode_ble_string(raw.serial_bytes) if raw.serial_bytes else None
 
         water_hardness = None
         if raw.user_settings_bytes:
@@ -1535,14 +1534,14 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             )
             if raw.error_list_bytes and len(raw.error_list_bytes) >= 3
             else None,
-            iot_market_name=parse_serial_number(raw.iot_market_bytes)
+            iot_market_name=decode_ble_string(raw.iot_market_bytes)
             if raw.iot_market_bytes
             else None,
             gatt_dump=raw.gatt_dump,
         )
 
     def _parse_vmini(self, raw: RawMachineData) -> NespressoMachineData:
-        serial = parse_serial_number(raw.serial_bytes) if raw.serial_bytes else None
+        serial = decode_ble_string(raw.serial_bytes) if raw.serial_bytes else None
 
         fota_status = None
         fota_progress = None
