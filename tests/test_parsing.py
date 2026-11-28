@@ -741,8 +741,6 @@ class TestExpertStatus:
         assert result["water_tank_empty"] is False
         assert result["error_present"] is False
         assert result["capsule_container_full"] is False
-        # 1023 is above the app's 1000 limit: stock tracking is off.
-        assert result["capsule_stock"] is None
         assert result["brewing_unit_closed"] is True
 
     def test_vertuo_parser_misreads_expert(self) -> None:
@@ -767,10 +765,10 @@ class TestExpertStatus:
             parse_expert_lever(b"")
 
     def test_brewing_with_stock(self) -> None:
-        # tank empty, container full, state 4, 42 capsules
+        # tank empty, container full, state 4, 42 capsules, which is not read
         data = bytes((0x01, 0x44, 42 >> 3, (42 & 0x07) << 5, 0, 0, 0, 0))
         result = parse_expert_status(data, b"\x02")
         assert result["machine_state"] == "brewing"
         assert result["water_tank_empty"] is True
         assert result["capsule_container_full"] is True
-        assert result["capsule_stock"] == 42
+        assert "capsule_stock" not in result

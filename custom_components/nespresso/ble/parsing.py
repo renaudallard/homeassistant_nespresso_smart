@@ -275,12 +275,12 @@ def parse_expert_status(data: bytes, params: bytes | None = None) -> dict[str, o
     5 descaling needed, 7 water tank empty, 9 capsule container full,
     12-15 machine state, 16 capsule stock low, 17-26 capsule stock
     (above 1000 means stock tracking is off), 46 slider closed (from params).
-    Keys match parse_vertuonext_status so the coordinator needs no other change.
+    The stock bits are not read, since the stock counter is gone. Keys are
+    those of parse_vertuonext_status, but the lever only with params.
     """
     if len(data) < 4:
         raise ValueError(f"Expert status requires >= 4 bytes, got {len(data)}")
 
-    stock = _select_bits(data, 17, 26)
     status: dict[str, object] = {
         "machine_state": EXPERT_STATE_NAMES.get(_select_bits(data, 12, 15), "unknown"),
         "milk_unit_state": "unknown",
@@ -294,8 +294,6 @@ def parse_expert_status(data: bytes, params: bytes | None = None) -> dict[str, o
         "milk_frother_running": False,
         "cup_length_prog": False,
         "capsule_container_full": bool(_select_bits(data, 9, 9)),
-        "capsule_stock_low": bool(_select_bits(data, 16, 16)),
-        "capsule_stock": None if stock > 1000 else stock,
     }
     if params:
         # Left out without CHAR_MACHINE_PARAMS, so a status notification
