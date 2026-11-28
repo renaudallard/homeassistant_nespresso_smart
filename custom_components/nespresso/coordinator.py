@@ -881,10 +881,15 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         return self._client is not None
 
     async def async_release_kept_connection(self) -> None:
-        """Release the temporary connection kept for brew."""
+        """Release the temporary connection kept for brew.
+
+        Under the lock, or a poll reading over that link would lose it
+        halfway through.
+        """
         self._keep_connection = False
         if not self.persistent:
-            await self._disconnect()
+            async with self._ble_lock:
+                await self._disconnect()
 
     async def async_load_counters(
         self, descaling_capsules: int, descaling_days: int
