@@ -1293,11 +1293,14 @@ class VMiniProtocol(AbstractNespressoProtocol):
     async def async_read_all(
         self, client: BleakClient, on_status: Callable[[bytes], object]
     ) -> RawMachineData:
-        # No read is mandatory. This characteristic list comes from the
-        # APK's VMini SDK, never from hardware, and the first VMini-family
-        # machine seen in the wild (a Vertuo Up) exposes no standard Device
-        # Information service at all: a read the machine cannot answer must
-        # not keep the whole entry from setting up.
+        # Only the shadow data is mandatory. This characteristic list comes
+        # from the APK's VMini SDK, never from hardware, and the first
+        # VMini-family machine seen in the wild (a Vertuo Up) exposes no
+        # standard Device Information service at all: a read the machine
+        # cannot answer must not keep the whole entry from setting up. The
+        # shadow data is the machine's state, though, and a poll without it
+        # would publish "unknown", which fires brewing_finished in the middle
+        # of a brew and brewing_started again on the next poll.
         optional_reads = (
             (VMINI_CHAR_SERIAL, "serial"),
             (VMINI_CHAR_FW_REV, "firmware_rev"),
@@ -1311,7 +1314,9 @@ class VMiniProtocol(AbstractNespressoProtocol):
         for char, name in optional_reads:
             try:
                 value = await _read(client, char)
-            except Exception:  # noqa: BLE001
+            except Exception:
+                if name == "shadow_data":
+                    raise
                 values[name] = None
                 _LOGGER.debug("VMini %s not available", name)
                 continue

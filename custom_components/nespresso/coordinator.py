@@ -1529,7 +1529,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             # Cache the schema so shadow notifications can be decoded without
             # reading the header again.
             self._vmini_shadow_schema = raw.shadow_header
-        status = parse_vmini_status(raw.shadow_header, raw.shadow_data)
+        status = parse_vmini_status(
+            raw.shadow_header or self._vmini_shadow_schema, raw.shadow_data
+        )
 
         data = NespressoMachineData(
             machine_state="unknown",
