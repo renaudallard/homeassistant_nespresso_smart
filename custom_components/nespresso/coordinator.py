@@ -1370,9 +1370,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
             raw = await protocol.async_read_all(client, self._on_polled_status)
 
             # Keep connection alive for persistent mode or pending brew
-            if self._closed:
-                await _close(client)
-            elif self.persistent and self._status_uuid:
+            if self.persistent and self._status_uuid and not self._closed:
                 notifiable = self._notifiable_chars(client)
                 for uuid, on_notify in self._notify_handlers().items():
                     if uuid != self._status_uuid and uuid not in notifiable:
@@ -1382,6 +1380,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
                         _LOGGER.debug("%s cannot notify on %s", self.address, uuid)
                         continue
                     await client.start_notify(uuid, on_notify)
+            # After the last await: the entry can unload during any of them,
+            # and nothing would ever close a link kept from then on.
+            if self._closed:
+                await _close(client)
+            elif self.persistent and self._status_uuid:
                 self._client = client
             elif self._keep_connection:
                 self._client = client
