@@ -34,6 +34,11 @@
           "cleaning_ready": "Tisztításra kész",
           "ready_old_capsule": "Kész (régi kapszula)",
           "rinsing_paused": "Öblítés szünetel",
+          "reset": "Visszaállítás",
+          "advanced_menu": "Speciális kiválasztás",
+          "ble_settings": "Bluetooth beállítása",
+          "water_hardness_settings": "Vízkeménység beállítása",
+          "standby_delay_settings": "Energiatakarékos mód beállítása",
           "unknown": "Ismeretlen",
           "asleep": "Alvó mód"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Tisztításra kész",
               "ready_old_capsule": "Kész (régi kapszula)",
               "rinsing_paused": "Öblítés szünetel",
+              "reset": "Visszaállítás",
+              "advanced_menu": "Speciális kiválasztás",
+              "ble_settings": "Bluetooth beállítása",
+              "water_hardness_settings": "Vízkeménység beállítása",
+              "standby_delay_settings": "Energiatakarékos mód beállítása",
               "unknown": "Ismeretlen"
             }
           }

@@ -34,6 +34,11 @@
           "cleaning_ready": "Reinigung bereit",
           "ready_old_capsule": "Bereit (alte Kapsel)",
           "rinsing_paused": "Spülen pausiert",
+          "reset": "Zurücksetzen",
+          "advanced_menu": "Erweiterte Auswahl",
+          "ble_settings": "Bluetooth-Einstellung",
+          "water_hardness_settings": "Wasserhärte-Einstellung",
+          "standby_delay_settings": "Energiesparmodus-Einstellung",
           "unknown": "Unbekannt",
           "asleep": "Schläft"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Reinigung bereit",
               "ready_old_capsule": "Bereit (alte Kapsel)",
               "rinsing_paused": "Spülen pausiert",
+              "reset": "Zurücksetzen",
+              "advanced_menu": "Erweiterte Auswahl",
+              "ble_settings": "Bluetooth-Einstellung",
+              "water_hardness_settings": "Wasserhärte-Einstellung",
+              "standby_delay_settings": "Energiesparmodus-Einstellung",
               "unknown": "Unbekannt"
             }
           }

@@ -34,6 +34,11 @@
           "cleaning_ready": "Gata de curățare",
           "ready_old_capsule": "Gata (capsulă veche)",
           "rinsing_paused": "Clătire în pauză",
+          "reset": "Resetare",
+          "advanced_menu": "Selecție avansată",
+          "ble_settings": "Setare Bluetooth",
+          "water_hardness_settings": "Setarea durității apei",
+          "standby_delay_settings": "Setarea economiei de energie",
           "unknown": "Necunoscut",
           "asleep": "În repaus"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Gata de curățare",
               "ready_old_capsule": "Gata (capsulă veche)",
               "rinsing_paused": "Clătire în pauză",
+              "reset": "Resetare",
+              "advanced_menu": "Selecție avansată",
+              "ble_settings": "Setare Bluetooth",
+              "water_hardness_settings": "Setarea durității apei",
+              "standby_delay_settings": "Setarea economiei de energie",
               "unknown": "Necunoscut"
             }
           }

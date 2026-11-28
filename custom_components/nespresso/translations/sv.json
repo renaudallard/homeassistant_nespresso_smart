@@ -34,6 +34,11 @@
           "cleaning_ready": "Redo för rengöring",
           "ready_old_capsule": "Redo (gammal kapsel)",
           "rinsing_paused": "Sköljning pausad",
+          "reset": "Återställning",
+          "advanced_menu": "Avancerat val",
+          "ble_settings": "Bluetooth-inställning",
+          "water_hardness_settings": "Inställning för vattenhårdhet",
+          "standby_delay_settings": "Inställning för energisparläge",
           "unknown": "Okänd",
           "asleep": "Sover"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Redo för rengöring",
               "ready_old_capsule": "Redo (gammal kapsel)",
               "rinsing_paused": "Sköljning pausad",
+              "reset": "Återställning",
+              "advanced_menu": "Avancerat val",
+              "ble_settings": "Bluetooth-inställning",
+              "water_hardness_settings": "Inställning för vattenhårdhet",
+              "standby_delay_settings": "Inställning för energisparläge",
               "unknown": "Okänd"
             }
           }

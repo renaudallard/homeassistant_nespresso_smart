@@ -34,6 +34,11 @@
           "cleaning_ready": "Pulizia pronta",
           "ready_old_capsule": "Pronto (vecchia capsula)",
           "rinsing_paused": "Risciacquo in pausa",
+          "reset": "Ripristino",
+          "advanced_menu": "Selezione avanzata",
+          "ble_settings": "Impostazione Bluetooth",
+          "water_hardness_settings": "Impostazione della durezza dell'acqua",
+          "standby_delay_settings": "Impostazione del risparmio energetico",
           "unknown": "Sconosciuto",
           "asleep": "In sospensione"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Pulizia pronta",
               "ready_old_capsule": "Pronto (vecchia capsula)",
               "rinsing_paused": "Risciacquo in pausa",
+              "reset": "Ripristino",
+              "advanced_menu": "Selezione avanzata",
+              "ble_settings": "Impostazione Bluetooth",
+              "water_hardness_settings": "Impostazione della durezza dell'acqua",
+              "standby_delay_settings": "Impostazione del risparmio energetico",
               "unknown": "Sconosciuto"
             }
           }

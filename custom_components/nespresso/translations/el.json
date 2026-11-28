@@ -34,6 +34,11 @@
           "cleaning_ready": "Έτοιμη για καθαρισμό",
           "ready_old_capsule": "Έτοιμη (παλιά κάψουλα)",
           "rinsing_paused": "Ξέπλυμα σε παύση",
+          "reset": "Επαναφορά",
+          "advanced_menu": "Προηγμένη επιλογή",
+          "ble_settings": "Ρύθμιση Bluetooth",
+          "water_hardness_settings": "Ρύθμιση σκληρότητας νερού",
+          "standby_delay_settings": "Ρύθμιση εξοικονόμησης ενέργειας",
           "unknown": "Άγνωστο",
           "asleep": "Σε αδράνεια"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Έτοιμη για καθαρισμό",
               "ready_old_capsule": "Έτοιμη (παλιά κάψουλα)",
               "rinsing_paused": "Ξέπλυμα σε παύση",
+              "reset": "Επαναφορά",
+              "advanced_menu": "Προηγμένη επιλογή",
+              "ble_settings": "Ρύθμιση Bluetooth",
+              "water_hardness_settings": "Ρύθμιση σκληρότητας νερού",
+              "standby_delay_settings": "Ρύθμιση εξοικονόμησης ενέργειας",
               "unknown": "Άγνωστο"
             }
           }

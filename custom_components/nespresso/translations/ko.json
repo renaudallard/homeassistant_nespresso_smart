@@ -34,6 +34,11 @@
           "cleaning_ready": "클리닝 준비 완료",
           "ready_old_capsule": "준비 완료 (오래된 캡슐)",
           "rinsing_paused": "헹구기 일시 중지",
+          "reset": "재설정",
+          "advanced_menu": "고급 선택",
+          "ble_settings": "Bluetooth 설정",
+          "water_hardness_settings": "물 경도 설정",
+          "standby_delay_settings": "절전 모드 설정",
           "unknown": "알 수 없음",
           "asleep": "수면 모드"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "클리닝 준비 완료",
               "ready_old_capsule": "준비 완료 (오래된 캡슐)",
               "rinsing_paused": "헹구기 일시 중지",
+              "reset": "재설정",
+              "advanced_menu": "고급 선택",
+              "ble_settings": "Bluetooth 설정",
+              "water_hardness_settings": "물 경도 설정",
+              "standby_delay_settings": "절전 모드 설정",
               "unknown": "알 수 없음"
             }
           }

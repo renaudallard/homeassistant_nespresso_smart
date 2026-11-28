@@ -34,6 +34,11 @@
           "cleaning_ready": "Čištění připraveno",
           "ready_old_capsule": "Připraveno (stará kapsle)",
           "rinsing_paused": "Oplachování pozastaveno",
+          "reset": "Obnovení",
+          "advanced_menu": "Rozšířený výběr",
+          "ble_settings": "Nastavení Bluetooth",
+          "water_hardness_settings": "Nastavení tvrdosti vody",
+          "standby_delay_settings": "Nastavení úsporného režimu",
           "unknown": "Neznámý",
           "asleep": "Režim spánku"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Čištění připraveno",
               "ready_old_capsule": "Připraveno (stará kapsle)",
               "rinsing_paused": "Oplachování pozastaveno",
+              "reset": "Obnovení",
+              "advanced_menu": "Rozšířený výběr",
+              "ble_settings": "Nastavení Bluetooth",
+              "water_hardness_settings": "Nastavení tvrdosti vody",
+              "standby_delay_settings": "Nastavení úsporného režimu",
               "unknown": "Neznámý"
             }
           }

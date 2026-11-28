@@ -34,6 +34,11 @@
           "cleaning_ready": "พร้อมทำความสะอาด",
           "ready_old_capsule": "พร้อม (แคปซูลเก่า)",
           "rinsing_paused": "พักการล้างแล้ว",
+          "reset": "รีเซ็ต",
+          "advanced_menu": "การเลือกขั้นสูง",
+          "ble_settings": "การตั้งค่า Bluetooth",
+          "water_hardness_settings": "การตั้งค่าความกระด้างของน้ำ",
+          "standby_delay_settings": "การตั้งค่าประหยัดพลังงาน",
           "unknown": "ไม่ทราบ",
           "asleep": "หลับอยู่"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "พร้อมทำความสะอาด",
               "ready_old_capsule": "พร้อม (แคปซูลเก่า)",
               "rinsing_paused": "พักการล้างแล้ว",
+              "reset": "รีเซ็ต",
+              "advanced_menu": "การเลือกขั้นสูง",
+              "ble_settings": "การตั้งค่า Bluetooth",
+              "water_hardness_settings": "การตั้งค่าความกระด้างของน้ำ",
+              "standby_delay_settings": "การตั้งค่าประหยัดพลังงาน",
               "unknown": "ไม่ทราบ"
             }
           }

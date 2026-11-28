@@ -34,6 +34,11 @@
           "cleaning_ready": "Temizlik için hazır",
           "ready_old_capsule": "Hazır (eski kapsül)",
           "rinsing_paused": "Durulama duraklatıldı",
+          "reset": "Sıfırlama",
+          "advanced_menu": "Gelişmiş seçim",
+          "ble_settings": "Bluetooth ayarı",
+          "water_hardness_settings": "Su sertliği ayarı",
+          "standby_delay_settings": "Güç tasarrufu ayarı",
           "unknown": "Bilinmiyor",
           "asleep": "Uyku modu"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Temizlik için hazır",
               "ready_old_capsule": "Hazır (eski kapsül)",
               "rinsing_paused": "Durulama duraklatıldı",
+              "reset": "Sıfırlama",
+              "advanced_menu": "Gelişmiş seçim",
+              "ble_settings": "Bluetooth ayarı",
+              "water_hardness_settings": "Su sertliği ayarı",
+              "standby_delay_settings": "Güç tasarrufu ayarı",
               "unknown": "Bilinmiyor"
             }
           }

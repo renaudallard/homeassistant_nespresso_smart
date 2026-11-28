@@ -34,6 +34,11 @@
           "cleaning_ready": "Czyszczenie gotowe",
           "ready_old_capsule": "Gotowy (stara kapsułka)",
           "rinsing_paused": "Płukanie wstrzymane",
+          "reset": "Resetowanie",
+          "advanced_menu": "Wybór zaawansowany",
+          "ble_settings": "Ustawienie Bluetooth",
+          "water_hardness_settings": "Ustawienie twardości wody",
+          "standby_delay_settings": "Ustawienie oszczędzania energii",
           "unknown": "Nieznany",
           "asleep": "Uśpienie"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Czyszczenie gotowe",
               "ready_old_capsule": "Gotowy (stara kapsułka)",
               "rinsing_paused": "Płukanie wstrzymane",
+              "reset": "Resetowanie",
+              "advanced_menu": "Wybór zaawansowany",
+              "ble_settings": "Ustawienie Bluetooth",
+              "water_hardness_settings": "Ustawienie twardości wody",
+              "standby_delay_settings": "Ustawienie oszczędzania energii",
               "unknown": "Nieznany"
             }
           }

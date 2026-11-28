@@ -34,6 +34,11 @@
           "cleaning_ready": "Cleaning ready",
           "ready_old_capsule": "Ready (old capsule)",
           "rinsing_paused": "Rinsing paused",
+          "reset": "Reset",
+          "advanced_menu": "Advanced selection",
+          "ble_settings": "Bluetooth setting",
+          "water_hardness_settings": "Water hardness setting",
+          "standby_delay_settings": "Energy saving setting",
           "unknown": "Unknown",
           "asleep": "Asleep"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Cleaning ready",
               "ready_old_capsule": "Ready (old capsule)",
               "rinsing_paused": "Rinsing paused",
+              "reset": "Reset",
+              "advanced_menu": "Advanced selection",
+              "ble_settings": "Bluetooth setting",
+              "water_hardness_settings": "Water hardness setting",
+              "standby_delay_settings": "Energy saving setting",
               "unknown": "Unknown"
             }
           }

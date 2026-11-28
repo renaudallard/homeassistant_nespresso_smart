@@ -34,6 +34,11 @@
           "cleaning_ready": "清潔已就緒",
           "ready_old_capsule": "就緒（使用過的膠囊）",
           "rinsing_paused": "清洗已暫停",
+          "reset": "重置",
+          "advanced_menu": "進階選擇",
+          "ble_settings": "藍牙設定",
+          "water_hardness_settings": "水質軟硬度設定",
+          "standby_delay_settings": "省電模式設定",
           "unknown": "未知",
           "asleep": "休眠"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "清潔已就緒",
               "ready_old_capsule": "就緒（使用過的膠囊）",
               "rinsing_paused": "清洗已暫停",
+              "reset": "重置",
+              "advanced_menu": "進階選擇",
+              "ble_settings": "藍牙設定",
+              "water_hardness_settings": "水質軟硬度設定",
+              "standby_delay_settings": "省電模式設定",
               "unknown": "未知"
             }
           }

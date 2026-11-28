@@ -34,6 +34,11 @@
           "cleaning_ready": "湯通し準備完了",
           "ready_old_capsule": "準備完了（古いカプセル）",
           "rinsing_paused": "すすぎ一時停止中",
+          "reset": "リセット",
+          "advanced_menu": "詳細選択",
+          "ble_settings": "Bluetooth 設定",
+          "water_hardness_settings": "水硬度レベル設定",
+          "standby_delay_settings": "省電力モード設定",
           "unknown": "不明",
           "asleep": "スリープ"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "湯通し準備完了",
               "ready_old_capsule": "準備完了（古いカプセル）",
               "rinsing_paused": "すすぎ一時停止中",
+              "reset": "リセット",
+              "advanced_menu": "詳細選択",
+              "ble_settings": "Bluetooth 設定",
+              "water_hardness_settings": "水硬度レベル設定",
+              "standby_delay_settings": "省電力モード設定",
               "unknown": "不明"
             }
           }

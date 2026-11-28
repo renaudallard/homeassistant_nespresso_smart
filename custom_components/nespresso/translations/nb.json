@@ -34,6 +34,11 @@
           "cleaning_ready": "Klar for rengjøring",
           "ready_old_capsule": "Klar (gammel kapsel)",
           "rinsing_paused": "Skylling pauset",
+          "reset": "Tilbakestilling",
+          "advanced_menu": "Avansert valg",
+          "ble_settings": "Bluetooth-innstilling",
+          "water_hardness_settings": "Innstilling for vannhardhet",
+          "standby_delay_settings": "Innstilling for strømsparingsmodus",
           "unknown": "Ukjent",
           "asleep": "I dvale"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Klar for rengjøring",
               "ready_old_capsule": "Klar (gammel kapsel)",
               "rinsing_paused": "Skylling pauset",
+              "reset": "Tilbakestilling",
+              "advanced_menu": "Avansert valg",
+              "ble_settings": "Bluetooth-innstilling",
+              "water_hardness_settings": "Innstilling for vannhardhet",
+              "standby_delay_settings": "Innstilling for strømsparingsmodus",
               "unknown": "Ukjent"
             }
           }

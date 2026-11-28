@@ -34,6 +34,11 @@
           "cleaning_ready": "Reiniging gereed",
           "ready_old_capsule": "Gereed (oude capsule)",
           "rinsing_paused": "Spoelen gepauzeerd",
+          "reset": "Reset",
+          "advanced_menu": "Geavanceerde selectie",
+          "ble_settings": "Bluetooth-instelling",
+          "water_hardness_settings": "Instelling waterhardheid",
+          "standby_delay_settings": "Instelling energiebesparing",
           "unknown": "Onbekend",
           "asleep": "Slaapstand"
         }
@@ -266,6 +271,11 @@
               "cleaning_ready": "Reiniging gereed",
               "ready_old_capsule": "Gereed (oude capsule)",
               "rinsing_paused": "Spoelen gepauzeerd",
+              "reset": "Reset",
+              "advanced_menu": "Geavanceerde selectie",
+              "ble_settings": "Bluetooth-instelling",
+              "water_hardness_settings": "Instelling waterhardheid",
+              "standby_delay_settings": "Instelling energiebesparing",
               "unknown": "Onbekend"
             }
           }
