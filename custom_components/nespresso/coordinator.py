@@ -876,6 +876,11 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self._keep_connection = True
 
     @property
+    def closed(self) -> bool:
+        """Whether the entry this coordinator served has unloaded."""
+        return self._closed
+
+    @property
     def is_connected(self) -> bool:
         """Whether a connection is being held open right now.
 

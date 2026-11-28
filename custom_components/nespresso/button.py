@@ -203,7 +203,13 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
         """
         deadline = time.monotonic() + BREW_WAIT_MINUTES * 60
         state = self._state()
-        while state in states and time.monotonic() < deadline:
+        # A reload leaves this coordinator for good, and its refreshes do
+        # nothing, so waiting on would only end in a false give up.
+        while (
+            state in states
+            and time.monotonic() < deadline
+            and not self.coordinator.closed
+        ):
             await asyncio.sleep(5)
             await self.coordinator.async_request_refresh()
             state = self._state()
@@ -252,6 +258,8 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
             )
             state = await self._wait_to_leave(waking)
             await self._dismiss("nespresso_power_save")
+            if self.coordinator.closed:
+                return
             if state in waking:
                 await self._give_up(state)
                 return
@@ -270,6 +278,8 @@ class NespressoVertuoBrewButton(CoordinatorEntity[NespressoCoordinator], ButtonE
             )
             state = await self._wait_to_leave(waiting)
         await self._dismiss("nespresso_capsule")
+        if self.coordinator.closed:
+            return
         if state in waiting:
             await self._give_up(state)
             return
