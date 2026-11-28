@@ -315,8 +315,8 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     def _on_status_notification(self, _sender: object, data: bytearray) -> None:
         """Handle BLE GATT notification for status changes.
 
-        This callback runs on the BLE thread, so schedule the update
-        on the HA event loop.
+        bleak calls this on the event loop, from inside its own callback, so
+        the update is scheduled to run after it rather than in it.
         """
         _LOGGER.debug("BLE notification received: %s (len=%d)", data.hex(), len(data))
         self.hass.loop.call_soon_threadsafe(self._handle_status_update, bytes(data))
