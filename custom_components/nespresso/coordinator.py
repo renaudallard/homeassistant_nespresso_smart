@@ -247,6 +247,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         self._counter_store = counter_store(hass, address)
         # Whether the store already says this machine wants an encrypted link.
         self._encryption_saved = False
+        # Whether async_load_counters ran. Until it has, the counters are the
+        # defaults, and writing them would wipe the ones on disk.
+        self._counters_loaded = False
         self._client: BleakClient | None = None
         self._status_uuid = self._get_status_uuid()
         # Schema of the VMini device shadow, cached from the last full read
@@ -299,13 +302,19 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         return None
 
     async def async_shutdown(self) -> None:
-        """Disconnect persistent client on shutdown.
+        """Stop taking updates, write the counters and drop the link.
 
-        The timers stop first, so none starts a poll while the disconnect
-        runs, which can take ten seconds on BlueZ.
+        Home Assistant runs this on an unload and after a failed setup alike.
+        The counters are written now, in place of any delayed write still
+        pending: a reload reads the store before that write would land, and
+        after a removal it would bring the file back. Nothing is saved after
+        this. The timers stop before the disconnect, so none starts a poll
+        while it runs, which can take ten seconds on BlueZ.
         """
         self._closed = True
         await super().async_shutdown()
+        if self._counters_loaded:
+            await self._counter_store.async_save(self._counters())
         await self._disconnect()
 
     async def _disconnect(self) -> None:
@@ -917,6 +926,7 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
         """Restore brew counters from disk. Call once before the first refresh."""
         self.descaling_capsules = descaling_capsules
         self.descaling_days = descaling_days
+        self._counters_loaded = True
         if stored := await self._counter_store.async_load():
             self.brew_total = stored.get("brew_total", 0)
             self.brews_since_descaling = stored.get("brews_since_descaling", 0)
@@ -1118,20 +1128,9 @@ class NespressoCoordinator(DataUpdateCoordinator[NespressoMachineData]):
     @callback
     def _async_save_counters(self) -> None:
         """Write counters with a delay so bursts do not thrash the disk."""
-        if self._closed:
+        if self._closed or not self._counters_loaded:
             return
         self._counter_store.async_delay_save(self._counters, COUNTER_SAVE_DELAY)
-
-    async def async_close(self) -> None:
-        """Stop taking updates and write the counters now.
-
-        Written in place of any delayed write still pending: a reload reads
-        the store before that write would land, so the coordinator it creates
-        would start from older counts. Nothing is saved after this, or a poll
-        still running could bring the file back after a removal.
-        """
-        self._closed = True
-        await self._counter_store.async_save(self._counters())
 
     @callback
     def async_apply_advertisement(self, raw: bytes | None) -> bool:
