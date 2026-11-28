@@ -1137,6 +1137,26 @@ async def _dump_all_characteristics(client: BleakClient) -> dict[str, dict[str, 
     return dump
 
 
+async def _read_optional(
+    client: BleakClient, char_uuid: str, name: str
+) -> bytearray | None:
+    """Read a characteristic some machines lack, or None when it fails."""
+    try:
+        value = await _read(client, char_uuid)
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("%s not available", name)
+        return None
+    _LOGGER.debug("Read %s [%s]: %s", name, char_uuid, value.hex())
+    return value
+
+
+async def _debug_dump(client: BleakClient) -> dict[str, dict[str, str]] | None:
+    """Every characteristic, but only when debug logging would show it."""
+    if not _LOGGER.isEnabledFor(logging.DEBUG):
+        return None
+    return await _dump_all_characteristics(client)
+
+
 async def _read_char(client: BleakClient, char_uuid: str, name: str) -> bytearray:
     """Read a characteristic the poll cannot do without, naming it in the log."""
     try:
@@ -1180,17 +1200,10 @@ class BaristaProtocol(AbstractNespressoProtocol):
             client, BARISTA_CHAR_PROFILE_VERSION, "profile_version"
         )
         params = await _read_char(client, BARISTA_CHAR_MACHINE_PARAMS, "machine_params")
-        # Recipe information (optional)
-        recipe_info = None
-        try:
-            recipe_info = await _read(client, BARISTA_CHAR_RECIPE_INFO)
-            _LOGGER.debug("Recipe info raw: %s", recipe_info.hex())
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Recipe info not available")
-        # GATT dump only when debug logging is active
-        gatt_dump = None
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            gatt_dump = await _dump_all_characteristics(client)
+        recipe_info = await _read_optional(
+            client, BARISTA_CHAR_RECIPE_INFO, "recipe_info"
+        )
+        gatt_dump = await _debug_dump(client)
 
         return RawMachineData(
             status_bytes=bytes(status),
@@ -1235,41 +1248,21 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Error list entry not available")
 
-        # Capsule counter (optional, may not be available on all models)
-        caps_counter = None
-        try:
-            caps_counter = await _read(client, VERTUO_CHAR_CAPS_COUNTER)
-            _LOGGER.debug("Capsule counter raw: %s", caps_counter.hex())
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Capsule counter not available")
-
-        # WiFi status (optional). Only interesting on a machine that might
-        # reach Nespresso's cloud, and absent on models without WiFi.
-        wifi_current = None
-        try:
-            wifi_current = await _read(client, VERTUO_CHAR_WIFI_CURRENT)
-            _LOGGER.debug("Vertuo WiFi current setup raw: %s", wifi_current.hex())
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Vertuo WiFi status not available")
-
-        # IoT market name (optional)
-        iot_market = None
-        try:
-            iot_market = await _read(client, VERTUO_CHAR_IOT_MARKET)
-            _LOGGER.debug("IoT market name: %s", _decode_ble_string(bytes(iot_market)))
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("IoT market name not available")
+        # Not on every model. WiFi only matters on a machine that might reach
+        # Nespresso's cloud, and models without WiFi lack it.
+        caps_counter = await _read_optional(
+            client, VERTUO_CHAR_CAPS_COUNTER, "caps_counter"
+        )
+        wifi_current = await _read_optional(
+            client, VERTUO_CHAR_WIFI_CURRENT, "wifi_current"
+        )
+        iot_market = await _read_optional(client, VERTUO_CHAR_IOT_MARKET, "iot_market")
 
         # Only logged, so only read when debug logging would show it: any
         # unsolicited data on the command response, and the GATT dump.
-        gatt_dump = None
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            try:
-                cmd_rsp = await _read(client, VERTUO_CHAR_COMMAND_RSP)
-                _LOGGER.debug("VertuoNext command response: %s", cmd_rsp.hex())
-            except Exception:  # noqa: BLE001
-                _LOGGER.debug("VertuoNext command response not readable")
-            gatt_dump = await _dump_all_characteristics(client)
+        gatt_dump = await _debug_dump(client)
+        if gatt_dump is not None:
+            await _read_optional(client, VERTUO_CHAR_COMMAND_RSP, "command_rsp")
 
         return RawMachineData(
             status_bytes=bytes(status),
@@ -1301,47 +1294,19 @@ class VMiniProtocol(AbstractNespressoProtocol):
         # shadow data is the machine's state, though, and a poll without it
         # would publish "unknown", which fires brewing_finished in the middle
         # of a brew and brewing_started again on the next poll.
-        optional_reads = (
-            (VMINI_CHAR_SERIAL, "serial"),
-            (VMINI_CHAR_FW_REV, "firmware_rev"),
-            (VMINI_CHAR_SW_REV, "software_rev"),
-            (VMINI_CHAR_ASSET_VERSIONS, "asset_versions"),
-            (VMINI_CHAR_SHADOW_HEADER, "shadow_header"),
-            (VMINI_CHAR_SHADOW_DATA, "shadow_data"),
-            (VMINI_CHAR_FOTA_STATUS, "fota_status"),
+        serial = await _read_optional(client, VMINI_CHAR_SERIAL, "serial")
+        fw = await _read_optional(client, VMINI_CHAR_FW_REV, "firmware_rev")
+        sw = await _read_optional(client, VMINI_CHAR_SW_REV, "software_rev")
+        asset_versions = await _read_optional(
+            client, VMINI_CHAR_ASSET_VERSIONS, "asset_versions"
         )
-        values: dict[str, bytearray | None] = {}
-        for char, name in optional_reads:
-            try:
-                value = await _read(client, char)
-            except Exception:
-                if name == "shadow_data":
-                    raise
-                values[name] = None
-                _LOGGER.debug("VMini %s not available", name)
-                continue
-            values[name] = value
-            _LOGGER.debug("Read %s [%s]: %s", name, char, value.hex())
-            if name == "shadow_data":
-                on_status(bytes(value))
-        serial = values["serial"]
-        fw = values["firmware_rev"]
-        sw = values["software_rev"]
-        asset_versions = values["asset_versions"]
-        shadow = values["shadow_header"]
-        shadow_data = values["shadow_data"]
-        fota_status = values["fota_status"]
-        _LOGGER.debug(
-            "VMini raw: serial=%s asset_versions=%s shadow=%s shadow_data=%s",
-            serial.hex() if serial else "N/A",
-            asset_versions.hex() if asset_versions else "N/A",
-            shadow.hex() if shadow else "N/A",
-            shadow_data.hex() if shadow_data else "N/A",
+        shadow = await _read_optional(client, VMINI_CHAR_SHADOW_HEADER, "shadow_header")
+        shadow_data = await _read_char(client, VMINI_CHAR_SHADOW_DATA, "shadow_data")
+        on_status(bytes(shadow_data))
+        fota_status = await _read_optional(
+            client, VMINI_CHAR_FOTA_STATUS, "fota_status"
         )
-        # GATT dump only when debug logging is active
-        gatt_dump_result = None
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            gatt_dump_result = await _dump_all_characteristics(client)
+        gatt_dump_result = await _debug_dump(client)
 
         return RawMachineData(
             serial_bytes=bytes(serial) if serial else None,
@@ -1351,7 +1316,7 @@ class VMiniProtocol(AbstractNespressoProtocol):
             if asset_versions
             else None,
             shadow_header=_decode_ble_string(bytes(shadow)) if shadow else None,
-            shadow_data=_decode_ble_string(bytes(shadow_data)) if shadow_data else None,
+            shadow_data=_decode_ble_string(bytes(shadow_data)),
             fota_status_bytes=bytes(fota_status) if fota_status else None,
             gatt_dump=gatt_dump_result,
         )
