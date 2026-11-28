@@ -53,7 +53,6 @@ from ..const import (
     BARISTA_CHAR_RECIPE_INFO,
     BARISTA_CHAR_SERIAL,
     BARISTA_CHAR_STATUS,
-    CMID_TYPE_FINAL,
     CMID_TYPE_NAMES,
     CMID_TYPE_NONE,
     CMID_TYPE_UNDEFINED,
@@ -557,13 +556,13 @@ async def _read(client: BleakClient, char: str) -> bytearray:
     return await _gatt_op(client, partial(client.read_gatt_char, char))
 
 
-async def _write(
-    client: BleakClient, char: str, data: bytes, *, response: bool = True
-) -> None:
-    """Write a characteristic, failing fast instead of hanging."""
-    await _gatt_op(
-        client, partial(client.write_gatt_char, char, data, response=response)
-    )
+async def _write(client: BleakClient, char: str, data: bytes) -> None:
+    """Write a characteristic with response, failing fast instead of hanging.
+
+    Always a request: these characteristics carry the write property and not
+    write-without-response, and the app never writes any other way.
+    """
+    await _gatt_op(client, partial(client.write_gatt_char, char, data, response=True))
 
 
 # "pair" key maps to CHAR_TX_LEVEL_CHANGE_REQUEST in the APK.
@@ -625,11 +624,7 @@ async def _authenticate(
     if family == MachineFamily.VMINI:
         return await _authenticate_vmini(client, auth_key)
 
-    uuids = _AUTH_UUIDS.get(family)
-    if not uuids:
-        _LOGGER.debug("No auth UUIDs for family %s", family)
-        return False
-
+    uuids = _AUTH_UUIDS[family]
     auth_bytes = binascii.unhexlify(auth_key)
 
     state = await _read_cmid_type(client, uuids["onboard"], address)
@@ -656,22 +651,20 @@ async def _authenticate(
 
     # Write CMID with response (matches APK and bulldog)
     try:
-        await _write(client, uuids["auth"], auth_bytes, response=True)
+        await _write(client, uuids["auth"], auth_bytes)
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("CMID write failed for %s: %s", address, err)
         return False
 
     # Verify auth by reading a protected characteristic
-    verify_uuid = uuids.get("verify") or uuids.get("onboard")
-    if verify_uuid:
-        try:
-            await _read(client, verify_uuid)
-        except Exception as err:  # noqa: BLE001
-            if _is_read_not_permitted(err):
-                _explain_refused_read(address, state)
-            else:
-                _LOGGER.debug("Auth verify read failed for %s: %s", address, err)
-            return False
+    try:
+        await _read(client, uuids["verify"])
+    except Exception as err:  # noqa: BLE001
+        if _is_read_not_permitted(err):
+            _explain_refused_read(address, state)
+        else:
+            _LOGGER.debug("Auth verify read failed for %s: %s", address, err)
+        return False
 
     _LOGGER.debug("Auth succeeded for %s", address)
     return True
@@ -792,7 +785,6 @@ async def async_scan_wifi(client: BleakClient) -> list[dict[str, object]]:
             client,
             VERTUO_CHAR_WIFI_SCAN_SELECT,
             index.to_bytes(2, "little"),
-            response=True,
         )
         await asyncio.sleep(WIFI_SCAN_SETTLE)
         raw = await _read(client, VERTUO_CHAR_WIFI_SCAN_RESULT)
@@ -832,9 +824,9 @@ async def async_configure_wifi(
 
     frame = build_wifi_setup_frame(ssid, password, security_type, connection_index)
 
-    await _write(client, VERTUO_CHAR_IOT_MARKET, code.encode("ascii"), response=True)
+    await _write(client, VERTUO_CHAR_IOT_MARKET, code.encode("ascii"))
     _LOGGER.debug("Market code %s written to %s", code, client.address)
-    await _write(client, VERTUO_CHAR_WIFI_SETUP, frame, response=True)
+    await _write(client, VERTUO_CHAR_WIFI_SETUP, frame)
     _LOGGER.info(
         "WiFi credentials for %s written to %s, watch the WiFi status sensor",
         ssid,
@@ -1023,9 +1015,9 @@ async def _onboard_once(
     that dies right after one died for a knowable reason.
     """
     tx_acknowledged = False
-    # Only a machine that already holds a final token skips the TX level
-    # request. The APK sends it for every other state, and abandons the attempt
-    # when the write fails rather than writing a token the machine will ignore.
+    # The APK sends the TX level request for every state but a final token,
+    # and only an unpaired machine gets here. It abandons the attempt when the
+    # write fails rather than writing a token the machine will ignore.
     #
     # With a response, because that is the only kind of write these
     # characteristics accept: they carry the write property and not
@@ -1036,11 +1028,11 @@ async def _onboard_once(
     # by nothing at all.
     #
     # Abandoning the attempt here is not the end of it. The caller writes the
-    # CMID once more when onboarding gives up, so a machine that refuses this
-    # request still gets its token, exactly as it did before.
-    if send_tx_level and state != CMID_TYPE_FINAL:
+    # CMID once more after onboarding, so a machine that refuses this request
+    # still gets its token, exactly as it did before.
+    if send_tx_level:
         try:
-            await _write(client, uuids["pair"], bytes([1]), response=True)
+            await _write(client, uuids["pair"], bytes([1]))
             tx_acknowledged = True
             _LOGGER.debug("TX level write acknowledged")
         except Exception as err:  # noqa: BLE001
@@ -1048,7 +1040,7 @@ async def _onboard_once(
             return state, False
 
     try:
-        await _write(client, uuids["auth"], auth_bytes, response=True)
+        await _write(client, uuids["auth"], auth_bytes)
         _LOGGER.debug("Onboarding CMID write sent")
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Onboarding CMID write failed for %s: %s", address, err)
@@ -1074,7 +1066,7 @@ async def _authenticate_vmini(client: BleakClient, auth_key: str) -> bool:
         _LOGGER.debug(
             "Writing VMini machine token for %s: %s****", address, auth_key[:4]
         )
-        await _write(client, VMINI_CHAR_MACHINE_TOKEN, token, response=True)
+        await _write(client, VMINI_CHAR_MACHINE_TOKEN, token)
         _LOGGER.debug("VMini machine token written successfully")
         return True
     except Exception as err:  # noqa: BLE001
@@ -1113,10 +1105,7 @@ async def _dump_all_characteristics(client: BleakClient) -> dict[str, dict[str, 
             try:
                 value = await _read(client, char.uuid)
                 raw_hex = bytes(value).hex()
-                try:
-                    text = bytes(value).decode("utf-8", errors="replace")
-                except Exception:  # noqa: BLE001
-                    text = ""
+                text = bytes(value).decode("utf-8", errors="replace")
                 entry["value"] = raw_hex
                 _LOGGER.debug(
                     "GATT %s [%s] props=%s = %s (text=%r)",
@@ -1233,7 +1222,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         settings = await _read_char(client, VERTUO_CHAR_USER_SETTINGS, "user_settings")
         # Select current active error (index 0) then read error info
         try:
-            await _write(client, VERTUO_CHAR_ERROR_SELECTION, bytes([0]), response=True)
+            await _write(client, VERTUO_CHAR_ERROR_SELECTION, bytes([0]))
             _LOGGER.debug("Error selection set to index 0 (current active)")
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Error selection write not available")
@@ -1242,7 +1231,7 @@ class VertuoNextProtocol(AbstractNespressoProtocol):
         # Also read error at index 1 (error present in list) for diagnostics
         error_list_entry = None
         try:
-            await _write(client, VERTUO_CHAR_ERROR_SELECTION, bytes([1]), response=True)
+            await _write(client, VERTUO_CHAR_ERROR_SELECTION, bytes([1]))
             error_list_entry = await _read(client, VERTUO_CHAR_ERROR_INFO)
             _LOGGER.debug("Error list entry raw: %s", error_list_entry.hex())
         except Exception:  # noqa: BLE001
