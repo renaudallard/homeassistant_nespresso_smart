@@ -254,7 +254,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = NespressoCoordinator(
         hass, address, family, scan_interval, persistent, send_tx_level
     )
-    coordinator.is_expert = "expert" in (entry.title or "").lower()
+    # The name the machine advertised when it was added. The title would do
+    # until someone renames the entry.
+    coordinator.is_expert = "expert" in (entry.data.get("name") or "").lower()
 
     # Restore or generate auth key (must persist before first_refresh
     # so the same key survives ConfigEntryNotReady retries)
